@@ -10,9 +10,18 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Parse FRONTEND_URL to support comma-separated origins and strip trailing slashes
+origins = [
+    origin.strip().rstrip("/")
+    for origin in settings.FRONTEND_URL.split(",")
+    if origin.strip()
+]
+if "http://localhost:5173" not in origins:
+    origins.append("http://localhost:5173")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:5173"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
