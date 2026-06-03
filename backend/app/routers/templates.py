@@ -1,0 +1,72 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from uuid import UUID
+
+from app.database import get_db
+from app.models.expense import ExpenseTemplate
+from app.schemas.expense import TemplateCreate, TemplateUpdate, TemplateResponse
+from app.config import settings
+
+router = APIRouter(prefix="/templates", tags=["templates"])
+
+
+def get_user_id() -> UUID:
+    return settings.DEMO_USER_ID
+
+
+@router.get("/", response_model=list[TemplateResponse])
+async def list_templates(db: AsyncSession = Depends(get_db)):
+    user_id = get_user_id()
+    result = await db.execute(
+        select(ExpenseTemplate)
+        .where(ExpenseTemplate.user_id == user_id)
+        .order_by(ExpenseTemplate.display_order, ExpenseTemplate.created_at)
+    )
+    return [TemplateResponse.model_validate(t) for t in result.scalars().all()]
+
+
+@router.post("/", response_model=TemplateResponse, status_code=201)
+async def create_template(payload: TemplateCreate, db: AsyncSession = Depends(get_db)):
+    user_id = get_user_id()
+    tmpl = ExpenseTemplate(
+        user_id=user_id,
+        name=payload.name,
+        category=payload.category,
+        category_id=payload.category_id,
+        expense_type=payload.expense_type,
+        responsavel=payload.responsavel,
+        base_amount=payload.base_amount,
+        installment_total=payload.installment_total,
+        display_order=payload.display_order,
+    )
+    db.add(tmpl)
+    await db.flush()
+    return TemplateResponse.model_validate(tmpl)
+
+
+@router.patch("/{template_id}", response_model=TemplateResponse)
+async def update_template(
+    template_id: UUID,
+    payload: TemplateUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(ExpenseTemplate).where(ExpenseTemplate.id == template_id))
+    tmpl = result.scalars().first()
+    if tmpl is None:
+        raise HTTPException(status_code=404, detail="Template not found")
+
+    for field, value in payload.model_dump(exclude_none=True).items():
+        setattr(tmpl, field, value)
+
+    return TemplateResponse.model_validate(tmpl)
+
+
+@router.delete("/{template_id}", status_code=204)
+async def delete_template(template_id: UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(ExpenseTemplate).where(ExpenseTemplate.id == template_id))
+    tmpl = result.scalars().first()
+    if tmpl is None:
+        raise HTTPException(status_code=404, detail="Template not found")
+    await db.delete(tmpl)
+    await db.flush()

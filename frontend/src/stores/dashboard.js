@@ -1,0 +1,203 @@
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { periodsApi, expensesApi } from '../services/api.js'
+import { parseCurrency } from '../utils/currency.js'
+
+export const useDashboardStore = defineStore('dashboard', () => {
+  // ── State ──────────────────────────────────────────────────────────────────
+  const period = ref(null)
+  const expenses = ref([])
+  const loading = ref(false)
+  const saving = ref(false)
+  const error = ref(null)
+  const notFoundMonth = ref(false)   // true when navigating to a non-existent future month
+
+  // Current view: 'geral' | 'alvaro' | 'alexandra'
+  const currentView = ref('geral')
+
+  // UI flags: FAB actions per screen
+  const quickAddOpen = ref(false)
+  const quickAddTemplateOpen = ref(false)
+  const quickAddCategoryOpen = ref(false)
+
+  // ── Read-only: past months have status = 'closed' ─────────────────────────
+  const isReadOnly = computed(() => period.value?.status === 'closed')
+
+  // ── Computed — filtered by view ───────────────────────────────────────────
+  const filteredExpenses = computed(() => {
+    if (currentView.value === 'geral') return expenses.value
+    return expenses.value.filter((e) => e.responsavel === currentView.value)
+  })
+
+  // ── Computed — balance totals ─────────────────────────────────────────────
+  const totalCommitted = computed(() =>
+    expenses.value.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
+  )
+
+  const totalPaid = computed(() =>
+    expenses.value.filter((e) => e.is_paid).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
+  )
+
+  const incomeAlvaro = computed(() => parseFloat(period.value?.income_alvaro) || 0)
+  const incomeAlexandra = computed(() => parseFloat(period.value?.income_alexandra) || 0)
+  const incomeTotal = computed(() => incomeAlvaro.value + incomeAlexandra.value)
+  const carryover = computed(() => parseFloat(period.value?.carryover_balance) || 0)
+
+  // RN-03 — saldo formulas
+  const freeCash = computed(() => incomeTotal.value + carryover.value - totalCommitted.value)
+
+  const saldoAlvaro = computed(() => {
+    const alvaroExpenses = expenses.value
+      .filter((e) => e.responsavel === 'alvaro')
+      .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
+    return incomeAlvaro.value - alvaroExpenses
+  })
+
+  const saldoAlexandra = computed(() => {
+    const alexandraExpenses = expenses.value
+      .filter((e) => e.responsavel === 'alexandra')
+      .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
+    return incomeAlexandra.value - alexandraExpenses
+  })
+
+  const paidCount = computed(() => expenses.value.filter((e) => e.is_paid).length)
+
+  // ── Actions ────────────────────────────────────────────────────────────────
+  async function fetchCurrent() {
+    loading.value = true
+    error.value = null
+    notFoundMonth.value = false
+    try {
+      const { data } = await periodsApi.getCurrent()
+      period.value = data.period
+      expenses.value = data.expenses
+    } catch (e) {
+      error.value = 'Não foi possível carregar os dados. Verifique a conexão.'
+      console.error(e)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function fetchByMonth(year, month) {
+    loading.value = true
+    error.value = null
+    notFoundMonth.value = false
+    try {
+      const { data } = await periodsApi.getByMonth(year, month)
+      period.value = data.period
+      expenses.value = data.expenses
+    } catch (e) {
+      if (e.response?.status === 404) {
+        notFoundMonth.value = true
+        period.value = null
+        expenses.value = []
+      } else {
+        error.value = 'Não foi possível carregar os dados.'
+      }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function updateIncome(field, value) {
+    if (!period.value || isReadOnly.value) return
+    const amount = typeof value === 'number' ? value : parseCurrency(value)
+    saving.value = true
+    try {
+      const { data } = await periodsApi.updateIncome(period.value.id, { [field]: amount })
+      period.value = data
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function updateExpenseAmount(expenseId, rawValue) {
+    if (isReadOnly.value) return
+    const amount = typeof rawValue === 'number' ? rawValue : parseCurrency(rawValue)
+    saving.value = true
+    try {
+      const { data } = await expensesApi.update(expenseId, { amount })
+      _replaceExpense(data)
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function togglePaid(expenseId) {
+    if (isReadOnly.value) return
+    // Optimistic update for snappy UI
+    const idx = expenses.value.findIndex((e) => e.id === expenseId)
+    if (idx !== -1) expenses.value[idx].is_paid = !expenses.value[idx].is_paid
+
+    try {
+      const { data } = await expensesApi.togglePaid(expenseId)
+      _replaceExpense(data)
+    } catch {
+      // revert on failure
+      if (idx !== -1) expenses.value[idx].is_paid = !expenses.value[idx].is_paid
+    }
+  }
+
+  async function updateRent(expenseId, components) {
+    if (isReadOnly.value) return
+    saving.value = true
+    try {
+      const { data } = await expensesApi.updateRent(expenseId, components)
+      _replaceExpense(data)
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function addExpense(payload) {
+    if (!period.value || isReadOnly.value) return
+    saving.value = true
+    try {
+      const { data } = await expensesApi.create(period.value.id, {
+        display_order: expenses.value.length,
+        ...payload,
+      })
+      expenses.value.push(data)
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function deleteExpense(expenseId) {
+    if (isReadOnly.value) return
+    await expensesApi.delete(expenseId)
+    expenses.value = expenses.value.filter((e) => e.id !== expenseId)
+  }
+
+  async function runTurnover() {
+    saving.value = true
+    try {
+      await periodsApi.turnover()
+      await fetchCurrent()
+      notFoundMonth.value = false
+    } finally {
+      saving.value = false
+    }
+  }
+
+  function setView(view) {
+    currentView.value = view
+  }
+
+  function _replaceExpense(updated) {
+    const idx = expenses.value.findIndex((e) => e.id === updated.id)
+    if (idx !== -1) expenses.value[idx] = updated
+  }
+
+  return {
+    period, expenses, loading, saving, error, notFoundMonth,
+    currentView, quickAddOpen, quickAddTemplateOpen, quickAddCategoryOpen, isReadOnly,
+    filteredExpenses,
+    totalCommitted, totalPaid, freeCash,
+    incomeAlvaro, incomeAlexandra, incomeTotal, carryover,
+    saldoAlvaro, saldoAlexandra, paidCount,
+    fetchCurrent, fetchByMonth, updateIncome, updateExpenseAmount,
+    togglePaid, updateRent, addExpense, deleteExpense, runTurnover, setView,
+  }
+})
