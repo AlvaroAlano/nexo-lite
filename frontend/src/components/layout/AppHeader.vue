@@ -1,6 +1,6 @@
 <template>
   <header class="sticky top-0 z-30 bg-white/90 dark:bg-brand-canvas-dark/90 backdrop-blur-md border-b border-brand-hairline-light dark:border-brand-hairline-dark transition-colors duration-150">
-    <div class="max-w-5xl mx-auto px-4 h-16 md:h-14 flex items-center justify-between gap-3">
+    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
       <!-- Logo (desktop) -->
       <RouterLink to="/" class="hidden md:flex items-center gap-2 flex-shrink-0">
         <div class="w-7 h-7 rounded-lg bg-brand-ink-light dark:bg-white flex items-center justify-center">
@@ -11,8 +11,8 @@
 
       <!-- Logo (mobile) -->
       <RouterLink to="/" class="flex md:hidden items-center flex-shrink-0">
-        <div class="w-8.5 h-8.5 rounded-lg bg-brand-ink-light dark:bg-white flex items-center justify-center">
-          <span class="text-white dark:text-brand-canvas-dark text-sm font-bold tracking-tight">N</span>
+        <div class="w-7 h-7 rounded-lg bg-brand-ink-light dark:bg-white flex items-center justify-center">
+          <span class="text-white dark:text-brand-canvas-dark text-xs font-bold tracking-tight">N</span>
         </div>
       </RouterLink>
 
@@ -21,17 +21,17 @@
         <button
           @click="navigate(-1)"
           :disabled="store.loading"
-          class="w-9 h-9 md:w-8 md:h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark disabled:opacity-30 transition-colors active:scale-90"
+          class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark disabled:opacity-30 transition-colors active:scale-90"
           aria-label="Mês anterior"
         >
-          <svg class="w-4.5 h-4.5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
         </button>
  
         <button
           @click="goToCurrent"
-          class="px-3 py-2 md:py-1.5 rounded-lg font-semibold text-base md:text-sm text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark transition-colors min-w-[140px] text-center"
+          class="px-3 py-1.5 rounded-lg font-semibold text-sm text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark transition-colors min-w-[140px] text-center"
           :class="store.isReadOnly ? 'opacity-70' : ''"
         >
           {{ displayLabel }}
@@ -41,10 +41,10 @@
         <button
           @click="navigate(+1)"
           :disabled="store.loading"
-          class="w-9 h-9 md:w-8 md:h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark disabled:opacity-30 transition-colors active:scale-90"
+          class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark disabled:opacity-30 transition-colors active:scale-90"
           aria-label="Próximo mês"
         >
-          <svg class="w-4.5 h-4.5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="9 18 15 12 9 6"/>
           </svg>
         </button>
@@ -97,16 +97,16 @@
 
         <button
           @click="toggleTheme"
-          class="w-9 h-9 md:w-8 md:h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark transition-colors active:scale-95"
+          class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark transition-colors active:scale-95"
           title="Alternar tema"
           aria-label="Alternar tema"
         >
           <!-- Moon icon (shows when theme is light) -->
-          <svg v-if="theme === 'light'" class="w-4.5 h-4.5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg v-if="theme === 'light'" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
           <!-- Sun icon (shows when theme is dark) -->
-          <svg v-else class="w-4.5 h-4.5 md:w-4 md:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"></circle>
             <line x1="12" y1="1" x2="12" y2="3"></line>
             <line x1="12" y1="21" x2="12" y2="23"></line>
