@@ -92,8 +92,9 @@ Local de cadastro de gastos repetitivos (templates de despesas).
 Central de configurações globais e cadastros de infraestrutura do sistema.
 
 * **Seção "Membros e Rendas"**:
-  * **Inputs "Nome Álvaro" e "Nome Alexandra"**: Atualizam os valores reativos da store e persistem no `localStorage`. Ao alterar, todos os títulos de abas, badges de despesas e modais da aplicação refletem a mudança na hora.
-  * **Inputs de Renda**: Facilitam o ajuste rápido do salário base configurado no período ativo.
+  * **Botão "Salvar"**: Localizado no canto superior direito do card. Executa o salvamento unificado dos nomes configurados (na store/localStorage) e das rendas dos membros (no banco de dados PostgreSQL) de uma única vez.
+  * **Inputs "Membro 1" e "Membro 2"**: Permitem alterar os nomes e as rendas. Pressionar `Enter` em qualquer um dos campos também dispara a ação de salvar.
+  * **Inputs de Renda**: Integrados com a máscara financeira em tempo real (`CurrencyInput`), desabilitados caso o mês ativo esteja fechado.
 * **Seção "Categorias de Despesa"**:
   * **Botão "+ Categoria"**: No mobile, exibe o formulário de cadastro de categorias; no desktop, foca o cursor do teclado no formulário lateral.
   * **Inputs do Formulário de Categoria**:

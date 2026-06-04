@@ -7,9 +7,18 @@
 
     <!-- Members & Salaries Section -->
     <div class="bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-stripe-card p-5 shadow-stripe-1 mb-6 transition-colors duration-150">
-      <h3 class="font-medium text-brand-ink-light dark:text-white text-sm mb-4">
-        Membros e Rendas (Mês Atual)
-      </h3>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-medium text-brand-ink-light dark:text-white text-sm">
+          Membros e Rendas (Mês Atual)
+        </h3>
+        <button
+          @click="saveMembersAndSalaries"
+          :disabled="isSavingMembers"
+          class="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold active:scale-95 transition-all disabled:opacity-40"
+        >
+          {{ isSavingMembers ? 'Salvando…' : 'Salvar' }}
+        </button>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Membro 1 -->
         <div class="space-y-2">
@@ -17,8 +26,7 @@
           <div class="flex flex-col sm:flex-row gap-2">
             <input
               v-model="nameAlvaro"
-              @blur="saveNames"
-              @keydown.enter="saveNames"
+              @keydown.enter="saveMembersAndSalaries"
               placeholder="Nome"
               class="w-full sm:flex-1 px-4 py-2 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
             />
@@ -26,8 +34,7 @@
               <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mr-1">R$</span>
               <CurrencyInput
                 v-model="salaryAlvaro"
-                @confirm="updateSalary('income_alvaro', salaryAlvaro)"
-                @blur="updateSalary('income_alvaro', salaryAlvaro)"
+                @confirm="saveMembersAndSalaries"
                 :disabled="dashboardStore.isReadOnly"
                 hide-prefix
                 input-class="bg-transparent text-right border-0 focus:ring-0 outline-none font-tabular font-medium text-brand-ink-light dark:text-white text-sm w-full"
@@ -42,8 +49,7 @@
           <div class="flex flex-col sm:flex-row gap-2">
             <input
               v-model="nameAlexandra"
-              @blur="saveNames"
-              @keydown.enter="saveNames"
+              @keydown.enter="saveMembersAndSalaries"
               placeholder="Nome"
               class="w-full sm:flex-1 px-4 py-2 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
             />
@@ -51,8 +57,7 @@
               <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mr-1">R$</span>
               <CurrencyInput
                 v-model="salaryAlexandra"
-                @confirm="updateSalary('income_alexandra', salaryAlexandra)"
-                @blur="updateSalary('income_alexandra', salaryAlexandra)"
+                @confirm="saveMembersAndSalaries"
                 :disabled="dashboardStore.isReadOnly"
                 hide-prefix
                 input-class="bg-transparent text-right border-0 focus:ring-0 outline-none font-tabular font-medium text-brand-ink-light dark:text-white text-sm w-full"
@@ -313,9 +318,10 @@ function openAddCategory() {
   }
 }
 
-// Member names local state & save function
+// Member names local state
 const nameAlvaro = ref('')
 const nameAlexandra = ref('')
+const isSavingMembers = ref(false)
 
 watch(() => dashboardStore.nameAlvaro, (val) => {
   nameAlvaro.value = val
@@ -324,10 +330,6 @@ watch(() => dashboardStore.nameAlvaro, (val) => {
 watch(() => dashboardStore.nameAlexandra, (val) => {
   nameAlexandra.value = val
 }, { immediate: true })
-
-function saveNames() {
-  dashboardStore.updateNames(nameAlvaro.value, nameAlexandra.value)
-}
 
 // Salaries local state synced with dashboardStore
 const salaryAlvaro = ref(0)
@@ -341,8 +343,24 @@ watch(() => dashboardStore.incomeAlexandra, (val) => {
   salaryAlexandra.value = val
 }, { immediate: true })
 
-async function updateSalary(field, val) {
-  await dashboardStore.updateIncome(field, val)
+async function saveMembersAndSalaries() {
+  isSavingMembers.value = true
+  try {
+    // Salva os nomes localmente na store/localStorage
+    dashboardStore.updateNames(nameAlvaro.value, nameAlexandra.value)
+
+    // Atualiza as rendas no banco de dados para o período atual (se não for somente leitura)
+    if (!dashboardStore.isReadOnly) {
+      await Promise.all([
+        dashboardStore.updateIncome('income_alvaro', salaryAlvaro.value),
+        dashboardStore.updateIncome('income_alexandra', salaryAlexandra.value)
+      ])
+    }
+  } catch (err) {
+    console.error('Erro ao salvar membros e rendas:', err)
+  } finally {
+    isSavingMembers.value = false
+  }
 }
 
 watch(() => dashboardStore.quickAddCategoryOpen, async (val) => {
