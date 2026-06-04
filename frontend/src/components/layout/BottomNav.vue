@@ -43,7 +43,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Home, Repeat2, Tag, BarChart2, Plus } from 'lucide-vue-next'
+import { Home, Repeat2, Settings, BarChart2, Plus } from 'lucide-vue-next'
 import { useDashboardStore } from '../../stores/dashboard.js'
 
 const route = useRoute()
@@ -60,7 +60,7 @@ const allItems = [
   { type: 'route', to: '/',          name: 'dashboard', icon: Home,      label: 'Check-in'     },
   { type: 'route', to: '/templates', name: 'templates', icon: Repeat2,   label: 'Recorrências' },
   { type: 'fab' },
-  { type: 'route', to: '/settings',  name: 'settings',  icon: Tag,       label: 'Categorias'   },
+  { type: 'route', to: '/settings',  name: 'settings',  icon: Settings,  label: 'Ajustes'      },
   { type: 'route', to: '/stats',     name: 'stats',     icon: BarChart2, label: 'Estatísticas' },
 ]
 

@@ -65,7 +65,7 @@
                 class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                 :class="RESP_BADGES[expense.responsavel] || 'bg-brand-canvas-soft-light text-brand-ink-mute-light dark:bg-brand-canvas-dark dark:text-brand-ink-mute-dark'"
               >
-                {{ RESP_LABELS[expense.responsavel] || 'Casal' }}
+                {{ respLabels[expense.responsavel] || 'Casal' }}
               </span>
             </div>
           </td>
@@ -148,7 +148,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, computed } from 'vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { useCategoriesStore } from '../../stores/categories.js'
 import { formatCurrency } from '../../utils/currency.js'
@@ -161,7 +161,11 @@ defineEmits(['open-rent', 'delete'])
 const store = useDashboardStore()
 const catStore = useCategoriesStore()
 
-const RESP_LABELS = { alvaro: 'Álvaro', alexandra: 'Alexandra', conjunto: 'Casal' }
+const respLabels = computed(() => ({
+  alvaro: store.nameAlvaro,
+  alexandra: store.nameAlexandra,
+  conjunto: 'Casal'
+}))
 const RESP_BADGES = {
   alvaro:    'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300',
   alexandra: 'bg-pink-50 text-pink-600 dark:bg-pink-950/40 dark:text-pink-300',

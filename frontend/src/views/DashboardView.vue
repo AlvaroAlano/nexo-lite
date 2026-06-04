@@ -203,7 +203,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick, reactive } from 'vue'
+import { ref, watch, onMounted, nextTick, reactive, computed } from 'vue'
 import { useDashboardStore } from '../stores/dashboard.js'
 import BalanceSummary from '../components/dashboard/BalanceSummary.vue'
 import ExpenseCard from '../components/dashboard/ExpenseCard.vue'
@@ -247,11 +247,11 @@ async function doDelete() {
   }
 }
 
-const responsavelOpts = [
+const responsavelOpts = computed(() => [
   { value: 'conjunto', label: 'Casal' },
-  { value: 'alvaro',   label: 'Álvaro' },
-  { value: 'alexandra', label: 'Alexandra' },
-]
+  { value: 'alvaro',   label: store.nameAlvaro },
+  { value: 'alexandra', label: store.nameAlexandra },
+])
 
 function resetAddForm() {
   addForm.name = ''

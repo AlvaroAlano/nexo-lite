@@ -15,6 +15,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // Current view: 'geral' | 'alvaro' | 'alexandra'
   const currentView = ref('geral')
 
+  // Nomes dos membros reativos persistidos no localStorage
+  const nameAlvaro = ref(localStorage.getItem('name_alvaro') || 'Álvaro')
+  const nameAlexandra = ref(localStorage.getItem('name_alexandra') || 'Alexandra')
+
   // UI flags: FAB actions per screen
   const quickAddOpen = ref(false)
   const quickAddTemplateOpen = ref(false)
@@ -185,6 +189,13 @@ export const useDashboardStore = defineStore('dashboard', () => {
     currentView.value = view
   }
 
+  function updateNames(alvaro, alexandra) {
+    nameAlvaro.value = alvaro || 'Álvaro'
+    nameAlexandra.value = alexandra || 'Alexandra'
+    localStorage.setItem('name_alvaro', nameAlvaro.value)
+    localStorage.setItem('name_alexandra', nameAlexandra.value)
+  }
+
   function _replaceExpense(updated) {
     const idx = expenses.value.findIndex((e) => e.id === updated.id)
     if (idx !== -1) expenses.value[idx] = updated
@@ -192,12 +203,13 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   return {
     period, expenses, loading, saving, error, notFoundMonth,
-    currentView, quickAddOpen, quickAddTemplateOpen, quickAddCategoryOpen, isReadOnly,
+    currentView, nameAlvaro, nameAlexandra,
+    quickAddOpen, quickAddTemplateOpen, quickAddCategoryOpen, isReadOnly,
     filteredExpenses,
     totalCommitted, totalPaid, freeCash,
     incomeAlvaro, incomeAlexandra, incomeTotal, carryover,
     saldoAlvaro, saldoAlexandra, paidCount,
     fetchCurrent, fetchByMonth, updateIncome, updateExpenseAmount,
-    togglePaid, updateRent, addExpense, deleteExpense, runTurnover, setView,
+    togglePaid, updateRent, addExpense, deleteExpense, runTurnover, setView, updateNames,
   }
 })

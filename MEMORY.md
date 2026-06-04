@@ -5,6 +5,21 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 
 ---
 
+## 2026-06-03 — Customização de Nomes, Salários e Aba de Ajustes
+
+**Contexto:** Unificação do gerenciamento de perfis e categorias na aba de Ajustes. Suporte à edição dinâmica dos nomes dos membros do casal no frontend e inputs rápidos de renda do mês ativo na tela de configurações.
+
+**Criado / Alterado:**
+- Alterado `dashboard.js` para gerenciar os nomes reativos `nameAlvaro` e `nameAlexandra` persistidos no `localStorage`.
+- Alterado `SettingsView.vue` para renomear título/subtítulo para "Ajustes", adicionar uma nova seção "Membros e Rendas" com inputs para customizar os nomes em tempo real e campos rápidos (`CurrencyInput`) integrados a `updateIncome` do mês atual.
+- Alterado `BottomNav.vue` e `AppHeader.vue` para evoluir a aba "Categorias" para "Ajustes", alterando os rótulos e substituindo o ícone `Tag` por `Settings` (engrenagem).
+- Alterado `BalanceSummary.vue` para exibir dinamicamente os nomes dos membros da store nas abas gerais, nas rendas individuais e nos saldos livres de Álvaro/Alexandra.
+- Alterados `DashboardView.vue` e `TemplatesView.vue` para tornar o array `responsavelOpts` uma propriedade computed que utiliza os nomes configurados pelo usuário na store Pinia.
+- Alterados `ExpenseCard.vue` e `ExpenseTable.vue` para exibir o nome dinâmico nos badges de responsável das despesas.
+- Validada compilação estática do bundle via build de produção.
+
+---
+
 ## 2026-06-03 — Deleção de despesas & Melhorias em Parcelamentos (Recorrências)
 
 **Contexto:** Adição de deleção de despesas no Check-in e otimização no fluxo de criação de parcelas no formulário de Recorrências.
@@ -17,6 +32,8 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 - Corrigido o modal de criação mobile em `TemplatesView.vue`, substituindo as tags `<option>` nativas pelas propriedades `:options="responsavelOpts"` e `:options="expenseTypeOpts"` no `AppSelect`.
 - Alterado `AppHeader.vue` para exibir o logo box compacto `"N"` no canto esquerdo da barra de navegação superior nos layouts mobile.
 - Criado `icon.svg` e gerados os ícones físicos `icon-192.png` e `icon-512.png` na pasta `public/icons` (usando a ferramenta `sharp` temporária), tornando a aplicação um PWA 100% instalável e offline-ready (22 recursos no precache do Service Worker).
+- Alterados `BottomNav.vue` e `AppHeader.vue` para aumentar paddings, tamanhos de botões, ícones e fontes nos layouts mobile (melhorando a acessibilidade e targets de toque).
+- Alterados `DashboardView.vue` e `TemplatesView.vue` para remover o focus automático (`.focus()`) nos campos de input ao abrir os modais mobile rápidos, prevenindo a abertura indesejada do teclado virtual.
 - Validada compilação do bundle via build de produção completo.
 
 ---

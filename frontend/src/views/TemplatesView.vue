@@ -266,11 +266,11 @@ import { useDashboardStore } from '../stores/dashboard.js'
 const dashboardStore = useDashboardStore()
 const templates = ref([])
 
-const responsavelOpts = [
+const responsavelOpts = computed(() => [
   { value: 'conjunto',  label: 'Casal (Conjunto)' },
-  { value: 'alvaro',    label: 'Álvaro' },
-  { value: 'alexandra', label: 'Alexandra' },
-]
+  { value: 'alvaro',    label: dashboardStore.nameAlvaro },
+  { value: 'alexandra', label: dashboardStore.nameAlexandra },
+])
 const expenseTypeOpts = [
   { value: 'fixed',       label: 'Fixa' },
   { value: 'variable',    label: 'Variável' },

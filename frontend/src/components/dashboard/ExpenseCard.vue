@@ -128,13 +128,16 @@ const isRent = computed(() => props.expense.expense_type === 'rent')
 const category = computed(() => props.expense.category_id ? catStore.getCategory(props.expense.category_id) : null)
 const catColor = computed(() => category.value ? colorByKey(category.value.color) : colorByKey('slate'))
 
-const RESP_LABELS = { alvaro: 'Álvaro', alexandra: 'Alexandra', conjunto: 'Casal' }
 const RESP_COLORS = {
   alvaro:    'text-blue-500 dark:text-blue-400',
   alexandra: 'text-pink-500 dark:text-pink-400',
   conjunto:  'text-brand-ink-mute-light dark:text-brand-ink-mute-dark',
 }
-const responsavelLabel = computed(() => RESP_LABELS[props.expense.responsavel] || 'Casal')
+const responsavelLabel = computed(() => {
+  if (props.expense.responsavel === 'alvaro') return store.nameAlvaro
+  if (props.expense.responsavel === 'alexandra') return store.nameAlexandra
+  return 'Casal'
+})
 const responsavelColor = computed(() => RESP_COLORS[props.expense.responsavel] || RESP_COLORS.conjunto)
 
 const editing = ref(false)

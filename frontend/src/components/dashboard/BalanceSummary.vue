@@ -64,8 +64,8 @@
                 </div>
 
                 <div class="space-y-2 mb-3">
-                  <IncomeRow label="Álvaro" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" />
-                  <IncomeRow label="Alexandra" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" />
+                  <IncomeRow :label="store.nameAlvaro" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" />
+                  <IncomeRow :label="store.nameAlexandra" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" />
                 </div>
 
                 <div v-if="store.carryover > 0" class="flex justify-between mb-2">
@@ -84,23 +84,23 @@
               </div>
 
               <div v-else-if="store.currentView === 'alvaro'">
-                <IncomeRow label="Renda de Álvaro" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" />
+                <IncomeRow :label="`Renda de ${store.nameAlvaro}`" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" />
                 <div class="border-t border-brand-hairline-dark/20 my-3" />
                 <div class="flex justify-between mb-1">
-                  <span class="text-brand-ink-mute-dark text-sm">Contas de Álvaro</span>
+                  <span class="text-brand-ink-mute-dark text-sm">Contas de {{ store.nameAlvaro }}</span>
                   <span class="font-tabular font-medium text-brand-ink-mute-dark text-sm">− {{ fmt(alvaroCommitted) }}</span>
                 </div>
-                <FreeCashDisplay :value="store.saldoAlvaro" label="Saldo de Álvaro" />
+                <FreeCashDisplay :value="store.saldoAlvaro" :label="`Saldo de ${store.nameAlvaro}`" />
               </div>
 
               <div v-else-if="store.currentView === 'alexandra'">
-                <IncomeRow label="Renda de Alexandra" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" />
+                <IncomeRow :label="`Renda de ${store.nameAlexandra}`" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" />
                 <div class="border-t border-brand-hairline-dark/20 my-3" />
                 <div class="flex justify-between mb-1">
-                  <span class="text-brand-ink-mute-dark text-sm">Contas de Alexandra</span>
+                  <span class="text-brand-ink-mute-dark text-sm">Contas de {{ store.nameAlexandra }}</span>
                   <span class="font-tabular font-medium text-brand-ink-mute-dark text-sm">− {{ fmt(alexandraCommitted) }}</span>
                 </div>
-                <FreeCashDisplay :value="store.saldoAlexandra" label="Saldo de Alexandra" />
+                <FreeCashDisplay :value="store.saldoAlexandra" :label="`Saldo de ${store.nameAlexandra}`" />
               </div>
             </Transition>
           </div>
@@ -121,11 +121,11 @@ import FreeCashDisplay from './FreeCashDisplay.vue'
 const store = useDashboardStore()
 const fmt = formatCurrency
 
-const tabs = [
+const tabs = computed(() => [
   { key: 'geral', label: 'Visão Geral' },
-  { key: 'alvaro', label: 'Álvaro' },
-  { key: 'alexandra', label: 'Alexandra' },
-]
+  { key: 'alvaro', label: store.nameAlvaro },
+  { key: 'alexandra', label: store.nameAlexandra },
+])
 
 const collapsed = ref(false)
 

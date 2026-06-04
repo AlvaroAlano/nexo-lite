@@ -1,8 +1,71 @@
 <template>
   <div class="max-w-4xl mx-auto px-4 pt-5 pb-6 font-ss01">
     <div class="mb-6">
-      <h1 class="text-xl font-light tracking-tight text-brand-ink-light dark:text-white">Categorias</h1>
-      <p class="text-sm text-brand-ink-mute-light dark:text-brand-ink-mute-dark mt-1">Gerencie as categorias usadas nas despesas.</p>
+      <h1 class="text-xl font-light tracking-tight text-brand-ink-light dark:text-white">Ajustes</h1>
+      <p class="text-sm text-brand-ink-mute-light dark:text-brand-ink-mute-dark mt-1">Gerencie os membros, rendas e categorias do sistema.</p>
+    </div>
+
+    <!-- Members & Salaries Section -->
+    <div class="bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-stripe-card p-5 shadow-stripe-1 mb-6 transition-colors duration-150">
+      <h3 class="font-medium text-brand-ink-light dark:text-white text-sm mb-4">
+        Membros e Rendas (Mês Atual)
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Membro 1 -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wide">Membro 1</label>
+          <div class="flex gap-2">
+            <input
+              v-model="nameAlvaro"
+              @blur="saveNames"
+              @keydown.enter="saveNames"
+              placeholder="Nome"
+              class="flex-1 px-4 py-2 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
+            />
+            <div class="w-36 flex items-center justify-between px-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark rounded-stripe-input">
+              <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mr-1">R$</span>
+              <CurrencyInput
+                v-model="salaryAlvaro"
+                @confirm="updateSalary('income_alvaro', salaryAlvaro)"
+                @blur="updateSalary('income_alvaro', salaryAlvaro)"
+                :disabled="dashboardStore.isReadOnly"
+                hide-prefix
+                input-class="bg-transparent text-right font-tabular font-medium text-brand-ink-light dark:text-white text-sm focus:outline-none w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Membro 2 -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wide">Membro 2</label>
+          <div class="flex gap-2">
+            <input
+              v-model="nameAlexandra"
+              @blur="saveNames"
+              @keydown.enter="saveNames"
+              placeholder="Nome"
+              class="flex-1 px-4 py-2 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
+            />
+            <div class="w-36 flex items-center justify-between px-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark rounded-stripe-input">
+              <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mr-1">R$</span>
+              <CurrencyInput
+                v-model="salaryAlexandra"
+                @confirm="updateSalary('income_alexandra', salaryAlexandra)"
+                @blur="updateSalary('income_alexandra', salaryAlexandra)"
+                :disabled="dashboardStore.isReadOnly"
+                hide-prefix
+                input-class="bg-transparent text-right font-tabular font-medium text-brand-ink-light dark:text-white text-sm focus:outline-none w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories Section Header -->
+    <div class="mb-4">
+      <h3 class="font-medium text-brand-ink-light dark:text-white text-sm">Categorias</h3>
     </div>
 
     <ConfirmModal
@@ -223,12 +286,36 @@ import { useDashboardStore } from '../stores/dashboard.js'
 import { COLORS, CATEGORY_ICONS, colorByKey, getIconComponent } from '../utils/categories.js'
 import ConfirmModal from '../components/ui/ConfirmModal.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
+import CurrencyInput from '../components/ui/CurrencyInput.vue'
 
 const store = useCategoriesStore()
 const dashboardStore = useDashboardStore()
 const saving = ref(false)
 const editing = ref(null)
 const categoryNameInput = ref(null)
+
+// Member names local state & save function
+const nameAlvaro = ref(dashboardStore.nameAlvaro)
+const nameAlexandra = ref(dashboardStore.nameAlexandra)
+
+function saveNames() {
+  dashboardStore.updateNames(nameAlvaro.value, nameAlexandra.value)
+}
+
+// Salaries local state synced with dashboardStore
+const salaryAlvaro = ref(dashboardStore.incomeAlvaro)
+const salaryAlexandra = ref(dashboardStore.incomeAlexandra)
+
+watch(() => dashboardStore.incomeAlvaro, (val) => {
+  salaryAlvaro.value = val
+})
+watch(() => dashboardStore.incomeAlexandra, (val) => {
+  salaryAlexandra.value = val
+})
+
+async function updateSalary(field, val) {
+  await dashboardStore.updateIncome(field, val)
+}
 
 watch(() => dashboardStore.quickAddCategoryOpen, async (val) => {
   if (val) {
