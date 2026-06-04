@@ -281,11 +281,8 @@ const loading = ref(false)
 const saving = ref(false)
 const templateNameInput = ref(null)
 
-watch(() => dashboardStore.quickAddTemplateOpen, async (val) => {
-  if (val) {
-    await nextTick()
-    templateNameInput.value?.focus()
-  } else {
+watch(() => dashboardStore.quickAddTemplateOpen, (val) => {
+  if (!val) {
     form.value = emptyForm()
   }
 })

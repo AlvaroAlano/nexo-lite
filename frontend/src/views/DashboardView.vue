@@ -272,11 +272,8 @@ watch(
   }
 )
 
-watch(showExpenseModal, async (val) => {
-  if (val) {
-    await nextTick()
-    expenseNameInput.value?.focus()
-  } else {
+watch(showExpenseModal, (val) => {
+  if (!val) {
     resetAddForm()
   }
 })
