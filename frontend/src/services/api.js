@@ -44,4 +44,10 @@ export const summaryApi = {
   get: (periodId) => http.get(`/summary/${periodId}`),
 }
 
+// ─── Vault (Caixinha) ────────────────────────────────────────────────────────
+export const vaultApi = {
+  getSummary: () => http.get('/vault/summary'),
+  reconcile: (realBalance) => http.post('/vault/reconcile', { real_balance: realBalance }),
+}
+
 export default http

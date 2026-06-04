@@ -2,6 +2,11 @@
   <div class="max-w-5xl mx-auto px-4 pt-5 pb-6 font-ss01">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
 
+      <!-- 0: Caixinha -->
+      <StatCard class="md:col-span-2" title="Caixinha" subtitle="Reserva financeira — aportes e rendimento acumulado">
+        <VaultStats />
+      </StatCard>
+
       <!-- 1: Radar de Comprometimento -->
       <StatCard title="Radar de Comprometimento" subtitle="Custo total previsto nos próximos 6 meses">
         <FutureRadarChart :data="futureMonthsData" />
@@ -33,6 +38,7 @@ import WarBar from '../components/stats/WarBar.vue'
 import FutureRadarChart from '../components/stats/FutureRadarChart.vue'
 import LiquidityDonut from '../components/stats/LiquidityDonut.vue'
 import FreeCashChart from '../components/stats/FreeCashChart.vue'
+import VaultStats from '../components/stats/VaultStats.vue'
 
 // ── Mocks ─────────────────────────────────────────────────────────────────
 // TODO: substituir por dados reais do endpoint GET /summary e GET /templates

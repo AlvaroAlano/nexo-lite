@@ -66,6 +66,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   const paidCount = computed(() => expenses.value.filter((e) => e.is_paid).length)
 
+  // ── Caixinha (Vault) ──────────────────────────────────────────────────────
+  const vaultExpense = computed(() => expenses.value.find((e) => e.category === 'Caixinha') ?? null)
+  const vaultMonthAmount = computed(() => parseFloat(vaultExpense.value?.amount) || 0)
+  const vaultMonthPaid = computed(() => vaultExpense.value?.is_paid ?? false)
+
   // ── Actions ────────────────────────────────────────────────────────────────
   async function fetchCurrent() {
     loading.value = true
@@ -209,6 +214,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     totalCommitted, totalPaid, freeCash,
     incomeAlvaro, incomeAlexandra, incomeTotal, carryover,
     saldoAlvaro, saldoAlexandra, paidCount,
+    vaultExpense, vaultMonthAmount, vaultMonthPaid,
     fetchCurrent, fetchByMonth, updateIncome, updateExpenseAmount,
     togglePaid, updateRent, addExpense, deleteExpense, runTurnover, setView, updateNames,
   }

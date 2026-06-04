@@ -81,6 +81,30 @@
                 </div>
 
                 <FreeCashDisplay :value="store.freeCash" label="Livre este mês" />
+
+                <!-- Caixinha deste mês -->
+                <div
+                  v-if="store.vaultExpense"
+                  class="flex items-center justify-between mt-3 px-1"
+                >
+                  <div class="flex items-center gap-1.5">
+                    <PiggyBank :size="13" class="text-brand-ink-mute-dark flex-shrink-0" />
+                    <span class="text-brand-ink-mute-dark text-sm">Caixinha</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-tabular text-sm" :class="store.vaultMonthPaid ? 'text-emerald-400' : 'text-brand-ink-mute-dark'">
+                      {{ fmt(store.vaultMonthAmount) }}
+                    </span>
+                    <span
+                      v-if="store.vaultMonthPaid"
+                      class="text-[10px] text-emerald-500/70 bg-emerald-500/10 rounded-full px-1.5 py-0.5 leading-none"
+                    >depositado</span>
+                    <span
+                      v-else
+                      class="text-[10px] text-brand-ink-mute-dark/60 bg-zinc-800 rounded-full px-1.5 py-0.5 leading-none"
+                    >pendente</span>
+                  </div>
+                </div>
               </div>
 
               <div v-else-if="store.currentView === 'alvaro'">
@@ -112,7 +136,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { ChevronDown } from 'lucide-vue-next'
+import { ChevronDown, PiggyBank } from 'lucide-vue-next'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { formatCurrency } from '../../utils/currency.js'
 import IncomeRow from './IncomeRow.vue'
