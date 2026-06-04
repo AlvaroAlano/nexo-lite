@@ -12,10 +12,13 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 **Criado / Alterado:**
 - Alterado `dashboard.js` para gerenciar os nomes reativos `nameAlvaro` e `nameAlexandra` persistidos no `localStorage`.
 - Alterado `SettingsView.vue` para renomear título/subtítulo para "Ajustes", adicionar uma nova seção "Membros e Rendas" com inputs para customizar os nomes em tempo real e campos rápidos (`CurrencyInput`) integrados a `updateIncome` do mês atual.
-- Alterado `BottomNav.vue` e `AppHeader.vue` para evoluir a aba "Categorias" para "Ajustes", alterando os rótulos e substituindo o ícone `Tag` por `Settings` (engrenagem).
+- Alterado `BottomNav.vue` e `AppHeader.vue` para evoluir a aba "Categorias" para "Ajustes", alterando os rótulos e substituindo o ícone `Tag` por `Settings` (engrenagem). Reordenadas as abas de navegação (Check-in -> Estatísticas -> FAB -> Recorrências -> Ajustes) para agrupar operação/dados à esquerda e planejamento/ajustes à direita.
+- Alterado `BottomNav.vue` para ocultar o FAB (botão '+') na rota de Ajustes (Settings), deixando a interface mais limpa.
+- Alterado `SettingsView.vue` para adicionar botão compacto '+ Categoria' com ícone Plus ao lado do título da seção, que abre o modal de categorias no mobile e foca/rola até o input correspondente no desktop.
 - Alterado `BalanceSummary.vue` para exibir dinamicamente os nomes dos membros da store nas abas gerais, nas rendas individuais e nos saldos livres de Álvaro/Alexandra.
 - Alterados `DashboardView.vue` e `TemplatesView.vue` para tornar o array `responsavelOpts` uma propriedade computed que utiliza os nomes configurados pelo usuário na store Pinia.
 - Alterados `ExpenseCard.vue` e `ExpenseTable.vue` para exibir o nome dinâmico nos badges de responsável das despesas.
+- Alterado `TemplatesView.vue` para reorganizar o card de recorrência, posicionando o nome no topo (ocupando toda a largura útil) e o badge de tipo na linha inferior, inline ao lado da categoria. Isso otimiza o espaço horizontal e previne que nomes longos sofram truncagem precoce no mobile.
 - Validada compilação estática do bundle via build de produção.
 
 ---

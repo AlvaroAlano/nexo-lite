@@ -7,15 +7,15 @@
       class="bg-brand-canvas-soft-light/95 dark:bg-brand-canvas-soft-dark/95 backdrop-blur-xl border border-brand-hairline-light dark:border-brand-hairline-dark rounded-full flex items-center p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_6px_rgba(0,0,0,0.06)] gap-0.5 transition-colors duration-150"
     >
       <template v-for="(item, i) in allItems" :key="i">
-        <!-- FAB — hidden on stats, context-aware action with smooth width transition -->
+        <!-- FAB — hidden on stats and settings, context-aware action with smooth width transition -->
         <div
           v-if="item.type === 'fab'"
           class="flex items-center justify-center transition-all duration-300 ease-in-out overflow-hidden"
-          :class="route.name !== 'stats' ? 'w-11 mx-0.5' : 'w-0 mx-0'"
+          :class="route.name !== 'stats' && route.name !== 'settings' ? 'w-11 mx-0.5' : 'w-0 mx-0'"
         >
           <Transition name="fab-pop">
             <button
-              v-if="route.name !== 'stats'"
+              v-if="route.name !== 'stats' && route.name !== 'settings'"
               @click="openAdd"
               class="w-10 h-10 bg-brand-primary hover:bg-brand-primary-hover rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
               :aria-label="fabLabel"
@@ -58,16 +58,15 @@ const store = useDashboardStore()
 
 const fabLabel = computed(() => {
   if (route.name === 'templates') return 'Adicionar recorrência'
-  if (route.name === 'settings')  return 'Adicionar categoria'
   return 'Adicionar despesa'
 })
 
 const allItems = [
   { type: 'route', to: '/',          name: 'dashboard', icon: Home,      label: 'Check-in'     },
-  { type: 'route', to: '/templates', name: 'templates', icon: Repeat2,   label: 'Recorrências' },
-  { type: 'fab' },
-  { type: 'route', to: '/settings',  name: 'settings',  icon: Settings,  label: 'Ajustes'      },
   { type: 'route', to: '/stats',     name: 'stats',     icon: BarChart2, label: 'Estatísticas' },
+  { type: 'fab' },
+  { type: 'route', to: '/templates', name: 'templates', icon: Repeat2,   label: 'Recorrências' },
+  { type: 'route', to: '/settings',  name: 'settings',  icon: Settings,  label: 'Ajustes'      },
 ]
 
 function labelStyle(name) {
@@ -84,10 +83,6 @@ function labelStyle(name) {
 async function openAdd() {
   if (route.name === 'templates') {
     store.quickAddTemplateOpen = true
-    return
-  }
-  if (route.name === 'settings') {
-    store.quickAddCategoryOpen = true
     return
   }
   if (route.name !== 'dashboard') {

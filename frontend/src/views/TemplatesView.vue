@@ -112,18 +112,18 @@
             class="bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-stripe-card px-4 py-3 flex items-center gap-3 shadow-stripe-1 transition-all duration-150"
             :class="!tmpl.is_active ? 'opacity-40' : ''"
           >
-            <!-- Type badge -->
-            <span
-              class="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full flex-shrink-0"
-              :class="typeBadge(tmpl.expense_type)"
-            >
-              {{ typeLabel(tmpl.expense_type) }}
-            </span>
-
             <!-- Info -->
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0 space-y-1">
               <p class="font-medium text-brand-ink-light dark:text-white text-sm truncate">{{ tmpl.name }}</p>
-              <p class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark">{{ tmpl.category }}</p>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark">{{ tmpl.category }}</span>
+                <span
+                  class="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full flex-shrink-0"
+                  :class="typeBadge(tmpl.expense_type)"
+                >
+                  {{ typeLabel(tmpl.expense_type) }}
+                </span>
+              </div>
             </div>
 
             <!-- Amount + installment -->

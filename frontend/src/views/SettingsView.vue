@@ -64,8 +64,15 @@
     </div>
 
     <!-- Categories Section Header -->
-    <div class="mb-4">
+    <div class="mb-4 flex items-center justify-between">
       <h3 class="font-medium text-brand-ink-light dark:text-white text-sm">Categorias</h3>
+      <button
+        @click="openAddCategory"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-primary/[0.08] dark:bg-brand-primary/[0.18] hover:bg-brand-primary/[0.15] text-brand-primary dark:text-brand-primary-soft text-xs font-semibold active:scale-95 transition-all"
+      >
+        <Plus :size="12" stroke-width="2.5" />
+        Categoria
+      </button>
     </div>
 
     <ConfirmModal
@@ -278,9 +285,9 @@
     </BaseModal>
   </div>
 </template>
-
 <script setup>
 import { ref, reactive, watch, nextTick } from 'vue'
+import { Plus } from 'lucide-vue-next'
 import { useCategoriesStore } from '../stores/categories.js'
 import { useDashboardStore } from '../stores/dashboard.js'
 import { COLORS, CATEGORY_ICONS, colorByKey, getIconComponent } from '../utils/categories.js'
@@ -293,6 +300,18 @@ const dashboardStore = useDashboardStore()
 const saving = ref(false)
 const editing = ref(null)
 const categoryNameInput = ref(null)
+
+function openAddCategory() {
+  if (window.innerWidth < 768) {
+    dashboardStore.quickAddCategoryOpen = true
+  } else {
+    const el = document.querySelector('input[placeholder="Nome (ex: Alimentação)"]')
+    if (el) {
+      el.focus()
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }
+}
 
 // Member names local state & save function
 const nameAlvaro = ref('')

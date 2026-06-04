@@ -63,6 +63,15 @@
             Check-in
           </RouterLink>
           <RouterLink
+            to="/stats"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            :class="$route.name === 'stats'
+              ? 'bg-brand-canvas-soft-light dark:bg-brand-canvas-soft-dark text-brand-ink-light dark:text-white'
+              : 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-brand-ink-light dark:hover:text-white hover:bg-brand-canvas-soft-light/50 dark:hover:bg-brand-canvas-soft-dark/50'"
+          >
+            Estatísticas
+          </RouterLink>
+          <RouterLink
             to="/templates"
             class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
             :class="$route.name === 'templates'

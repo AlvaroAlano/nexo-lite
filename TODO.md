@@ -69,6 +69,9 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [ ] Swipe-to-delete nos cards mobile (UX extra)
 - [x] PWA: criar ícones reais (192px e 512px) — (2026-06-03)
 - [x] Tela de Ajustes unificada com customização reativa de nomes e edição de salários do mês ativo — (2026-06-03)
+- [x] Inverter layout do card de recorrências, colocando nome no topo e badge de tipo na linha inferior para evitar corte no mobile — (2026-06-03)
+- [x] Reordenar navegação no desktop e mobile, agrupando Dados (Check-in/Estatísticas) e Planejamento (Recorrências/Ajustes) — (2026-06-03)
+- [x] Ocultar FAB no mobile na rota de Ajustes e adicionar botão '+ Categoria' ao lado do cabeçalho de Categorias — (2026-06-03)
 
 ## 🔐 Auth
 
