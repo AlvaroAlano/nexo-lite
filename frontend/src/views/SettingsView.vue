@@ -7,19 +7,10 @@
 
     <!-- Members & Salaries Section -->
     <div class="bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-stripe-card p-5 shadow-stripe-1 mb-6 transition-colors duration-150">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-medium text-brand-ink-light dark:text-white text-sm">
-          Membros e Rendas (Mês Atual)
-        </h3>
-        <button
-          @click="saveMembersAndSalaries"
-          :disabled="isSavingMembers"
-          class="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-xs font-semibold active:scale-95 transition-all disabled:opacity-40"
-        >
-          {{ isSavingMembers ? 'Salvando…' : 'Salvar' }}
-        </button>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <h3 class="font-medium text-brand-ink-light dark:text-white text-sm mb-4">
+        Membros e Rendas (Mês Atual)
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <!-- Membro 1 -->
         <div class="space-y-2">
           <label class="text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wide">Membro 1</label>
@@ -65,6 +56,15 @@
             </div>
           </div>
         </div>
+      </div>
+      <div class="flex justify-end">
+        <button
+          @click="saveMembersAndSalaries"
+          :disabled="isSavingMembers"
+          class="px-5 py-2 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-sm font-medium active:scale-[.98] transition-all disabled:opacity-40"
+        >
+          {{ isSavingMembers ? 'Salvando…' : 'Salvar' }}
+        </button>
       </div>
     </div>
 

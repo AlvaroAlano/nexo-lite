@@ -92,7 +92,7 @@ Local de cadastro de gastos repetitivos (templates de despesas).
 Central de configurações globais e cadastros de infraestrutura do sistema.
 
 * **Seção "Membros e Rendas"**:
-  * **Botão "Salvar"**: Localizado no canto superior direito do card. Executa o salvamento unificado dos nomes configurados (na store/localStorage) e das rendas dos membros (no banco de dados PostgreSQL) de uma única vez.
+  * **Botão "Salvar"**: Localizado no rodapé do card (canto inferior direito). Executa o salvamento unificado dos nomes configurados (na store/localStorage) e das rendas dos membros (no banco de dados PostgreSQL) de uma única vez.
   * **Inputs "Membro 1" e "Membro 2"**: Permitem alterar os nomes e as rendas. Pressionar `Enter` em qualquer um dos campos também dispara a ação de salvar.
   * **Inputs de Renda**: Integrados com a máscara financeira em tempo real (`CurrencyInput`), desabilitados caso o mês ativo esteja fechado.
 * **Seção "Categorias de Despesa"**:
