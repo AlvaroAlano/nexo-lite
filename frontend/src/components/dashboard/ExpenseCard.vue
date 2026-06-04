@@ -77,7 +77,7 @@
         </button>
 
         <button
-          v-if="!store.isReadOnly"
+          v-if="!store.isReadOnly && expense.category !== 'Caixinha'"
           @click="$emit('delete', expense)"
           class="w-5 h-5 flex items-center justify-center rounded-md text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-red-500/10 hover:text-red-500 active:bg-red-500/20 transition-all flex-shrink-0"
           title="Excluir despesa"

@@ -44,6 +44,14 @@ export const summaryApi = {
   get: (periodId) => http.get(`/summary/${periodId}`),
 }
 
+// ─── Debts (Dívidas Ativas) ──────────────────────────────────────────────────
+export const debtsApi = {
+  list:   ()           => http.get('/debts/'),
+  create: (data)       => http.post('/debts/', data),
+  update: (id, data)   => http.patch(`/debts/${id}`, data),
+  delete: (id)         => http.delete(`/debts/${id}`),
+}
+
 // ─── Vault (Caixinha) ────────────────────────────────────────────────────────
 export const vaultApi = {
   getSummary: () => http.get('/vault/summary'),

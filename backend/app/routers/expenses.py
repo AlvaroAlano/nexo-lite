@@ -109,5 +109,7 @@ async def delete_expense(
     expense = result.scalars().first()
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
+    if expense.category == "Caixinha":
+        raise HTTPException(status_code=403, detail="Caixinha expense cannot be deleted")
     await db.delete(expense)
     await db.flush()

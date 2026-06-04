@@ -7,7 +7,12 @@
         <VaultStats />
       </StatCard>
 
-      <!-- 1: Radar de Comprometimento -->
+      <!-- 1: Dívidas Ativas -->
+      <StatCard class="md:col-span-2" title="Dívidas Ativas" subtitle="Quanto a Caixinha já cobre de cada dívida">
+        <DebtsList />
+      </StatCard>
+
+      <!-- 2: Radar de Comprometimento -->
       <StatCard title="Radar de Comprometimento" subtitle="Custo total previsto nos próximos 6 meses">
         <FutureRadarChart :data="futureMonthsData" />
       </StatCard>
@@ -39,6 +44,7 @@ import FutureRadarChart from '../components/stats/FutureRadarChart.vue'
 import LiquidityDonut from '../components/stats/LiquidityDonut.vue'
 import FreeCashChart from '../components/stats/FreeCashChart.vue'
 import VaultStats from '../components/stats/VaultStats.vue'
+import DebtsList from '../components/stats/DebtsList.vue'
 
 // ── Mocks ─────────────────────────────────────────────────────────────────
 // TODO: substituir por dados reais do endpoint GET /summary e GET /templates

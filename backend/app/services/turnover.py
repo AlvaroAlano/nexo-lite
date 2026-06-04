@@ -153,5 +153,19 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
             )
         db.add(expense)
 
+    # Always ensure Caixinha exists in the new period (independent of templates)
+    caixinha_created = any(
+        getattr(tmpl, "category", "") == "Caixinha" for tmpl in templates
+    )
+    if not caixinha_created:
+        db.add(MonthlyExpense(
+            period_id=new_period.id,
+            name="Caixinha",
+            category="Caixinha",
+            expense_type="variable",
+            amount=Decimal("0.00"),
+            display_order=999,
+        ))
+
     await db.flush()
     return new_period

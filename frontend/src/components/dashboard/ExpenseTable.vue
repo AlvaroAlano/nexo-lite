@@ -121,6 +121,7 @@
           <!-- Delete action -->
           <td v-if="!store.isReadOnly" class="px-2 py-3.5 text-center w-[50px]">
             <button
+              v-if="expense.category !== 'Caixinha'"
               @click="$emit('delete', expense)"
               class="opacity-0 group-hover:opacity-100 focus:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-red-500/10 hover:text-red-500 active:bg-red-500/20 transition-all mx-auto"
               title="Excluir despesa"
