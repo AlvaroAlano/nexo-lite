@@ -4,7 +4,7 @@
     style="bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem)"
   >
     <nav
-      class="bg-brand-canvas-soft-light/95 dark:bg-brand-canvas-soft-dark/95 backdrop-blur-xl border border-brand-hairline-light dark:border-brand-hairline-dark rounded-full flex items-center p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_6px_rgba(0,0,0,0.06)] gap-0.5 transition-colors duration-150"
+      class="bg-brand-canvas-soft-light/95 dark:bg-brand-canvas-soft-dark/95 backdrop-blur-xl border border-brand-hairline-light dark:border-brand-hairline-dark rounded-full flex items-center p-2 shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_6px_rgba(0,0,0,0.06)] gap-0.5 transition-colors duration-150"
     >
       <template v-for="(item, i) in allItems" :key="i">
         <!-- FAB — hidden on stats, context-aware action -->
@@ -12,10 +12,10 @@
           <button
             v-if="route.name !== 'stats'"
             @click="openAdd"
-            class="w-10 h-10 mx-0.5 bg-brand-primary hover:bg-brand-primary-hover rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
+            class="w-12 h-12 mx-0.5 bg-brand-primary hover:bg-brand-primary-hover rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
             :aria-label="fabLabel"
           >
-            <Plus class="text-white" :size="20" stroke-width="2.5" />
+            <Plus class="text-white" :size="24" stroke-width="2.5" />
           </button>
         </Transition>
 
@@ -23,15 +23,15 @@
         <button
           v-if="item.type === 'route'"
           @click="router.push(item.to)"
-          class="flex items-center rounded-full px-3 py-2 transition-colors duration-200 min-w-[44px] justify-center active:opacity-60"
+          class="flex items-center rounded-full px-3.5 py-2.5 transition-colors duration-200 min-w-[48px] justify-center active:opacity-60"
           :class="route.name === item.name
             ? 'bg-brand-primary/[0.10] dark:bg-brand-primary/[0.18] text-brand-primary dark:text-brand-primary-soft'
             : 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-brand-ink-light dark:hover:text-white'"
           :aria-label="item.label"
         >
-          <component :is="item.icon" :size="21" stroke-width="2" class="flex-shrink-0" />
+          <component :is="item.icon" :size="22" stroke-width="2" class="flex-shrink-0" />
           <span
-            class="overflow-hidden whitespace-nowrap text-[10px] font-semibold"
+            class="overflow-hidden whitespace-nowrap text-[11px] font-semibold"
             :style="labelStyle(item.name)"
           >{{ item.label }}</span>
         </button>
@@ -67,7 +67,7 @@ const allItems = [
 function labelStyle(name) {
   const active = route.name === name
   return {
-    maxWidth: active ? '64px' : '0px',
+    maxWidth: active ? '76px' : '0px',
     opacity: active ? '1' : '0',
     paddingLeft: active ? '6px' : '0px',
     transition:
