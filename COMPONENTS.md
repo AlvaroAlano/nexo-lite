@@ -152,6 +152,31 @@ Biblioteca: **Lucide** (`lucide-vue-next`)
 
 ---
 
+## `stats/` — Visualizações de Estatísticas
+
+### `StatCard.vue`
+Card wrapper padrão para todos os gráficos da tela de Estatísticas.
+- `title` — título do gráfico
+- `subtitle` — descrição curta (opcional)
+```vue
+<StatCard title="Cabo de Guerra" subtitle="Distribuição de carga financeira">
+  <WarBar :data="warData" />
+</StatCard>
+```
+
+---
+
+### `WarBar.vue`
+Barra horizontal empilhada com 3 segmentos: Álvaro / Alexandra / Conjunto.
+- `data` — objeto `{ alvaro, alexandra, conjunto }` cada um com `{ label, amount }`
+- Hover nas fatias escurece as demais (opacity)
+- Labels acima mostram nome, % e valor monetário proporcionalmente
+```vue
+<WarBar :data="{ alvaro: { label: 'Álvaro', amount: 3200 }, alexandra: { label: 'Alexandra', amount: 1800 }, conjunto: { label: 'Conjunto', amount: 2400 } }" />
+```
+
+---
+
 ## Adicionando novos componentes
 
 1. Criar o arquivo em `src/components/ui/`
