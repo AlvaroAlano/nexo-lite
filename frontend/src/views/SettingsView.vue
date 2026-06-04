@@ -14,15 +14,15 @@
         <!-- Membro 1 -->
         <div class="space-y-2">
           <label class="text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wide">Membro 1</label>
-          <div class="flex gap-2">
+          <div class="flex flex-col sm:flex-row gap-2">
             <input
               v-model="nameAlvaro"
               @blur="saveNames"
               @keydown.enter="saveNames"
               placeholder="Nome"
-              class="flex-1 px-4 py-2 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
+              class="w-full sm:flex-1 px-4 py-2 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
             />
-            <div class="w-36 flex items-center justify-between px-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark rounded-stripe-input">
+            <div class="w-full sm:w-36 flex items-center justify-between px-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark rounded-stripe-input">
               <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mr-1">R$</span>
               <CurrencyInput
                 v-model="salaryAlvaro"
@@ -30,7 +30,7 @@
                 @blur="updateSalary('income_alvaro', salaryAlvaro)"
                 :disabled="dashboardStore.isReadOnly"
                 hide-prefix
-                input-class="bg-transparent text-right font-tabular font-medium text-brand-ink-light dark:text-white text-sm focus:outline-none w-full"
+                input-class="bg-transparent text-right border-0 focus:ring-0 outline-none font-tabular font-medium text-brand-ink-light dark:text-white text-sm w-full"
               />
             </div>
           </div>
@@ -39,15 +39,15 @@
         <!-- Membro 2 -->
         <div class="space-y-2">
           <label class="text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wide">Membro 2</label>
-          <div class="flex gap-2">
+          <div class="flex flex-col sm:flex-row gap-2">
             <input
               v-model="nameAlexandra"
               @blur="saveNames"
               @keydown.enter="saveNames"
               placeholder="Nome"
-              class="flex-1 px-4 py-2 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
+              class="w-full sm:flex-1 px-4 py-2 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
             />
-            <div class="w-36 flex items-center justify-between px-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark rounded-stripe-input">
+            <div class="w-full sm:w-36 flex items-center justify-between px-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark rounded-stripe-input">
               <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mr-1">R$</span>
               <CurrencyInput
                 v-model="salaryAlexandra"
@@ -55,7 +55,7 @@
                 @blur="updateSalary('income_alexandra', salaryAlexandra)"
                 :disabled="dashboardStore.isReadOnly"
                 hide-prefix
-                input-class="bg-transparent text-right font-tabular font-medium text-brand-ink-light dark:text-white text-sm focus:outline-none w-full"
+                input-class="bg-transparent text-right border-0 focus:ring-0 outline-none font-tabular font-medium text-brand-ink-light dark:text-white text-sm w-full"
               />
             </div>
           </div>
@@ -295,23 +295,32 @@ const editing = ref(null)
 const categoryNameInput = ref(null)
 
 // Member names local state & save function
-const nameAlvaro = ref(dashboardStore.nameAlvaro)
-const nameAlexandra = ref(dashboardStore.nameAlexandra)
+const nameAlvaro = ref('')
+const nameAlexandra = ref('')
+
+watch(() => dashboardStore.nameAlvaro, (val) => {
+  nameAlvaro.value = val
+}, { immediate: true })
+
+watch(() => dashboardStore.nameAlexandra, (val) => {
+  nameAlexandra.value = val
+}, { immediate: true })
 
 function saveNames() {
   dashboardStore.updateNames(nameAlvaro.value, nameAlexandra.value)
 }
 
 // Salaries local state synced with dashboardStore
-const salaryAlvaro = ref(dashboardStore.incomeAlvaro)
-const salaryAlexandra = ref(dashboardStore.incomeAlexandra)
+const salaryAlvaro = ref(0)
+const salaryAlexandra = ref(0)
 
 watch(() => dashboardStore.incomeAlvaro, (val) => {
   salaryAlvaro.value = val
-})
+}, { immediate: true })
+
 watch(() => dashboardStore.incomeAlexandra, (val) => {
   salaryAlexandra.value = val
-})
+}, { immediate: true })
 
 async function updateSalary(field, val) {
   await dashboardStore.updateIncome(field, val)

@@ -11,7 +11,7 @@
       inputmode="numeric"
       autocomplete="off"
       :value="display"
-      :class="[inputClass, 'font-tabular', hidePrefix ? '' : 'pl-10']"
+      :class="[inputClass, 'font-tabular border-0 focus:ring-0 outline-none', hidePrefix ? '' : 'pl-10']"
       @focus="onFocus"
       @input="onInput"
       @keydown.enter="$emit('confirm')"
