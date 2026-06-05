@@ -190,7 +190,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -309,6 +309,14 @@ async function biometricLogin() {
     // Usuário cancelou ou dispositivo não suportado — ignora silenciosamente
   }
 }
+
+// Dispara Face ID / Touch ID automaticamente ao entrar no vault (se já registrado)
+watch(stage, async (newStage) => {
+  if (newStage !== 'vault') return
+  if (!biometricAvailable.value || !hasBiometricCredential(owner.value)) return
+  await new Promise(r => setTimeout(r, 400)) // aguarda transição de tela
+  biometricLogin()
+})
 
 // ─── Mount / keyboard ────────────────────────────────────────────
 
