@@ -62,7 +62,8 @@
       <div
         v-else-if="stage === 'vault'"
         key="vault"
-        class="absolute inset-0 flex flex-col items-center justify-center gap-14 px-6 select-none pt-[env(safe-area-inset-top,48px)]"
+        class="absolute inset-0 flex flex-col items-center justify-between px-6 select-none overflow-y-auto
+               pt-[max(env(safe-area-inset-top,0px),4rem)] pb-[max(env(safe-area-inset-bottom,0px),2rem)]"
       >
         <!-- Avatar + greeting -->
         <div class="flex flex-col items-center gap-5">
@@ -79,7 +80,7 @@
         </div>
 
         <!-- Dots + Numpad -->
-        <div class="flex flex-col items-center gap-8">
+        <div class="flex flex-col items-center gap-6">
 
           <!-- PIN hint -->
           <p class="text-white/35 text-[11px] tracking-wide -mb-2">Digite seu PIN</p>
