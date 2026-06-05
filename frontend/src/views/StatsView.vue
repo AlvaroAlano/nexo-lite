@@ -1,33 +1,39 @@
 <template>
   <div class="max-w-5xl mx-auto px-4 pt-5 pb-6 font-ss01">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
 
-      <!-- 0: Caixinha -->
+    <!-- Spinner enquanto history/templates carregam -->
+    <div v-if="statsStore.loading" class="flex justify-center py-16">
+      <div class="w-5 h-5 rounded-full border-2 border-brand-hairline-light dark:border-brand-hairline-dark border-t-brand-primary animate-spin" />
+    </div>
+
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+
+      <!-- 0: Caixinha — dados via useVaultStore (já integrado) -->
       <StatCard class="md:col-span-2" title="Caixinha" subtitle="Reserva financeira — aportes e rendimento acumulado">
         <VaultStats />
       </StatCard>
 
-      <!-- 1: Dívidas Ativas -->
+      <!-- 1: Dívidas Ativas — dados via useDebtsStore (já integrado) -->
       <StatCard class="md:col-span-2" title="Dívidas Ativas" subtitle="Quanto a Caixinha já cobre de cada dívida">
         <DebtsList />
       </StatCard>
 
-      <!-- 2: Radar de Comprometimento -->
+      <!-- 2: Radar de Comprometimento — projeção via templates -->
       <StatCard title="Radar de Comprometimento" subtitle="Custo total previsto nos próximos 6 meses">
         <FutureRadarChart :data="futureMonthsData" />
       </StatCard>
 
-      <!-- 2: Evolução do Saldo Livre -->
+      <!-- 3: Evolução do Saldo Livre — histórico real de períodos -->
       <StatCard title="Evolução do Saldo Livre" subtitle="Free Cash e Carryover — últimos 6 meses">
         <FreeCashChart :data="freeCashData" />
       </StatCard>
 
-      <!-- 3: Termômetro de Liquidez -->
+      <!-- 4: Termômetro de Liquidez — despesas do mês atual -->
       <StatCard title="Termômetro de Liquidez" subtitle="Proporção do orçamento comprometida em fixos">
         <LiquidityDonut :data="liquidityData" />
       </StatCard>
 
-      <!-- 4: Cabo de Guerra -->
+      <!-- 5: Cabo de Guerra — despesas por responsável do mês atual -->
       <StatCard title="Cabo de Guerra" subtitle="Distribuição de carga financeira entre os membros">
         <WarBar :data="warData" />
       </StatCard>
@@ -37,48 +43,86 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import StatCard from '../components/stats/StatCard.vue'
-import WarBar from '../components/stats/WarBar.vue'
-import FutureRadarChart from '../components/stats/FutureRadarChart.vue'
-import LiquidityDonut from '../components/stats/LiquidityDonut.vue'
-import FreeCashChart from '../components/stats/FreeCashChart.vue'
-import VaultStats from '../components/stats/VaultStats.vue'
-import DebtsList from '../components/stats/DebtsList.vue'
+import { computed, onMounted } from 'vue'
+import { useDashboardStore } from '../stores/dashboard.js'
+import { useStatsStore }     from '../stores/stats.js'
+import StatCard          from '../components/stats/StatCard.vue'
+import WarBar            from '../components/stats/WarBar.vue'
+import FutureRadarChart  from '../components/stats/FutureRadarChart.vue'
+import LiquidityDonut    from '../components/stats/LiquidityDonut.vue'
+import FreeCashChart     from '../components/stats/FreeCashChart.vue'
+import VaultStats        from '../components/stats/VaultStats.vue'
+import DebtsList         from '../components/stats/DebtsList.vue'
 
-// ── Mocks ─────────────────────────────────────────────────────────────────
-// TODO: substituir por dados reais do endpoint GET /summary e GET /templates
+const dashboard  = useDashboardStore()
+const statsStore = useStatsStore()
 
-const warData = ref({
-  alvaro:    { label: 'Álvaro',    amount: 3200 },
-  alexandra: { label: 'Alexandra', amount: 1800 },
-  conjunto:  { label: 'Conjunto',  amount: 2400 },
+const PT_MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+
+onMounted(() => {
+  // Garante dados do dashboard mesmo se o usuário entrou direto em /stats
+  if (!dashboard.period && !dashboard.loading) dashboard.fetchCurrent()
+  statsStore.fetchAll()
 })
 
-// Proporção fixas vs variáveis do mês atual
-const liquidityData = ref({
-  fixed:    5500, // aluguel + fixas recorrentes
-  variable: 3000, // variáveis + parceladas
+// ── Cabo de Guerra — soma de despesas por responsável do mês atual ───────────
+const warData = computed(() => {
+  const by = { alvaro: 0, alexandra: 0, conjunto: 0 }
+  for (const e of dashboard.expenses) {
+    const amt = parseFloat(e.amount || 0)
+    if      (e.responsavel === 'alvaro')    by.alvaro    += amt
+    else if (e.responsavel === 'alexandra') by.alexandra += amt
+    else                                    by.conjunto  += amt
+  }
+  return {
+    alvaro:    { label: dashboard.nameAlvaro    || 'Álvaro',    amount: by.alvaro    },
+    alexandra: { label: dashboard.nameAlexandra || 'Alexandra', amount: by.alexandra },
+    conjunto:  { label: 'Conjunto',                             amount: by.conjunto  },
+  }
 })
 
-// Últimos 6 meses: Free Cash e Carryover acumulado
-// TODO: substituir por GET /periods (endpoint ainda não implementado no backend)
-const freeCashData = ref([
-  { month: 'Jan', freeCash: 1800, carryover: 200  },
-  { month: 'Fev', freeCash: 2200, carryover: 400  },
-  { month: 'Mar', freeCash: 1500, carryover: 600  },
-  { month: 'Abr', freeCash: 2800, carryover: 500  },
-  { month: 'Mai', freeCash: 2400, carryover: 900  },
-  { month: 'Jun', freeCash: 3100, carryover: 1200 },
-])
+// ── Termômetro — fixas + aluguel vs variáveis + parceladas ──────────────────
+const liquidityData = computed(() => {
+  let fixed = 0, variable = 0
+  for (const e of dashboard.expenses) {
+    const amt = parseFloat(e.amount || 0)
+    if (e.expense_type === 'fixed' || e.expense_type === 'rent') fixed    += amt
+    else                                                          variable += amt
+  }
+  return { fixed, variable }
+})
 
-// Próximos 6 meses: mês atual mais alto, decrescendo conforme parcelas expiram
-const futureMonthsData = ref([
-  { month: 'Jun', value: 8500 },
-  { month: 'Jul', value: 8100 },
-  { month: 'Ago', value: 7600 },
-  { month: 'Set', value: 7200 },
-  { month: 'Out', value: 6800 },
-  { month: 'Nov', value: 6400 },
-])
+// ── Evolução — últimos 6 meses fechados (histórico real) ────────────────────
+const freeCashData = computed(() =>
+  statsStore.history.slice(-6).map(p => ({
+    month:     PT_MONTHS[p.month - 1],
+    freeCash:  p.free_cash,
+    carryover: p.carryover_balance,
+  }))
+)
+
+// ── Radar — projeção dos próximos 6 meses via templates ativos ───────────────
+const futureMonthsData = computed(() => {
+  const now          = new Date()
+  const currentMonth = now.getMonth() // 0-indexed
+
+  return Array.from({ length: 6 }, (_, i) => {
+    const label = PT_MONTHS[(currentMonth + i) % 12]
+
+    // Mês atual: usa total real de despesas se disponível
+    if (i === 0 && dashboard.expenses.length > 0) {
+      return { month: label, value: Math.round(dashboard.totalCommitted) }
+    }
+
+    // Meses futuros: soma templates que ainda estarão ativos
+    const projected = statsStore.templates.reduce((sum, t) => {
+      if (!t.is_active) return sum
+      // Parcelas: expira quando installment_paid + i >= installment_total
+      if (t.installment_total != null && t.installment_paid + i >= t.installment_total) return sum
+      return sum + parseFloat(t.base_amount || 0)
+    }, 0)
+
+    return { month: label, value: Math.round(projected) }
+  })
+})
 </script>

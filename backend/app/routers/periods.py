@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from uuid import UUID
 from datetime import datetime, timezone
 
@@ -58,6 +58,40 @@ async def get_current_period(db: AsyncSession = Depends(get_db)):
         await db.flush()
 
     return await _fetch_period_with_expenses(db, period)
+
+
+@router.get("/history")
+async def get_periods_history(
+    limit: int = 12,
+    db: AsyncSession = Depends(get_db),
+):
+    """Últimos N meses com free_cash e carryover calculados — alimenta gráficos de stats."""
+    user_id = get_user_id()
+    result = await db.execute(
+        select(MonthlyPeriod)
+        .where(MonthlyPeriod.user_id == user_id)
+        .order_by(MonthlyPeriod.year.desc(), MonthlyPeriod.month.desc())
+        .limit(limit)
+    )
+    periods = result.scalars().all()
+
+    rows = []
+    for p in reversed(periods):  # ordem cronológica
+        exp_result = await db.execute(
+            select(func.coalesce(func.sum(MonthlyExpense.amount), 0))
+            .where(MonthlyExpense.period_id == p.id)
+        )
+        total_expenses = float(exp_result.scalar())
+        income    = float(p.income_alvaro or 0) + float(p.income_alexandra or 0)
+        carryover = float(p.carryover_balance or 0)
+        rows.append({
+            "year":              p.year,
+            "month":             p.month,
+            "carryover_balance": carryover,
+            "total_expenses":    total_expenses,
+            "free_cash":         income + carryover - total_expenses,
+        })
+    return rows
 
 
 @router.get("/{year}/{month}", response_model=dict)

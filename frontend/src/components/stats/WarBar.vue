@@ -64,7 +64,7 @@ const segments = computed(() =>
     key,
     label: val.label,
     amount: val.amount,
-    pct: Math.round((val.amount / total.value) * 100),
+    pct: total.value > 0 ? Math.round((val.amount / total.value) * 100) : 0,
     color: CONFIG[key]?.color ?? '#94a3b8',
     textClass: CONFIG[key]?.textClass ?? 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark',
   }))

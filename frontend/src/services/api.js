@@ -8,10 +8,11 @@ const http = axios.create({
 
 // ─── Periods ────────────────────────────────────────────────────────────────
 export const periodsApi = {
-  getCurrent: () => http.get('/periods/current'),
-  getByMonth: (year, month) => http.get(`/periods/${year}/${month}`),
+  getCurrent:   () => http.get('/periods/current'),
+  getByMonth:   (year, month) => http.get(`/periods/${year}/${month}`),
   updateIncome: (periodId, data) => http.patch(`/periods/${periodId}/income`, data),
-  turnover: () => http.post('/periods/turnover'),
+  turnover:     () => http.post('/periods/turnover'),
+  history:      (limit = 12) => http.get('/periods/history', { params: { limit } }),
 }
 
 // ─── Expenses ───────────────────────────────────────────────────────────────
