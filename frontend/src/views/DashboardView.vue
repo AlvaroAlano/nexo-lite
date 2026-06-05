@@ -49,7 +49,7 @@
 
         <!-- ── LEFT: Balance summary (sticky sidebar on desktop) ── -->
         <div class="md:sticky md:top-[60px] md:self-start">
-          <BalanceSummary class="mb-5" />
+          <BalanceSummary />
 
           <!-- Add expense — desktop sidebar -->
           <div v-if="!store.isReadOnly" class="hidden md:block">

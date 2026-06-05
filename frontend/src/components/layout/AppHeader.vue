@@ -50,6 +50,23 @@
         </button>
       </div>
 
+      <!-- Streak 🔥 -->
+      <div
+        v-if="currentStreak > 0"
+        class="relative group flex items-center gap-1 px-2 py-1 rounded-lg cursor-default select-none flex-shrink-0"
+      >
+        <Flame :size="14" class="text-orange-500 flex-shrink-0" />
+        <span class="text-xs font-semibold tabular-nums text-orange-500">{{ currentStreak }}</span>
+
+        <!-- Tooltip -->
+        <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+          <div class="relative px-2.5 py-1.5 rounded-lg bg-brand-ink-light dark:bg-zinc-800 shadow-stripe-2 whitespace-nowrap">
+            <span class="text-[11px] text-white leading-snug">{{ streakTooltip }}</span>
+            <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-brand-ink-light dark:bg-zinc-800" />
+          </div>
+        </div>
+      </div>
+
       <!-- Nav (desktop) + theme toggle + saving indicator -->
       <div class="flex items-center gap-2 flex-shrink-0">
         <nav class="hidden md:flex items-center gap-1">
@@ -139,10 +156,13 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import { Flame } from 'lucide-vue-next'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { monthLabel } from '../../utils/date.js'
+import { useGamification } from '../../composables/useGamification.js'
 
 const store = useDashboardStore()
+const { currentStreak, streakTooltip } = useGamification()
 
 // Local nav state — tracks what month we're displaying
 const navYear = ref(null)

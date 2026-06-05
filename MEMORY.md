@@ -5,6 +5,18 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 
 ---
 
+## 2026-06-05 — Fix: Navegação fixa no mobile (BottomNav)
+
+**Contexto:** O menu inferior (BottomNav) não estava respeitando a posição fixa na tela em dispositivos mobile, comportando-se de forma absoluta/scrollável junto com o conteúdo (exigindo rolar a página até o final para aparecer). Isso é um comportamento comum no iOS Safari e Android Chrome quando o `html` e `body` possuem altura forçada em 100% e o conteúdo os ultrapassa.
+
+**Criado / Alterado:**
+- Alterado `index.html` para remover a classe `h-full` das tags `<html>`, `<body>` e `<div id="app">`, permitindo que o documento cresça naturalmente e delegando o scroll corretamente ao navegador de forma nativa.
+- Alterado `App.vue` para substituir a classe `min-h-full` do container principal por `min-h-[100dvh]`, garantindo que o app ocupe no mínimo a tela inteira (respeitando a barra de endereços dinâmica dos navegadores mobile), sem restringir o comportamento de elementos com posição `fixed`, e adicionado `pb-28` para compensar a altura do menu flutuante.
+- Alterado `BottomNav.vue` para centralizar horizontalmente e fixar o menu flutuante no rodapé. O componente agora utiliza `<Teleport to="body">` e um wrapper flexível com `pointer-events-none` e `inset-x-0` para garantir posicionamento absoluto matematicamente preciso, imune ao contexto de empilhamento de contêineres pais com transformações (como as transições do Vue).
+- Removida a classe `md:hidden` do componente `BottomNav` no `App.vue`, sendo movida nativamente para dentro da hierarquia do próprio componente no `Teleport`.
+
+---
+
 ## 2026-06-03 — Customização de Nomes, Salários e Aba de Ajustes
 
 **Contexto:** Unificação do gerenciamento de perfis e categorias na aba de Ajustes. Suporte à edição dinâmica dos nomes dos membros do casal no frontend e inputs rápidos de renda do mês ativo na tela de configurações.

@@ -1,5 +1,5 @@
 <template>
-  <div class="font-ss01">
+  <div class="font-ss01 mb-5">
     <!-- Tab row + collapse toggle -->
     <div class="flex items-center gap-1 mb-3 bg-brand-canvas-soft-light dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-xl p-1 transition-colors duration-150">
       <button
@@ -52,14 +52,36 @@
             <Transition :name="tabTransition">
               <div v-if="store.currentView === 'geral'">
                 <div class="flex items-center justify-between mb-4">
-                  <span class="text-brand-ink-mute-dark text-xs">
-                    {{ store.paidCount }}/{{ store.expenses.length }} pagos
-                  </span>
                   <div class="flex items-center gap-2">
+                    <span class="text-brand-ink-mute-dark text-xs">
+                      {{ store.paidCount }}/{{ store.expenses.length }} pagos
+                    </span>
+                    <!-- Nota de saúde -->
+                    <span
+                      v-if="healthConfig"
+                      class="text-[10px] font-semibold px-1.5 py-0.5 rounded-md border leading-none"
+                      :class="[healthConfig.bgClass, healthConfig.textClass]"
+                      :title="healthConfig.label"
+                    >{{ healthScore }}</span>
+                  </div>
+                  <div class="flex items-center gap-2.5">
                     <div class="w-20 h-1.5 bg-zinc-800 dark:bg-zinc-900 rounded-full overflow-hidden">
                       <div class="h-full bg-emerald-500 rounded-full transition-all duration-500" :style="{ width: progressPct + '%' }" />
                     </div>
                     <span class="text-brand-ink-mute-dark text-[10px] font-tabular">{{ progressPct }}%</span>
+
+                    <!-- Épico 2: Auditor IA -->
+                    <button
+                      @click="analyzeMonth"
+                      :disabled="isAnalyzing"
+                      class="w-6 h-6 flex items-center justify-center rounded-lg text-brand-ink-mute-dark hover:text-white hover:bg-white/10 disabled:opacity-50 transition-all active:scale-90"
+                      title="Auditor IA"
+                    >
+                      <svg v-if="isAnalyzing" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/>
+                      </svg>
+                      <Bot v-else :size="14" />
+                    </button>
                   </div>
                 </div>
 
@@ -105,6 +127,64 @@
                     >pendente</span>
                   </div>
                 </div>
+
+                <!-- Missão do mês -->
+                <div class="flex items-center justify-between mt-2.5 px-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-[11px]" :class="goalMet ? 'text-emerald-400' : 'text-brand-ink-mute-dark'">
+                      {{ goalMet ? '✓' : '○' }}
+                    </span>
+                    <span class="text-[11px] text-brand-ink-mute-dark">Meta Caixinha:</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <template v-if="!editingGoal">
+                      <button
+                        @click="startGoalEdit"
+                        class="text-[11px] font-tabular hover:text-white transition-colors"
+                        :class="goalMet ? 'text-emerald-400' : 'text-brand-ink-mute-dark'"
+                        title="Alterar meta"
+                      >{{ fmt(monthlyGoal) }}</button>
+                    </template>
+                    <template v-else>
+                      <CurrencyInput
+                        v-model="goalEditVal"
+                        hide-prefix
+                        @confirm="saveGoal"
+                        @cancel="editingGoal = false"
+                        @blur="saveGoal"
+                        input-class="w-20 text-right text-[11px] py-0 px-1 bg-zinc-800 border border-brand-primary/40 rounded text-white font-tabular"
+                      />
+                    </template>
+                    <div v-if="!goalMet && monthlyGoal > 0" class="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                      <div class="h-full bg-emerald-500/60 rounded-full transition-all duration-500" :style="{ width: goalProgress + '%' }" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Épico 3: Poder de Quitação -->
+                <div v-if="nextTargetDebt" class="mt-3 pt-3 border-t border-brand-hairline-dark/20 px-1">
+                  <p class="text-[10px] text-brand-ink-mute-dark mb-1.5">
+                    Poder de Quitação:
+                    <span class="font-medium text-white/70">{{ nextTargetDebt.name }}</span>
+                  </p>
+                  <div class="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full transition-all duration-700"
+                      :class="vaultProgressPct >= 50 ? 'bg-emerald-500' : 'bg-zinc-500'"
+                      :style="{ width: vaultProgressPct + '%' }"
+                    />
+                  </div>
+                  <p class="text-[10px] font-tabular text-brand-ink-mute-dark mt-1">
+                    {{ fmt(caixinhaBalance) }} / {{ fmt(nextTargetDebt.amount) }}
+                    <span class="ml-1 text-white/40">({{ vaultProgressPct.toFixed(0) }}%)</span>
+                  </p>
+                  <p v-if="payoffEstimate === 0" class="text-[10px] text-emerald-400 mt-1">
+                    Caixinha já cobre essa dívida!
+                  </p>
+                  <p v-else-if="payoffEstimate" class="text-[10px] text-brand-ink-mute-dark/70 mt-1 italic">
+                    Com este ritmo: ~{{ payoffEstimate }} {{ payoffEstimate === 1 ? 'mês' : 'meses' }} para quitar {{ nextTargetDebt.name }}
+                  </p>
+                </div>
               </div>
 
               <div v-else-if="store.currentView === 'alvaro'">
@@ -132,18 +212,62 @@
       </div>
     </div>
   </div>
+  <!-- Modal insight IA -->
+  <BaseModal v-model="showInsightModal" title="Análise do Mês">
+    <div class="space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-xl bg-brand-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <Bot :size="15" class="text-brand-primary" />
+        </div>
+        <p class="text-sm text-brand-ink-light dark:text-white leading-relaxed">
+          {{ aiInsight }}
+        </p>
+      </div>
+    </div>
+    <template #footer>
+      <button
+        @click="showInsightModal = false"
+        class="w-full py-3 rounded-full border border-brand-hairline-light dark:border-brand-hairline-dark text-sm font-medium text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/40 transition-colors"
+      >
+        Fechar
+      </button>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { ChevronDown, PiggyBank } from 'lucide-vue-next'
+import { ChevronDown, PiggyBank, Bot } from 'lucide-vue-next'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { formatCurrency } from '../../utils/currency.js'
+import { useGamification } from '../../composables/useGamification.js'
 import IncomeRow from './IncomeRow.vue'
 import FreeCashDisplay from './FreeCashDisplay.vue'
+import BaseModal from '../ui/BaseModal.vue'
+import CurrencyInput from '../ui/CurrencyInput.vue'
 
 const store = useDashboardStore()
 const fmt = formatCurrency
+
+const {
+  isAnalyzing, aiInsight, showInsightModal, analyzeMonth,
+  vaultProgressPct, nextTargetDebt, caixinhaBalance,
+  healthScore, healthConfig,
+  monthlyGoal, goalMet, goalProgress, setMonthlyGoal,
+  payoffEstimate,
+} = useGamification()
+
+const editingGoal  = ref(false)
+const goalEditVal  = ref(0)
+
+function startGoalEdit() {
+  goalEditVal.value = monthlyGoal.value
+  editingGoal.value = true
+}
+function saveGoal() {
+  setMonthlyGoal(goalEditVal.value)
+  editingGoal.value = false
+}
 
 const tabs = computed(() => [
   { key: 'geral', label: 'Visão Geral' },
