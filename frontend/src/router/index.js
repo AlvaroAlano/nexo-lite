@@ -16,4 +16,13 @@ const router = createRouter({
   ],
 })
 
+router.beforeEach((to, from, next) => {
+  const authenticated = sessionStorage.getItem('nexo_authenticated') === '1'
+  if (to.name !== 'auth' && !authenticated) {
+    next({ name: 'auth' })
+  } else {
+    next()
+  }
+})
+
 export default router

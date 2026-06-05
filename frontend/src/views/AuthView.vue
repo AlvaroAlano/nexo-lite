@@ -110,7 +110,7 @@
             :aria-label="pinAriaLabel"
           >
             <div
-              v-for="i in 4"
+              v-for="i in 6"
               :key="i"
               class="w-[14px] h-[14px] rounded-full border-2 transition-all duration-200"
               :class="pinDotClass(i)"
@@ -145,7 +145,7 @@
                 <button
                   v-else
                   @click="pressDigit(key)"
-                  :disabled="pinState !== 'idle' || pin.length >= 4"
+                  :disabled="pinState !== 'idle' || pin.length >= 6"
                   :aria-label="`Dígito ${key}`"
                   class="aspect-square rounded-full flex items-center justify-center
                          text-white text-xl font-light
@@ -192,7 +192,7 @@ const pin            = ref([])
 const pinState       = ref('idle')   // 'idle' | 'success' | 'error'
 const selectedAvatar = ref(null)
 
-const CORRECT_PIN = '1234'
+const CORRECT_PIN = '180621'
 
 const owners = [
   { key: 'alvaro',    name: 'Álvaro',    initials: 'ÁL', gradient: 'from-emerald-500 to-teal-600'  },
@@ -212,7 +212,7 @@ const currentOwner = computed(() => owners.find(o => o.key === owner.value))
 const pinAriaLabel = computed(() => {
   if (pinState.value === 'success') return 'PIN correto, entrando…'
   if (pinState.value === 'error')   return 'PIN incorreto. Tente novamente.'
-  return `${pin.value.length} de 4 dígitos inseridos`
+  return `${pin.value.length} de 6 dígitos inseridos`
 })
 
 onMounted(() => {
@@ -267,10 +267,10 @@ function vibrate(pattern) {
 }
 
 function pressDigit(digit) {
-  if (pin.value.length >= 4 || pinState.value !== 'idle') return
+  if (pin.value.length >= 6 || pinState.value !== 'idle') return
   vibrate(40)
   pin.value = [...pin.value, digit]
-  if (pin.value.length === 4) validatePin()
+  if (pin.value.length === 6) validatePin()
 }
 
 function deleteDigit() {
@@ -283,6 +283,7 @@ function validatePin() {
   if (entered === CORRECT_PIN) {
     pinState.value = 'success'
     vibrate([30, 50, 30])
+    sessionStorage.setItem('nexo_authenticated', '1')
     setTimeout(() => router.push('/'), 900)
   } else {
     pinState.value = 'error'
