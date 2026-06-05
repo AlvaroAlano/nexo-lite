@@ -246,6 +246,9 @@ function base64UrlToArrayBuffer(base64url) {
 async function checkBiometricAvailability() {
   try {
     if (!window.PublicKeyCredential) return
+    // Desktops sem toque (Chrome + Google PW Manager) interceptam o WebAuthn
+    // antes de chegar na biometria do SO — esconder nesses casos
+    if (navigator.maxTouchPoints === 0) return
     biometricAvailable.value =
       await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
   } catch {}
