@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[100dvh] w-full overflow-hidden bg-[#09090b] relative">
+  <div class="h-[100dvh] w-full overflow-hidden relative bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0a0a0c] to-black">
 
     <!-- Ambient glow -->
     <div class="absolute inset-0 pointer-events-none overflow-hidden">
@@ -62,7 +62,7 @@
       <div
         v-else-if="stage === 'vault'"
         key="vault"
-        class="absolute inset-0 flex flex-col items-center justify-center gap-14 px-6 select-none"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-14 px-6 select-none pt-[env(safe-area-inset-top,48px)]"
       >
         <!-- Avatar + greeting -->
         <div class="flex flex-col items-center gap-5">
@@ -86,14 +86,14 @@
 
           <!-- PIN dots -->
           <div
-            class="flex gap-4"
+            class="flex gap-5"
             :class="{ shake: pinState === 'error' }"
             role="status"
             aria-live="polite"
             :aria-label="pinAriaLabel"
           >
             <div
-              v-for="i in 6"
+              v-for="i in 4"
               :key="i"
               class="w-3 h-3 rounded-full border transition-all duration-200"
               :class="pinDotClass(i)"
@@ -128,7 +128,7 @@
                 <button
                   v-else
                   @click="pressDigit(key)"
-                  :disabled="pinState !== 'idle' || pin.length >= 6"
+                  :disabled="pinState !== 'idle' || pin.length >= 4"
                   :aria-label="`Dígito ${key}`"
                   class="w-16 h-16 rounded-full flex items-center justify-center
                          text-2xl font-light text-white
@@ -145,7 +145,7 @@
           </div>
 
           <!-- Biometric button (Face ID / Touch ID) -->
-          <div v-if="biometricAvailable" class="flex flex-col items-center gap-2">
+          <div v-if="biometricAvailable" class="flex flex-col items-center gap-2 mt-2">
             <button
               @click="biometricLogin"
               class="w-12 h-12 rounded-full flex items-center justify-center
@@ -168,7 +168,7 @@
                 <path d="M9 6.8a6 6 0 0 1 9 5.2v2"/>
               </svg>
             </button>
-            <span class="text-[10px] text-white/25 tracking-wide">
+            <span class="text-[10px] text-slate-400 tracking-wide">
               {{ hasBiometricCredential(owner) ? 'Face ID · Touch ID' : 'Ativar biometria' }}
             </span>
           </div>
@@ -202,7 +202,7 @@ const pinState         = ref('idle')   // 'idle' | 'success' | 'error'
 const selectedAvatar   = ref(null)
 const biometricAvailable = ref(false)
 
-const CORRECT_PIN = '180621'
+const CORRECT_PIN = '0610'
 
 const owners = [
   { key: 'alvaro',    name: 'Álvaro',    initials: 'ÁL', gradient: 'from-slate-700 to-slate-900'   },
@@ -221,7 +221,7 @@ const currentOwner = computed(() => owners.find(o => o.key === owner.value))
 const pinAriaLabel = computed(() => {
   if (pinState.value === 'success') return 'PIN correto, entrando…'
   if (pinState.value === 'error')   return 'PIN incorreto. Tente novamente.'
-  return `${pin.value.length} de 6 dígitos inseridos`
+  return `${pin.value.length} de 4 dígitos inseridos`
 })
 
 // ─── Biometric helpers ────────────────────────────────────────────
@@ -377,10 +377,10 @@ function vibrate(pattern) {
 }
 
 function pressDigit(digit) {
-  if (pin.value.length >= 6 || pinState.value !== 'idle') return
+  if (pin.value.length >= 4 || pinState.value !== 'idle') return
   vibrate(40)
   pin.value = [...pin.value, digit]
-  if (pin.value.length === 6) validatePin()
+  if (pin.value.length === 4) validatePin()
 }
 
 function deleteDigit() {
