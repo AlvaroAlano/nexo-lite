@@ -1,9 +1,9 @@
 <template>
   <div class="h-[100dvh] w-full overflow-hidden bg-[#09090b] relative">
 
-    <!-- Ambient glow -->
+    <!-- Ambient glow — indigo, não verde -->
     <div class="absolute inset-0 pointer-events-none overflow-hidden">
-      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-emerald-500/[0.05] blur-3xl" />
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-indigo-500/[0.04] blur-3xl" />
     </div>
 
     <Transition name="stage" mode="out-in">
@@ -15,25 +15,15 @@
         class="absolute inset-0 flex flex-col items-center justify-center select-none"
       >
         <div class="logo-appear">
-          <svg width="72" height="72" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="32" cy="32" r="30" stroke="rgba(52,211,153,0.10)" stroke-width="1"/>
-            <path d="M20 44 L20 20 L32 36 L44 20 L44 44"
-                  stroke="url(#splash-g)" stroke-width="2.5"
+          <!-- Ícone "N": quadrado branco arredondado, N escuro — placeholder elegante -->
+          <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="1" y="1" width="70" height="70" rx="20" fill="rgba(255,255,255,0.95)" />
+            <path d="M21 52 L21 20 L51 52 L51 20"
+                  stroke="#0f0f14" stroke-width="4"
                   stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="20" cy="20" r="3"   fill="#34d399"/>
-            <circle cx="44" cy="20" r="3"   fill="#34d399"/>
-            <circle cx="20" cy="44" r="3"   fill="#34d399"/>
-            <circle cx="44" cy="44" r="3"   fill="#34d399"/>
-            <circle cx="32" cy="36" r="1.8" fill="#34d399" fill-opacity="0.45"/>
-            <defs>
-              <linearGradient id="splash-g" x1="20" y1="20" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-                <stop offset="0%"   stop-color="#34d399"/>
-                <stop offset="100%" stop-color="#059669"/>
-              </linearGradient>
-            </defs>
           </svg>
         </div>
-        <p class="logo-appear-delayed mt-4 text-white/30 text-[11px] tracking-[0.28em] uppercase font-medium">
+        <p class="logo-appear-delayed mt-5 text-white/30 text-[11px] tracking-[0.28em] uppercase font-medium">
           Nexo Lite
         </p>
       </div>
@@ -59,7 +49,6 @@
             class="flex-1 flex flex-col items-center gap-4 py-8 px-4 rounded-2xl border transition-all duration-300 cursor-pointer"
             :class="avatarCardClass(person.key)"
           >
-            <!-- Swap by <img> + object-cover when photo available -->
             <div
               class="w-16 h-16 rounded-full bg-gradient-to-br flex items-center justify-center text-white font-bold text-[1.05rem] shadow-xl transition-transform duration-300"
               :class="[person.gradient, selectedAvatar === person.key ? 'scale-110' : 'scale-100']"
@@ -76,22 +65,19 @@
       <div
         v-else-if="stage === 'vault'"
         key="vault"
-        class="absolute inset-0 flex flex-col items-center px-6 select-none
-               justify-between py-16
-               md:justify-center md:gap-14 md:py-0"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-14 px-6 select-none"
       >
         <!-- Avatar + greeting -->
-        <div class="flex flex-col items-center gap-4 mt-4 md:mt-0">
+        <div class="flex flex-col items-center gap-5">
           <div
-            class="w-14 h-14 rounded-full bg-gradient-to-br flex items-center justify-center text-white font-bold text-base shadow-lg"
-            :class="currentOwner?.gradient"
+            class="w-14 h-14 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border border-slate-600 flex items-center justify-center text-white font-semibold text-base shadow-lg"
             aria-hidden="true"
           >
             {{ currentOwner?.initials }}
           </div>
           <div class="text-center">
-            <p class="text-white/35 text-[10px] tracking-[0.22em] uppercase mb-1.5">Bem-vindo(a) de volta</p>
-            <p class="text-white text-lg font-semibold">{{ currentOwner?.name }}</p>
+            <p class="text-[10px] tracking-widest uppercase text-white/35 mb-1.5">Bem-vindo(a) de volta</p>
+            <p class="text-xl font-medium text-white">{{ currentOwner?.name }}</p>
           </div>
         </div>
 
@@ -101,7 +87,7 @@
           <!-- PIN hint -->
           <p class="text-white/35 text-[11px] tracking-wide -mb-2">Digite seu PIN</p>
 
-          <!-- PIN dots — aria-live anuncia estado ao leitor de tela -->
+          <!-- PIN dots -->
           <div
             class="flex gap-4"
             :class="{ shake: pinState === 'error' }"
@@ -112,26 +98,26 @@
             <div
               v-for="i in 6"
               :key="i"
-              class="w-[14px] h-[14px] rounded-full border-2 transition-all duration-200"
+              class="w-3 h-3 rounded-full border transition-all duration-200"
               :class="pinDotClass(i)"
             />
           </div>
 
           <!-- Numpad -->
-          <div class="grid grid-cols-3 gap-3 w-[264px]">
+          <div class="grid grid-cols-3 gap-5">
             <template v-for="(row, ri) in numpadRows" :key="ri">
               <template v-for="(key, ci) in row" :key="`${ri}-${ci}`">
 
-                <div v-if="key === null" class="aspect-square" />
+                <div v-if="key === null" class="w-16 h-16" />
 
                 <button
                   v-else-if="key === 'del'"
                   @click="deleteDigit"
                   aria-label="Apagar último dígito"
-                  class="aspect-square rounded-full flex items-center justify-center
+                  class="w-16 h-16 rounded-full flex items-center justify-center
                          text-white/50 hover:text-white/80
-                         bg-white/[0.04] hover:bg-white/[0.08] active:bg-white/[0.13]
-                         border border-white/[0.06]
+                         bg-white/5 hover:bg-white/10 active:bg-white/[0.15]
+                         backdrop-blur-sm
                          active:scale-90 transition-all duration-100 cursor-pointer"
                 >
                   <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -147,10 +133,10 @@
                   @click="pressDigit(key)"
                   :disabled="pinState !== 'idle' || pin.length >= 6"
                   :aria-label="`Dígito ${key}`"
-                  class="aspect-square rounded-full flex items-center justify-center
-                         text-white text-xl font-light
-                         bg-white/[0.06] hover:bg-white/[0.10] active:bg-white/[0.15]
-                         border border-white/[0.07]
+                  class="w-16 h-16 rounded-full flex items-center justify-center
+                         text-2xl font-light text-white
+                         bg-white/5 hover:bg-white/10 active:bg-white/[0.15]
+                         backdrop-blur-sm
                          active:scale-90 transition-all duration-100
                          disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                 >
@@ -161,7 +147,7 @@
             </template>
           </div>
 
-          <!-- Switch profile — min-h-[44px] para touch target correto -->
+          <!-- Switch profile -->
           <button
             @click="switchProfile"
             class="min-h-[44px] flex items-center justify-center px-6
@@ -171,9 +157,6 @@
             Trocar de perfil
           </button>
         </div>
-
-        <!-- Spacer desktop (escondido em md pois usamos gap) -->
-        <div class="md:hidden" />
       </div>
 
     </Transition>
@@ -195,7 +178,7 @@ const selectedAvatar = ref(null)
 const CORRECT_PIN = '180621'
 
 const owners = [
-  { key: 'alvaro',    name: 'Álvaro',    initials: 'ÁL', gradient: 'from-emerald-500 to-teal-600'  },
+  { key: 'alvaro',    name: 'Álvaro',    initials: 'ÁL', gradient: 'from-slate-700 to-slate-900'   },
   { key: 'alexandra', name: 'Alexandra', initials: 'AL', gradient: 'from-violet-500 to-purple-600' },
 ]
 
@@ -208,7 +191,6 @@ const numpadRows = [
 
 const currentOwner = computed(() => owners.find(o => o.key === owner.value))
 
-// Texto descritivo para leitores de tela acompanharem o estado do PIN
 const pinAriaLabel = computed(() => {
   if (pinState.value === 'success') return 'PIN correto, entrando…'
   if (pinState.value === 'error')   return 'PIN incorreto. Tente novamente.'
@@ -233,7 +215,6 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyboard)
 })
 
-// Suporte a teclado físico no desktop
 function handleKeyboard(e) {
   if (stage.value !== 'vault') return
   if (e.key >= '0' && e.key <= '9') pressDigit(parseInt(e.key))
@@ -245,7 +226,7 @@ function avatarCardClass(key) {
     return 'bg-white/[0.04] border-white/[0.08] hover:bg-white/[0.07] hover:border-white/[0.15]'
   }
   if (selectedAvatar.value === key) {
-    return 'bg-emerald-500/[0.09] border-emerald-500/30 scale-105 cursor-default'
+    return 'bg-indigo-500/[0.09] border-indigo-500/30 scale-105 cursor-default'
   }
   return 'opacity-0 scale-90 pointer-events-none bg-white/[0.04] border-white/[0.08]'
 }
@@ -298,12 +279,12 @@ function validatePin() {
 function pinDotClass(position) {
   const filled = position <= pin.value.length
   if (pinState.value === 'success') {
-    return filled ? 'bg-emerald-400 border-emerald-400 scale-125' : 'border-emerald-400/20'
+    return filled ? 'bg-indigo-400 border-indigo-400 scale-125' : 'border-indigo-400/20'
   }
   if (pinState.value === 'error') {
     return filled ? 'bg-red-500 border-red-500' : 'border-red-500/30'
   }
-  return filled ? 'bg-white border-white' : 'border-white/25'
+  return filled ? 'bg-white border-white' : 'border-slate-500'
 }
 
 function switchProfile() {
@@ -326,7 +307,7 @@ function switchProfile() {
 .stage-enter-from { opacity: 0; transform: translateY(14px) scale(0.96); }
 .stage-leave-to   { opacity: 0; transform: translateY(-8px)  scale(0.98); }
 
-/* ─── Logo entrance (0.5s — dentro do max recomendado de 400-500ms) ─── */
+/* ─── Logo entrance ─── */
 .logo-appear {
   animation: logo-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
@@ -349,7 +330,6 @@ function switchProfile() {
   40%, 60%      { transform: translateX( 8px); }
 }
 
-/* ─── Reduz / elimina animações para usuários com preferência de movimento reduzido ─── */
 @media (prefers-reduced-motion: reduce) {
   .logo-appear,
   .logo-appear-delayed {
