@@ -76,6 +76,7 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Reordenar navegação no desktop e mobile, agrupando Dados (Check-in/Estatísticas) e Planejamento (Recorrências/Ajustes) — (2026-06-03)
 - [x] Ocultar FAB no mobile na rota de Ajustes e adicionar botão '+ Categoria' ao lado do cabeçalho de Categorias — (2026-06-03)
 - [x] Ajustar espaçamento acima da Virada de Mês no mobile para reduzir o espaço sob a Caixinha — (2026-06-06)
+- [x] Corrigir fluxo de edição de categorias no mobile abrindo o modal dinamicamente — (2026-06-06)
 
 ## 🔐 Auth
 

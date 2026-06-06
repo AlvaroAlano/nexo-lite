@@ -5,6 +5,19 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 
 ---
 
+## 2026-06-06 — Fix: Fluxo de edição de categorias no mobile
+
+**Contexto:** O formulário de edição de categorias no mobile ficava oculto (`hidden md:block`), impossibilitando a edição a partir do menu de 3 pontos. Além disso, o watcher de abertura do modal limpava o estado de edição sempre que era aberto.
+
+**Criado / Alterado:**
+- Alterado `SettingsView.vue`:
+  - Feito o título do modal responsivo para mostrar "Editar Categoria" quando a categoria estiver sendo editada.
+  - Atualizado o watcher de `quickAddCategoryOpen` para apenas resetar o formulário se não houver categoria em edição, e chamar `cancelEdit()` ao fechar.
+  - Atualizado `startEdit()` para abrir o modal de categorias (`quickAddCategoryOpen = true`) no mobile.
+  - Atualizado o botão de salvar no rodapé do modal para exibir "Salvar alterações" se estiver em modo de edição.
+
+---
+
 ## 2026-06-06 — Fix: Espaçamento da Virada de Mês no mobile
 
 **Contexto:** O painel de "Virada de Mês" tinha margens e paddings fixos muito grandes (`mt-8 pt-6`), gerando um espaçamento exagerado abaixo do último item da lista de despesas (geralmente a Caixinha) no layout mobile.

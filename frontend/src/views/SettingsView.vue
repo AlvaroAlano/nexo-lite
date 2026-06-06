@@ -263,10 +263,10 @@
       </div>
     </div>
 
-    <!-- Mobile: Nova Categoria sheet -->
+    <!-- Mobile: Nova/Editar Categoria sheet -->
     <BaseModal
       v-model="dashboardStore.quickAddCategoryOpen"
-      title="Nova Categoria"
+      :title="editing ? 'Editar Categoria' : 'Nova Categoria'"
       :full-screen-on-mobile="true"
     >
       <div class="space-y-4">
@@ -323,7 +323,7 @@
           :disabled="!form.name.trim() || saving"
           class="w-full py-3 rounded-full bg-brand-primary hover:bg-brand-primary-hover text-white text-sm font-medium disabled:opacity-40 active:scale-[.98] transition-all"
         >
-          {{ saving ? 'Salvando…' : 'Criar categoria' }}
+          {{ saving ? 'Salvando…' : editing ? 'Salvar alterações' : 'Criar categoria' }}
         </button>
       </template>
     </BaseModal>
@@ -409,12 +409,15 @@ async function saveMembersAndSalaries() {
 
 watch(() => dashboardStore.quickAddCategoryOpen, async (val) => {
   if (val) {
-    editing.value = null
-    form.name = ''
-    form.icon = 'Package'
-    form.color = 'slate'
+    if (!editing.value) {
+      form.name = ''
+      form.icon = 'Package'
+      form.color = 'slate'
+    }
     await nextTick()
     categoryNameInput.value?.focus()
+  } else {
+    cancelEdit()
   }
 })
 
@@ -425,6 +428,9 @@ function startEdit(cat) {
   form.name = cat.name
   form.icon = cat.icon
   form.color = cat.color
+  if (window.innerWidth < 768) {
+    dashboardStore.quickAddCategoryOpen = true
+  }
 }
 
 function cancelEdit() {
