@@ -10,7 +10,7 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 **Contexto:** O painel de "Virada de Mês" tinha margens e paddings fixos muito grandes (`mt-8 pt-6`), gerando um espaçamento exagerado abaixo do último item da lista de despesas (geralmente a Caixinha) no layout mobile.
 
 **Criado / Alterado:**
-- Alterado `DashboardView.vue`: ajustada a classe do container de Virada de Mês para utilizar valores responsivos (`mt-4 md:mt-8 pt-4 md:pt-6`), reduzindo o espaço em branco excessivo no mobile.
+- Alterado `DashboardView.vue`: ajustada a classe do container de Virada de Mês para utilizar valores responsivos (`mt-4 md:mt-8 pt-0 md:pt-6`), removendo o padding top e reduzindo o espaço em branco excessivo no mobile.
 
 ---
 
