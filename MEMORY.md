@@ -5,6 +5,15 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 
 ---
 
+## 2026-06-06 — Fix: Espaçamento da Virada de Mês no mobile
+
+**Contexto:** O painel de "Virada de Mês" tinha margens e paddings fixos muito grandes (`mt-8 pt-6`), gerando um espaçamento exagerado abaixo do último item da lista de despesas (geralmente a Caixinha) no layout mobile.
+
+**Criado / Alterado:**
+- Alterado `DashboardView.vue`: ajustada a classe do container de Virada de Mês para utilizar valores responsivos (`mt-4 md:mt-8 pt-4 md:pt-6`), reduzindo o espaço em branco excessivo no mobile.
+
+---
+
 ## 2026-06-05 — Aluguel: editor de componentes no template + turnover inteligente
 
 **Contexto:** Usuário deletou a despesa manual de R$ 1.800 do Check-in e precisa de um sistema próprio para o boleto do aluguel com componentes (fixos, variáveis como gás, parcelados como IPTU).

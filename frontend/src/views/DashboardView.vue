@@ -128,7 +128,7 @@
 
 
           <!-- Turnover -->
-          <div v-if="!store.isReadOnly" class="mt-8 pt-6 border-t border-brand-hairline-light dark:border-brand-hairline-dark">
+          <div v-if="!store.isReadOnly" class="mt-4 md:mt-8 pt-4 md:pt-6 border-t border-brand-hairline-light dark:border-brand-hairline-dark">
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-sm font-semibold text-brand-ink-light dark:text-white">Virada de Mês</p>

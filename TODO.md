@@ -75,6 +75,7 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Inverter layout do card de recorrências, colocando nome no topo e badge de tipo na linha inferior para evitar corte no mobile — (2026-06-03)
 - [x] Reordenar navegação no desktop e mobile, agrupando Dados (Check-in/Estatísticas) e Planejamento (Recorrências/Ajustes) — (2026-06-03)
 - [x] Ocultar FAB no mobile na rota de Ajustes e adicionar botão '+ Categoria' ao lado do cabeçalho de Categorias — (2026-06-03)
+- [x] Ajustar espaçamento acima da Virada de Mês no mobile para reduzir o espaço sob a Caixinha — (2026-06-06)
 
 ## 🔐 Auth
 
