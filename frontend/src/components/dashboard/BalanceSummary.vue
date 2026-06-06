@@ -236,7 +236,7 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { ChevronDown, PiggyBank, Bot } from 'lucide-vue-next'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { formatCurrency } from '../../utils/currency.js'
