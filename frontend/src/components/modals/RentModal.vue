@@ -24,7 +24,7 @@
               :model-value="item.amount"
               @update:model-value="item.amount = $event"
               hide-prefix
-              input-class="w-20 text-right font-tabular font-semibold text-sm text-brand-ink-light dark:text-white bg-transparent border-b border-transparent focus:border-brand-primary/60 outline-none"
+              input-class="w-24 text-right font-tabular font-semibold text-sm text-brand-ink-light dark:text-white bg-transparent border-b border-transparent focus:border-brand-primary/60 outline-none"
             />
 
             <!-- Remover -->

@@ -1,5 +1,5 @@
 <template>
-  <div class="relative">
+  <div class="relative flex-shrink-0">
     <span
       v-if="!hidePrefix"
       class="absolute left-3 top-1/2 -translate-y-1/2 text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm font-mono pointer-events-none select-none"
