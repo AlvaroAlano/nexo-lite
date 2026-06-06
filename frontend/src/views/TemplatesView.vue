@@ -78,6 +78,7 @@
               <!-- Installment summary card -->
               <div v-if="installmentSummary" class="bg-brand-canvas-soft-light dark:bg-brand-canvas-dark/40 border border-brand-hairline-light dark:border-brand-hairline-dark/60 rounded-xl p-3 text-xs space-y-1 text-brand-ink-mute-light dark:text-brand-ink-mute-dark">
                 <p class="font-medium text-brand-ink-light dark:text-white">Resumo do Parcelamento:</p>
+                <p>{{ installmentSummary.totalText }}</p>
                 <p>{{ installmentSummary.paidText }}</p>
                 <p>{{ installmentSummary.remainingText }}</p>
               </div>
@@ -334,13 +335,15 @@ const installmentSummary = computed(() => {
   const remainingInstallments = Math.max(0, totalInstallments - paidInstallments)
   const amountPaid = paidInstallments * valuePerInstallment
   const amountRemaining = remainingInstallments * valuePerInstallment
+  const totalValue = totalInstallments * valuePerInstallment
 
   return {
     valuePerInstallment,
     remainingInstallments,
     amountPaid,
     amountRemaining,
-    paidText: paidInstallments > 0 
+    totalText: `Total da compra: ${formatCurrency(totalValue)} (${totalInstallments}× de ${formatCurrency(valuePerInstallment)})`,
+    paidText: paidInstallments > 0
       ? `Você já pagou ${paidInstallments} parcela(s) de ${formatCurrency(valuePerInstallment)} (${formatCurrency(amountPaid)} pago).`
       : 'Nenhuma parcela paga ainda.',
     remainingText: remainingInstallments > 0
