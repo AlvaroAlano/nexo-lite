@@ -191,17 +191,15 @@
           v-model="addForm.amount"
           input-class="w-full pr-4 py-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input font-tabular text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         />
-        <label class="flex items-center gap-3 py-1 cursor-pointer select-none">
-          <button
-            type="button"
-            @click="addForm.is_paid = !addForm.is_paid"
-            class="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-shrink-0"
+        <label @click="addForm.is_paid = !addForm.is_paid" class="flex items-center gap-3 py-1 cursor-pointer select-none">
+          <div
+            class="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-shrink-0 pointer-events-none"
             :class="addForm.is_paid ? 'bg-brand-primary border-brand-primary' : 'border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark'"
           >
             <svg v-if="addForm.is_paid" class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-          </button>
+          </div>
           <span class="text-sm text-brand-ink-light dark:text-white">Já paguei</span>
         </label>
       </div>

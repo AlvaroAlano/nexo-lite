@@ -24,7 +24,12 @@
       <div class="md:grid md:grid-cols-[340px_1fr] md:gap-8 md:items-start">
         <!-- Left: form (desktop only) -->
         <div class="hidden md:block bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-stripe-card p-5 shadow-stripe-1">
-          <h3 class="font-medium text-brand-ink-light dark:text-white text-sm mb-4">Nova Recorrência</h3>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-medium text-brand-ink-light dark:text-white text-sm">
+              {{ editTarget ? 'Editar Recorrência' : 'Nova Recorrência' }}
+            </h3>
+            <button v-if="editTarget" @click="cancelEdit" class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-brand-ink-light dark:hover:text-white transition-colors">Cancelar</button>
+          </div>
           <div class="space-y-3">
             <input
               v-model="form.name"
@@ -80,11 +85,10 @@
               <p v-if="installmentError" class="text-red-500 text-xs">{{ installmentError }}</p>
             </template>
 
-            <!-- Add to current month -->
-            <label v-if="dashboardStore.period" class="flex items-center gap-3 py-2 cursor-pointer select-none">
+            <!-- Add to current month — hidden when editing -->
+            <label v-if="dashboardStore.period && !editTarget" @click="form.addToCurrentMonth = !form.addToCurrentMonth" class="flex items-center gap-3 py-2 cursor-pointer select-none">
               <div
-                @click="form.addToCurrentMonth = !form.addToCurrentMonth"
-                class="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-shrink-0"
+                class="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-shrink-0 pointer-events-none"
                 :class="form.addToCurrentMonth ? 'bg-brand-primary border-brand-primary' : 'border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark'"
               >
                 <svg v-if="form.addToCurrentMonth" class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -99,7 +103,7 @@
               :disabled="!form.name.trim() || saving || !!installmentError"
               class="w-full py-2.5 md:py-2 rounded-full bg-brand-primary text-white text-sm font-medium hover:bg-brand-primary-hover disabled:opacity-40 active:scale-[.98] transition-all"
             >
-              {{ saving ? 'Salvando…' : 'Adicionar' }}
+              {{ saving ? 'Salvando…' : (editTarget ? 'Salvar' : 'Adicionar') }}
             </button>
           </div>
         </div>
@@ -144,6 +148,16 @@
             <!-- Actions -->
             <div class="flex gap-1 flex-shrink-0">
               <button
+                @click="startEdit(tmpl)"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-ink-light dark:hover:text-white transition-colors"
+                title="Editar"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button
                 @click="toggleActive(tmpl)"
                 class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-ink-light dark:hover:text-white transition-colors"
                 :title="tmpl.is_active ? 'Desativar' : 'Ativar'"
@@ -180,12 +194,11 @@
       <!-- Mobile: Nova Recorrência sheet -->
       <BaseModal
         v-model="dashboardStore.quickAddTemplateOpen"
-        title="Nova Recorrência"
+        :title="editTarget ? 'Editar Recorrência' : 'Nova Recorrência'"
         :full-screen-on-mobile="true"
       >
         <div class="space-y-3">
           <input
-            ref="templateNameInput"
             v-model="form.name"
             placeholder="Nome (ex: Conta de Luz)"
             class="w-full px-4 py-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
@@ -225,10 +238,9 @@
 
             <p v-if="installmentError" class="text-red-500 text-xs">{{ installmentError }}</p>
           </template>
-          <label v-if="dashboardStore.period" class="flex items-center gap-3 py-2 cursor-pointer select-none">
+          <label v-if="dashboardStore.period && !editTarget" @click="form.addToCurrentMonth = !form.addToCurrentMonth" class="flex items-center gap-3 py-2 cursor-pointer select-none">
             <div
-              @click="form.addToCurrentMonth = !form.addToCurrentMonth"
-              class="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-shrink-0"
+              class="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-shrink-0 pointer-events-none"
               :class="form.addToCurrentMonth ? 'bg-brand-primary border-brand-primary' : 'border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark'"
             >
               <svg v-if="form.addToCurrentMonth" class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -244,7 +256,7 @@
             :disabled="!form.name.trim() || saving || !!installmentError"
             class="w-full py-3 rounded-full bg-brand-primary text-white text-sm font-medium hover:bg-brand-primary-hover disabled:opacity-40 active:scale-[.98] transition-all"
           >
-            {{ saving ? 'Salvando…' : 'Adicionar recorrência' }}
+            {{ saving ? 'Salvando…' : (editTarget ? 'Salvar alterações' : 'Adicionar recorrência') }}
           </button>
         </template>
       </BaseModal>
@@ -253,7 +265,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { templatesApi } from '../services/api.js'
 import { formatCurrency } from '../utils/currency.js'
 import CategoryPicker from '../components/ui/CategoryPicker.vue'
@@ -279,11 +291,12 @@ const expenseTypeOpts = [
 ]
 const loading = ref(false)
 const saving = ref(false)
-const templateNameInput = ref(null)
+const editTarget = ref(null)
 
 watch(() => dashboardStore.quickAddTemplateOpen, (val) => {
   if (!val) {
     form.value = emptyForm()
+    editTarget.value = null
   }
 })
 
@@ -348,7 +361,57 @@ async function fetchTemplates() {
   }
 }
 
+function startEdit(tmpl) {
+  const isInstallment = tmpl.expense_type === 'installment'
+  form.value = {
+    name: tmpl.name,
+    category_id: tmpl.category_id,
+    expense_type: tmpl.expense_type,
+    responsavel: tmpl.responsavel,
+    base_amount: isInstallment ? tmpl.base_amount * (tmpl.installment_total || 1) : tmpl.base_amount,
+    installment_paid: tmpl.installment_paid ?? 0,
+    installment_total: tmpl.installment_total ?? null,
+    addToCurrentMonth: false,
+  }
+  editTarget.value = tmpl
+  if (window.innerWidth < 768) {
+    dashboardStore.quickAddTemplateOpen = true
+  }
+}
+
+function cancelEdit() {
+  editTarget.value = null
+  form.value = emptyForm()
+}
+
+async function updateTemplate() {
+  if (!editTarget.value || installmentError.value) return
+  saving.value = true
+  try {
+    const isInstallment = form.value.expense_type === 'installment'
+    const payload = {
+      name: form.value.name.trim(),
+      category_id: form.value.category_id,
+      expense_type: form.value.expense_type,
+      responsavel: form.value.responsavel,
+      base_amount: isInstallment
+        ? form.value.base_amount / (form.value.installment_total || 1)
+        : form.value.base_amount,
+      installment_total: isInstallment ? (form.value.installment_total ?? null) : null,
+      installment_paid: isInstallment ? (form.value.installment_paid ?? 0) : 0,
+    }
+    const { data } = await templatesApi.update(editTarget.value.id, payload)
+    const idx = templates.value.findIndex(t => t.id === editTarget.value.id)
+    if (idx !== -1) templates.value[idx] = data
+    editTarget.value = null
+    form.value = emptyForm()
+  } finally {
+    saving.value = false
+  }
+}
+
 async function addTemplate() {
+  if (editTarget.value) { await updateTemplate(); return }
   if (installmentError.value) return
   saving.value = true
   try {
