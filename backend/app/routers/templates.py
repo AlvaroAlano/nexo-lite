@@ -45,6 +45,7 @@ async def create_template(payload: TemplateCreate, db: AsyncSession = Depends(ge
         base_amount=payload.base_amount,
         installment_total=payload.installment_total,
         display_order=payload.display_order,
+        rent_items=payload.rent_items,
     )
     db.add(tmpl)
     await db.flush()

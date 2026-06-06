@@ -125,8 +125,31 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
                 display_order=tmpl.display_order,
             )
         elif tmpl.expense_type == "rent":
-            tmpl_items = getattr(tmpl, "rent_items", None) or []
-            total = sum(_safe_decimal(i.get("amount", 0)) for i in tmpl_items)
+            tmpl_items = list(getattr(tmpl, "rent_items", None) or [])
+            cloned_items: list[dict] = []
+            updated_tmpl_items: list[dict] = []
+
+            for item in tmpl_items:
+                item_type = item.get("type", "fixed")
+                if item_type == "installment":
+                    current = int(item.get("installment_current") or 0)
+                    total_inst = int(item.get("installment_total") or 0)
+                    if total_inst > 0 and current > total_inst:
+                        # Completed — keep in template, skip clone
+                        updated_tmpl_items.append(item)
+                        continue
+                    cloned_items.append({**item, "installment_current": current})
+                    updated_tmpl_items.append({**item, "installment_current": current + 1})
+                elif item_type == "variable":
+                    # Reset to 0 each month — user fills in during check-in
+                    cloned_items.append({**item, "amount": "0.00"})
+                    updated_tmpl_items.append(item)
+                else:  # fixed
+                    cloned_items.append(item)
+                    updated_tmpl_items.append(item)
+
+            tmpl.rent_items = updated_tmpl_items
+            total = sum(_safe_decimal(i.get("amount", 0)) for i in cloned_items)
             expense = MonthlyExpense(
                 period_id=new_period.id,
                 template_id=tmpl.id,
@@ -136,7 +159,7 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
                 expense_type="rent",
                 responsavel=resp,
                 amount=total,
-                rent_items=tmpl_items,
+                rent_items=cloned_items,
                 display_order=tmpl.display_order,
             )
         else:  # fixed or variable

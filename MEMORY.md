@@ -5,6 +5,22 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 
 ---
 
+## 2026-06-05 — Aluguel: editor de componentes no template + turnover inteligente
+
+**Contexto:** Usuário deletou a despesa manual de R$ 1.800 do Check-in e precisa de um sistema próprio para o boleto do aluguel com componentes (fixos, variáveis como gás, parcelados como IPTU).
+
+**Criado / Alterado:**
+- Criado `RentItemsEditor.vue` em `ui/`: componente reutilizável para editar `rent_items[]`. Props: `modelValue`/`v-model`. Mostra lista de itens (badge de tipo, edição de valor inline), formulário de adição de item (tipo fixo/variável/parcela), total calculado.
+- Alterado `TemplatesView.vue`: formulário de Aluguel agora exibe `RentItemsEditor` no lugar do campo `base_amount`. `emptyForm()` e `startEdit()` carregam `rent_items`. Payloads de criação/edição incluem `rent_items`; `base_amount` é calculado como soma dos itens. `addToCurrentMonth` para rent também passa `rent_items`.
+- Alterado `schemas/expense.py`: adicionado `rent_items: list[dict] = []` em `TemplateCreate`, `TemplateUpdate` (Optional) e `TemplateResponse`; adicionado `rent_items: list[dict] = []` em `ExpenseCreate`.
+- Alterado `routers/templates.py`: `create_template` passa `rent_items=payload.rent_items`.
+- Alterado `routers/expenses.py`: `create_expense` passa `rent_items` quando `expense_type == 'rent'`.
+- Alterado `services/turnover.py`: clonagem inteligente por tipo de item — fixo clona igual; variável clona com `amount="0.00"` (usuário preenche no mês); parcela clona com `installment_current` atual e incrementa o template (quando `current > total`, item é pulado).
+
+**Decisão:** `installment_current > installment_total` = item concluído (permanece no template para histórico, não clona). Variáveis sempre zeram no clone — usuário preenche via RentModal. Template atualiza `rent_items` no DB a cada turnover para rastrear progresso das parcelas.
+
+---
+
 ## 2026-06-05 — Fix: Navegação fixa no mobile (BottomNav)
 
 **Contexto:** O menu inferior (BottomNav) não estava respeitando a posição fixa na tela em dispositivos mobile, comportando-se de forma absoluta/scrollável junto com o conteúdo (exigindo rolar a página até o final para aparecer). Isso é um comportamento comum no iOS Safari e Android Chrome quando o `html` e `body` possuem altura forçada em 100% e o conteúdo os ultrapassa.

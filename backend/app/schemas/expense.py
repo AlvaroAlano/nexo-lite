@@ -44,6 +44,7 @@ class TemplateCreate(BaseModel):
     base_amount: Decimal = Decimal("0.00")
     installment_total: Optional[int] = None
     display_order: int = 0
+    rent_items: list[dict] = []
 
     @field_validator("base_amount", mode="before")
     @classmethod
@@ -62,6 +63,7 @@ class TemplateUpdate(BaseModel):
     installment_total: Optional[int] = None
     installment_paid: Optional[int] = None
     display_order: Optional[int] = None
+    rent_items: Optional[list[dict]] = None
 
     @field_validator("base_amount", mode="before")
     @classmethod
@@ -85,6 +87,7 @@ class TemplateResponse(BaseModel):
     installment_paid: int
     display_order: int
     created_at: datetime
+    rent_items: list[dict] = []
 
     model_config = {"from_attributes": True}
 
@@ -102,6 +105,7 @@ class ExpenseCreate(BaseModel):
     installment_current: Optional[int] = None
     installment_total: Optional[int] = None
     display_order: int = 0
+    rent_items: list[dict] = []
 
     @field_validator("amount", mode="before")
     @classmethod

@@ -39,7 +39,7 @@
             <CategoryPicker v-model="form.category_id" />
             <AppSelect v-model="form.responsavel" :options="responsavelOpts" />
             <AppSelect v-model="form.expense_type" :options="expenseTypeOpts" />
-            <div>
+            <div v-if="form.expense_type !== 'rent'">
               <label class="block text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1">
                 {{ form.expense_type === 'installment' ? 'Valor da parcela' : 'Valor mensal (base)' }}
               </label>
@@ -48,6 +48,7 @@
                 input-class="w-full pr-4 py-2.5 md:py-2 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
               />
             </div>
+            <RentItemsEditor v-if="form.expense_type === 'rent'" v-model="form.rent_items" />
 
             <!-- Installment fields -->
             <template v-if="form.expense_type === 'installment'">
@@ -213,7 +214,7 @@
           <CategoryPicker v-model="form.category_id" />
           <AppSelect v-model="form.responsavel" :options="responsavelOpts" />
           <AppSelect v-model="form.expense_type" :options="expenseTypeOpts" />
-          <div>
+          <div v-if="form.expense_type !== 'rent'">
             <label class="block text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1">
               {{ form.expense_type === 'installment' ? 'Valor da parcela' : 'Valor mensal (base)' }}
             </label>
@@ -222,6 +223,7 @@
               input-class="w-full pr-4 py-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-colors"
             />
           </div>
+          <RentItemsEditor v-if="form.expense_type === 'rent'" v-model="form.rent_items" />
           <template v-if="form.expense_type === 'installment'">
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -280,6 +282,7 @@ import CurrencyInput from '../components/ui/CurrencyInput.vue'
 import AppSelect from '../components/ui/AppSelect.vue'
 import ConfirmModal from '../components/ui/ConfirmModal.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
+import RentItemsEditor from '../components/ui/RentItemsEditor.vue'
 import { useDashboardStore } from '../stores/dashboard.js'
 
 const dashboardStore = useDashboardStore()
@@ -316,6 +319,7 @@ const emptyForm = () => ({
   installment_paid: 0,
   installment_total: null,
   addToCurrentMonth: false,
+  rent_items: [],
 })
 
 const form = ref(emptyForm())
@@ -380,6 +384,7 @@ function startEdit(tmpl) {
     installment_paid: tmpl.installment_paid ?? 0,
     installment_total: tmpl.installment_total ?? null,
     addToCurrentMonth: false,
+    rent_items: Array.from(tmpl.rent_items || []),
   }
   editTarget.value = tmpl
   if (window.innerWidth < 768) {
@@ -397,14 +402,17 @@ async function updateTemplate() {
   saving.value = true
   try {
     const isInstallment = form.value.expense_type === 'installment'
+    const isRent = form.value.expense_type === 'rent'
+    const rentTotal = isRent ? form.value.rent_items.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0) : 0
     const payload = {
       name: form.value.name.trim(),
       category_id: form.value.category_id,
       expense_type: form.value.expense_type,
       responsavel: form.value.responsavel,
-      base_amount: form.value.base_amount,
+      base_amount: isRent ? rentTotal : form.value.base_amount,
       installment_total: isInstallment ? (form.value.installment_total ?? null) : null,
       installment_paid: isInstallment ? (form.value.installment_paid ?? 0) : 0,
+      ...(isRent && { rent_items: form.value.rent_items }),
     }
     const { data } = await templatesApi.update(editTarget.value.id, payload)
     const idx = templates.value.findIndex(t => t.id === editTarget.value.id)
@@ -422,13 +430,16 @@ async function addTemplate() {
   saving.value = true
   try {
     const isInstallment = form.value.expense_type === 'installment'
+    const isRent = form.value.expense_type === 'rent'
+    const rentTotal = isRent ? form.value.rent_items.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0) : 0
     const payload = {
       name: form.value.name.trim(),
       category_id: form.value.category_id,
       expense_type: form.value.expense_type,
       responsavel: form.value.responsavel,
-      base_amount: form.value.base_amount,
+      base_amount: isRent ? rentTotal : form.value.base_amount,
       installment_total: isInstallment ? (form.value.installment_total || null) : null,
+      ...(isRent && { rent_items: form.value.rent_items }),
     }
     const { data: tmpl } = await templatesApi.create(payload)
 
@@ -453,6 +464,7 @@ async function addTemplate() {
           installment_current: current,
           installment_total: tmpl.installment_total,
         }),
+        ...(isRent && { rent_items: tmpl.rent_items || [] }),
       })
     }
 

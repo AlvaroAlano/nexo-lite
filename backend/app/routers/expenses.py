@@ -32,6 +32,7 @@ async def create_expense(
         installment_current=payload.installment_current,
         installment_total=payload.installment_total,
         display_order=payload.display_order,
+        rent_items=payload.rent_items if payload.expense_type == "rent" else [],
     )
     db.add(expense)
     await db.flush()
