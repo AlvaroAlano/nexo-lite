@@ -41,7 +41,7 @@
             <AppSelect v-model="form.expense_type" :options="expenseTypeOpts" />
             <div>
               <label class="block text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1">
-                {{ form.expense_type === 'installment' ? 'Valor total da compra' : 'Valor mensal (base)' }}
+                {{ form.expense_type === 'installment' ? 'Valor da parcela' : 'Valor mensal (base)' }}
               </label>
               <CurrencyInput
                 v-model="form.base_amount"
@@ -208,7 +208,7 @@
           <AppSelect v-model="form.expense_type" :options="expenseTypeOpts" />
           <div>
             <label class="block text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1">
-              {{ form.expense_type === 'installment' ? 'Valor total da compra' : 'Valor mensal (base)' }}
+              {{ form.expense_type === 'installment' ? 'Valor da parcela' : 'Valor mensal (base)' }}
             </label>
             <CurrencyInput
               v-model="form.base_amount"
@@ -330,7 +330,7 @@ const installmentSummary = computed(() => {
 
   if (totalInstallments <= 0) return null
 
-  const valuePerInstallment = totalAmount / totalInstallments
+  const valuePerInstallment = totalAmount
   const remainingInstallments = Math.max(0, totalInstallments - paidInstallments)
   const amountPaid = paidInstallments * valuePerInstallment
   const amountRemaining = remainingInstallments * valuePerInstallment
@@ -362,13 +362,12 @@ async function fetchTemplates() {
 }
 
 function startEdit(tmpl) {
-  const isInstallment = tmpl.expense_type === 'installment'
   form.value = {
     name: tmpl.name,
     category_id: tmpl.category_id,
     expense_type: tmpl.expense_type,
     responsavel: tmpl.responsavel,
-    base_amount: isInstallment ? tmpl.base_amount * (tmpl.installment_total || 1) : tmpl.base_amount,
+    base_amount: tmpl.base_amount,
     installment_paid: tmpl.installment_paid ?? 0,
     installment_total: tmpl.installment_total ?? null,
     addToCurrentMonth: false,
@@ -394,9 +393,7 @@ async function updateTemplate() {
       category_id: form.value.category_id,
       expense_type: form.value.expense_type,
       responsavel: form.value.responsavel,
-      base_amount: isInstallment
-        ? form.value.base_amount / (form.value.installment_total || 1)
-        : form.value.base_amount,
+      base_amount: form.value.base_amount,
       installment_total: isInstallment ? (form.value.installment_total ?? null) : null,
       installment_paid: isInstallment ? (form.value.installment_paid ?? 0) : 0,
     }
@@ -421,9 +418,7 @@ async function addTemplate() {
       category_id: form.value.category_id,
       expense_type: form.value.expense_type,
       responsavel: form.value.responsavel,
-      base_amount: isInstallment
-        ? (form.value.base_amount / (form.value.installment_total || 1))
-        : form.value.base_amount,
+      base_amount: form.value.base_amount,
       installment_total: isInstallment ? (form.value.installment_total || null) : null,
     }
     const { data: tmpl } = await templatesApi.create(payload)
