@@ -73,12 +73,15 @@
       <h3 class="font-medium text-brand-ink-light dark:text-white text-sm">Categorias</h3>
       <button
         @click="openAddCategory"
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-primary/[0.08] dark:bg-brand-primary/[0.18] hover:bg-brand-primary/[0.15] text-brand-primary dark:text-brand-primary-soft text-xs font-semibold active:scale-95 transition-all"
+        class="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-primary/[0.08] dark:bg-brand-primary/[0.18] hover:bg-brand-primary/[0.15] text-brand-primary dark:text-brand-primary-soft text-xs font-semibold active:scale-95 transition-all"
       >
         <Plus :size="12" stroke-width="2.5" />
         Categoria
       </button>
     </div>
+
+    <!-- Backdrop fecha menu mobile -->
+    <div v-if="openCatMenuId" class="fixed inset-0 z-20" @click="openCatMenuId = null" />
 
     <ConfirmModal
       v-model="showConfirmDelete"
@@ -195,27 +198,63 @@
           <!-- Color dot -->
           <div class="w-3 h-3 rounded-full flex-shrink-0" :style="{ backgroundColor: colorByKey(cat.color).bg }" />
 
-          <!-- Edit button -->
+          <!-- Desktop: icon buttons -->
           <button
             @click="startEdit(cat)"
-            class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-ink-light dark:hover:text-white transition-colors"
+            class="hidden md:flex w-8 h-8 items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-ink-light dark:hover:text-white transition-colors"
           >
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
           </button>
-
-          <!-- Delete -->
           <button
             @click="remove(cat)"
-            class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-red-500/10 hover:text-red-500 transition-colors"
+            class="hidden md:flex w-8 h-8 items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-red-500/10 hover:text-red-500 transition-colors"
           >
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
               <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
             </svg>
           </button>
+
+          <!-- Mobile: 3-dot menu -->
+          <div class="md:hidden flex-shrink-0 relative">
+            <button
+              @click.stop="toggleCatMenu(cat.id)"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark active:bg-black/5 dark:active:bg-white/10 transition-colors"
+            >
+              <MoreVertical :size="16" />
+            </button>
+            <Transition name="dropdown">
+              <div
+                v-if="openCatMenuId === cat.id"
+                class="absolute right-0 top-9 z-30 min-w-[150px] rounded-xl bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark shadow-stripe-2 py-1 overflow-hidden"
+              >
+                <button
+                  @click.stop="startEdit(cat); openCatMenuId = null"
+                  class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+                >
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Editar
+                </button>
+                <div class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark" />
+                <button
+                  @click.stop="remove(cat); openCatMenuId = null"
+                  class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                >
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                    <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                  </svg>
+                  Excluir
+                </button>
+              </div>
+            </Transition>
+          </div>
         </div>
 
         <p v-if="!store.categories.length" class="text-center py-8 text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm">
@@ -292,7 +331,7 @@
 </template>
 <script setup>
 import { ref, reactive, watch, nextTick } from 'vue'
-import { Plus } from 'lucide-vue-next'
+import { Plus, MoreVertical } from 'lucide-vue-next'
 import { useCategoriesStore } from '../stores/categories.js'
 import { useDashboardStore } from '../stores/dashboard.js'
 import { COLORS, CATEGORY_ICONS, colorByKey, getIconComponent } from '../utils/categories.js'
@@ -303,6 +342,11 @@ import CurrencyInput from '../components/ui/CurrencyInput.vue'
 const store = useCategoriesStore()
 const dashboardStore = useDashboardStore()
 const saving = ref(false)
+
+const openCatMenuId = ref(null)
+function toggleCatMenu(id) {
+  openCatMenuId.value = openCatMenuId.value === id ? null : id
+}
 const editing = ref(null)
 const categoryNameInput = ref(null)
 
@@ -428,3 +472,12 @@ async function doRemove() {
   showConfirmDelete.value = false
 }
 </script>
+
+<style scoped>
+.dropdown-enter-active { animation: dropdown-pop 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.dropdown-leave-active { animation: dropdown-pop 0.1s ease-in reverse forwards; }
+@keyframes dropdown-pop {
+  from { opacity: 0; transform: scale(0.88) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+</style>

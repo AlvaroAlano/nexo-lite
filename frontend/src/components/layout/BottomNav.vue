@@ -1,5 +1,12 @@
 <template>
+  <Transition
+    enter-active-class="transition-opacity duration-200"
+    leave-active-class="transition-opacity duration-150"
+    enter-from-class="opacity-0"
+    leave-to-class="opacity-0"
+  >
   <div
+    v-show="!isModalOpen"
     class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[9999] w-max pointer-events-none md:hidden"
     style="padding-bottom: env(safe-area-inset-bottom, 0px);"
   >
@@ -42,13 +49,25 @@
         </template>
     </nav>
   </div>
+  </Transition>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Home, Repeat2, Settings, BarChart2, Plus } from 'lucide-vue-next'
 import { useDashboardStore } from '../../stores/dashboard.js'
+
+const isModalOpen = ref(false)
+let _observer
+
+onMounted(() => {
+  _observer = new MutationObserver(() => {
+    isModalOpen.value = document.body.classList.contains('overflow-hidden')
+  })
+  _observer.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+})
+onUnmounted(() => _observer?.disconnect())
 
 const route = useRoute()
 const router = useRouter()

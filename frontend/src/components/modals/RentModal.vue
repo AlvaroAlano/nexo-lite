@@ -7,38 +7,37 @@
         <div
           v-for="(item, idx) in items"
           :key="item.id"
-          class="flex items-center gap-2 px-3 py-2 border border-brand-hairline-light dark:border-brand-hairline-dark/40 rounded-stripe-card bg-brand-canvas-soft-light/50 dark:bg-brand-canvas-soft-dark group"
+          class="px-3 py-2.5 border border-brand-hairline-light dark:border-brand-hairline-dark/40 rounded-stripe-card bg-brand-canvas-soft-light/50 dark:bg-brand-canvas-soft-dark group"
         >
-          <!-- Type badge -->
-          <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0" :class="typeBadge(item.type)">
-            {{ typeLabel(item.type) }}
-          </span>
+          <!-- Line 1: name -->
+          <p class="text-sm font-medium text-brand-ink-light dark:text-white leading-snug mb-1.5">{{ item.name }}</p>
 
-          <!-- Name -->
-          <span class="flex-1 text-sm text-brand-ink-light dark:text-white min-w-0 truncate">
-            {{ item.name }}
-            <span v-if="item.type === 'installment' && item.installment_current" class="text-brand-ink-mute-light dark:text-brand-ink-mute-dark ml-1 font-tabular text-[11px]">
+          <!-- Line 2: badge + info (left) | amount + remove (right) -->
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0" :class="typeBadge(item.type)">
+              {{ typeLabel(item.type) }}
+            </span>
+            <span v-if="item.type === 'installment' && item.installment_current" class="text-brand-ink-mute-light dark:text-brand-ink-mute-dark font-tabular text-[11px]">
               {{ item.installment_current }}/{{ item.installment_total }}
             </span>
-          </span>
-
-          <!-- Amount (inline edit) -->
-          <CurrencyInput
-            :model-value="item.amount"
-            @update:model-value="item.amount = $event"
-            hide-prefix
-            input-class="w-24 text-right font-tabular font-medium text-sm text-brand-ink-light dark:text-white bg-transparent border-b border-transparent focus:border-brand-primary outline-none"
-          />
-
-          <!-- Remove -->
-          <button
-            @click="removeItem(idx)"
-            class="w-6 h-6 flex items-center justify-center rounded text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
-          >
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
+            <div class="flex-1" />
+            <!-- Amount (inline edit) -->
+            <CurrencyInput
+              :model-value="item.amount"
+              @update:model-value="item.amount = $event"
+              hide-prefix
+              input-class="w-24 text-right font-tabular font-medium text-sm text-brand-ink-light dark:text-white bg-transparent border-b border-transparent focus:border-brand-primary outline-none"
+            />
+            <!-- Remove: always visible on mobile, hover-only on desktop -->
+            <button
+              @click="removeItem(idx)"
+              class="w-6 h-6 flex items-center justify-center rounded text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-red-500 hover:bg-red-500/10 transition-colors md:opacity-0 md:group-hover:opacity-100"
+            >
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 

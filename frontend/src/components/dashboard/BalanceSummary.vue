@@ -236,7 +236,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { ChevronDown, PiggyBank, Bot } from 'lucide-vue-next'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { formatCurrency } from '../../utils/currency.js'
@@ -275,7 +275,10 @@ const tabs = computed(() => [
   { key: 'alexandra', label: store.nameAlexandra },
 ])
 
-const collapsed = ref(false)
+const collapsed = computed({
+  get: () => store.balanceSummaryCollapsed,
+  set: (v) => { store.balanceSummaryCollapsed = v },
+})
 
 const viewOrder = { geral: 0, alvaro: 1, alexandra: 2 }
 const tabTransition = ref('tab-slide-left')

@@ -13,6 +13,9 @@
     </div>
 
     <template v-else>
+      <!-- Backdrop fecha menu mobile -->
+      <div v-if="openMenuId" class="fixed inset-0 z-20" @click="openMenuId = null" />
+
       <ConfirmModal
         v-model="showConfirmDelete"
         title="Remover recorrência"
@@ -153,8 +156,8 @@
               </template>
             </div>
 
-            <!-- Actions -->
-            <div class="flex gap-1 flex-shrink-0">
+            <!-- Actions: desktop icon buttons -->
+            <div class="hidden md:flex gap-1 flex-shrink-0">
               <button
                 @click="startEdit(tmpl)"
                 class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-ink-light dark:hover:text-white transition-colors"
@@ -190,6 +193,61 @@
                   <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
                 </svg>
               </button>
+            </div>
+
+            <!-- Actions: mobile 3-dot menu -->
+            <div class="md:hidden flex-shrink-0 relative">
+              <button
+                @click.stop="toggleMenu(tmpl.id)"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark active:bg-black/5 dark:active:bg-white/10 transition-colors"
+              >
+                <MoreVertical :size="16" />
+              </button>
+              <Transition name="dropdown">
+                <div
+                  v-if="openMenuId === tmpl.id"
+                  class="absolute right-0 top-9 z-30 min-w-[160px] rounded-xl bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark shadow-stripe-2 py-1 overflow-hidden"
+                >
+                  <button
+                    @click.stop="startEdit(tmpl); openMenuId = null"
+                    class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+                  >
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Editar
+                  </button>
+                  <div class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark" />
+                  <button
+                    @click.stop="toggleActive(tmpl); openMenuId = null"
+                    class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+                  >
+                    <svg v-if="tmpl.is_active" class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                    <svg v-else class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    {{ tmpl.is_active ? 'Desativar' : 'Ativar' }}
+                  </button>
+                  <div class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark" />
+                  <button
+                    @click.stop="confirmDelete(tmpl); openMenuId = null"
+                    class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                  >
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                      <path d="M10 11v6"/><path d="M14 11v6"/>
+                      <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                    </svg>
+                    Excluir
+                  </button>
+                </div>
+              </Transition>
             </div>
           </div>
 
@@ -275,6 +333,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
+import { MoreVertical } from 'lucide-vue-next'
 import { templatesApi } from '../services/api.js'
 import { formatCurrency } from '../utils/currency.js'
 import CategoryPicker from '../components/ui/CategoryPicker.vue'
@@ -485,6 +544,11 @@ async function toggleActive(tmpl) {
   if (idx !== -1) templates.value[idx] = data
 }
 
+const openMenuId = ref(null)
+function toggleMenu(id) {
+  openMenuId.value = openMenuId.value === id ? null : id
+}
+
 const showConfirmDelete = ref(false)
 const deleteTarget = ref(null)
 
@@ -526,3 +590,12 @@ function responsavelBadge(r) {
   return 'bg-brand-canvas-soft-light text-brand-ink-mute-light dark:bg-brand-canvas-dark dark:text-brand-ink-mute-dark'
 }
 </script>
+
+<style scoped>
+.dropdown-enter-active { animation: dropdown-pop 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.dropdown-leave-active { animation: dropdown-pop 0.1s ease-in reverse forwards; }
+@keyframes dropdown-pop {
+  from { opacity: 0; transform: scale(0.88) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+</style>

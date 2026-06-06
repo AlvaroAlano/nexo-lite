@@ -23,6 +23,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const quickAddOpen = ref(false)
   const quickAddTemplateOpen = ref(false)
   const quickAddCategoryOpen = ref(false)
+  const balanceSummaryCollapsed = ref(false)
 
   // ── Read-only: past months have status = 'closed' ─────────────────────────
   const isReadOnly = computed(() => period.value?.status === 'closed')
@@ -234,7 +235,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
   return {
     period, expenses, loading, saving, error, notFoundMonth,
     currentView, nameAlvaro, nameAlexandra,
-    quickAddOpen, quickAddTemplateOpen, quickAddCategoryOpen, isReadOnly,
+    quickAddOpen, quickAddTemplateOpen, quickAddCategoryOpen, balanceSummaryCollapsed, isReadOnly,
     filteredExpenses,
     totalCommitted, totalPaid, freeCash,
     incomeAlvaro, incomeAlexandra, incomeTotal, carryover,
