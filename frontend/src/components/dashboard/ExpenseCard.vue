@@ -42,32 +42,48 @@
 
     <!-- Amount + actions -->
     <div class="flex-shrink-0 flex flex-col items-end gap-2">
-      <!-- Amount (tap to edit, except rent) -->
-      <span
-        v-if="!editing"
-        @click="!isRent && startEdit()"
-        class="text-sm font-tabular font-medium transition-colors"
-        :class="[
-          expense.is_paid
-            ? 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark line-through'
-            : 'text-brand-ink-light dark:text-white',
-          !isRent ? 'cursor-pointer hover:text-brand-primary dark:hover:text-brand-primary-soft' : '',
-        ]"
-      >
-        {{ formatCurrency(expense.amount) }}
-      </span>
-      <CurrencyInput
-        v-else
-        v-model="editValue"
-        @confirm="saveEdit"
-        @cancel="cancelEdit"
-        @blur="saveEdit"
-        hide-prefix
-        input-class="font-tabular font-medium text-sm text-right text-brand-ink-light dark:text-white bg-transparent border-b border-brand-primary outline-none w-24"
-      />
+      <!-- Linha do valor: se não há ações secundárias, toggle fica inline aqui -->
+      <div class="flex items-center gap-2">
+        <span
+          v-if="!editing"
+          @click="!isRent && startEdit()"
+          class="text-sm font-tabular font-medium transition-colors"
+          :class="[
+            expense.is_paid
+              ? 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark line-through'
+              : 'text-brand-ink-light dark:text-white',
+            !isRent ? 'cursor-pointer hover:text-brand-primary dark:hover:text-brand-primary-soft' : '',
+          ]"
+        >
+          {{ formatCurrency(expense.amount) }}
+        </span>
+        <CurrencyInput
+          v-else
+          v-model="editValue"
+          @confirm="saveEdit"
+          @cancel="cancelEdit"
+          @blur="saveEdit"
+          hide-prefix
+          input-class="font-tabular font-medium text-sm text-right text-brand-ink-light dark:text-white bg-transparent border-b border-brand-primary outline-none w-24"
+        />
 
-      <!-- Secondary actions -->
-      <div class="flex items-center gap-2.5">
+        <!-- Toggle inline (só quando não há ações secundárias — ex: Caixinha) -->
+        <button
+          v-if="!hasSecondaryActions"
+          @click="store.togglePaid(expense.id)"
+          class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
+          :class="expense.is_paid
+            ? 'bg-emerald-500 border-emerald-500'
+            : 'border-brand-hairline-light dark:border-brand-hairline-dark hover:border-emerald-400 dark:hover:border-emerald-500'"
+        >
+          <svg v-if="expense.is_paid" class="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Ações secundárias (Detalhar, editar, excluir + toggle) -->
+      <div v-if="hasSecondaryActions" class="flex items-center gap-2.5">
         <button
           v-if="isRent"
           @click="$emit('open-rent', expense)"
@@ -75,7 +91,6 @@
         >
           Detalhar
         </button>
-
         <button
           v-if="!store.isReadOnly && expense.category !== 'Caixinha'"
           @click="$emit('edit', expense)"
@@ -96,12 +111,10 @@
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="3 6 5 6 21 6"/>
             <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            <path d="M10 11v6"/>
-            <path d="M14 11v6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/>
             <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
           </svg>
         </button>
-
         <button
           @click="store.togglePaid(expense.id)"
           class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
@@ -136,6 +149,9 @@ const catStore = useCategoriesStore()
 
 const isInstallment = computed(() => props.expense.expense_type === 'installment')
 const isRent = computed(() => props.expense.expense_type === 'rent')
+const hasSecondaryActions = computed(() =>
+  isRent.value || (!store.isReadOnly && props.expense.category !== 'Caixinha')
+)
 const category = computed(() => props.expense.category_id ? catStore.getCategory(props.expense.category_id) : null)
 const catColor = computed(() => category.value ? colorByKey(category.value.color) : colorByKey('slate'))
 
