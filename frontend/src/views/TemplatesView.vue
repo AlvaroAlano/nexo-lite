@@ -128,6 +128,12 @@
                 >
                   {{ typeLabel(tmpl.expense_type) }}
                 </span>
+                <span
+                  class="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full flex-shrink-0"
+                  :class="responsavelBadge(tmpl.responsavel)"
+                >
+                  {{ responsavelLabel(tmpl.responsavel) }}
+                </span>
               </div>
             </div>
 
@@ -494,5 +500,17 @@ function typeBadge(t) {
     installment: 'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300',
     rent: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   }[t] || 'bg-brand-canvas-soft-light text-brand-ink-mute-light dark:bg-brand-canvas-dark dark:text-brand-ink-mute-dark'
+}
+
+function responsavelLabel(r) {
+  if (r === 'alvaro')    return dashboardStore.nameAlvaro
+  if (r === 'alexandra') return dashboardStore.nameAlexandra
+  return 'Casal'
+}
+
+function responsavelBadge(r) {
+  if (r === 'alvaro')    return 'bg-brand-primary/10 text-brand-primary dark:bg-brand-primary/20 dark:text-brand-primary-soft'
+  if (r === 'alexandra') return 'bg-pink-500/10 text-pink-600 dark:bg-pink-500/20 dark:text-pink-400'
+  return 'bg-brand-canvas-soft-light text-brand-ink-mute-light dark:bg-brand-canvas-dark dark:text-brand-ink-mute-dark'
 }
 </script>
