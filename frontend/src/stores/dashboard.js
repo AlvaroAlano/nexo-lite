@@ -193,6 +193,17 @@ export const useDashboardStore = defineStore('dashboard', () => {
     catch (e) { console.error('[delete]', e) }
   }
 
+  async function updateExpenseFull(expenseId, payload) {
+    if (isReadOnly.value) return
+    saving.value = true
+    try {
+      const { data } = await expensesApi.update(expenseId, payload)
+      _replaceExpense(data)
+    } finally {
+      saving.value = false
+    }
+  }
+
   async function runTurnover() {
     saving.value = true
     try {
@@ -231,7 +242,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     vaultExpense, vaultMonthAmount, vaultMonthPaid,
     fetchCurrent, fetchByMonth, updateIncome, updateExpenseAmount,
     togglePaid, updateRent, addExpense, deleteExpense,
-    removeExpenseLocally, restoreExpense, hardDeleteExpense,
+    removeExpenseLocally, restoreExpense, hardDeleteExpense, updateExpenseFull,
     runTurnover, setView, updateNames,
   }
 })

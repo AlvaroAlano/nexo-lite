@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from app.database import get_db
 from app.models.expense import MonthlyExpense
+from app.models.category import Category
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate, RentUpdate, ExpenseResponse
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
@@ -50,7 +51,13 @@ async def update_expense(
 
     if payload.name is not None:
         expense.name = payload.name
-    if payload.category is not None:
+    if payload.responsavel is not None:
+        expense.responsavel = payload.responsavel
+    if payload.category_id is not None:
+        expense.category_id = payload.category_id
+        cat = (await db.execute(select(Category).where(Category.id == payload.category_id))).scalars().first()
+        expense.category = cat.name if cat else expense.category
+    elif payload.category is not None:
         expense.category = payload.category
     if payload.amount is not None:
         expense.amount = payload.amount

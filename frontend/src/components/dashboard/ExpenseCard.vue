@@ -78,6 +78,17 @@
 
         <button
           v-if="!store.isReadOnly && expense.category !== 'Caixinha'"
+          @click="$emit('edit', expense)"
+          class="w-5 h-5 flex items-center justify-center rounded-md text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-primary active:opacity-60 transition-all flex-shrink-0"
+          title="Editar despesa"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+        <button
+          v-if="!store.isReadOnly && expense.category !== 'Caixinha'"
           @click="$emit('delete', expense)"
           class="w-5 h-5 flex items-center justify-center rounded-md text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-red-500/10 hover:text-red-500 active:bg-red-500/20 transition-all flex-shrink-0"
           title="Excluir despesa"
@@ -118,7 +129,7 @@ import CurrencyInput from '../ui/CurrencyInput.vue'
 const props = defineProps({
   expense: { type: Object, required: true },
 })
-defineEmits(['open-rent', 'delete'])
+defineEmits(['open-rent', 'delete', 'edit'])
 
 const store = useDashboardStore()
 const catStore = useCategoriesStore()

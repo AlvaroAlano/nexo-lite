@@ -110,6 +110,7 @@
               :expense="expense"
               @open-rent="openRent"
               @delete="deleteWithUndo"
+              @edit="openEditModal"
             />
             <p v-if="!store.filteredExpenses.length" class="text-center py-10 text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm">
               Nenhuma despesa neste mês ainda.
@@ -122,6 +123,7 @@
             :expenses="store.filteredExpenses"
             @open-rent="openRent"
             @delete="deleteWithUndo"
+            @edit="openEditModal"
           />
 
 
@@ -176,7 +178,7 @@
       </Transition>
     </Teleport>
 
-    <BaseModal v-model="showExpenseModal" title="Nova Despesa" :full-screen-on-mobile="true">
+    <BaseModal v-model="showExpenseModal" :title="editTarget ? 'Editar Despesa' : 'Nova Despesa'" :full-screen-on-mobile="true">
       <div class="space-y-3">
         <input
           v-model="addForm.name"
@@ -188,10 +190,11 @@
           <AppSelect v-model="addForm.responsavel" :options="responsavelOpts" />
         </div>
         <CurrencyInput
+          v-if="!editTarget || editTarget.expense_type !== 'rent'"
           v-model="addForm.amount"
           input-class="w-full pr-4 py-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input font-tabular text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         />
-        <label @click="addForm.is_paid = !addForm.is_paid" class="flex items-center gap-3 py-1 cursor-pointer select-none">
+        <label v-if="!editTarget" @click="addForm.is_paid = !addForm.is_paid" class="flex items-center gap-3 py-1 cursor-pointer select-none">
           <div
             class="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-shrink-0 pointer-events-none"
             :class="addForm.is_paid ? 'bg-brand-primary border-brand-primary' : 'border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark'"
@@ -205,11 +208,11 @@
       </div>
       <template #footer>
         <button
-          @click="quickAdd"
+          @click="editTarget ? saveExpenseEdit() : quickAdd()"
           :disabled="!addForm.name.trim() || store.saving"
           class="w-full py-3 rounded-full bg-brand-primary text-white text-sm font-medium hover:bg-brand-primary-hover disabled:opacity-40 active:scale-[.98] transition-all"
         >
-          {{ store.saving ? 'Adicionando…' : 'Adicionar despesa' }}
+          {{ store.saving ? 'Salvando…' : (editTarget ? 'Salvar alterações' : 'Adicionar despesa') }}
         </button>
       </template>
     </BaseModal>
@@ -236,6 +239,7 @@ const rentExpense = ref(null)
 const showTurnover = ref(false)
 const showAddForm = ref(false)
 const showExpenseModal = ref(false)
+const editTarget = ref(null)
 
 const addForm = reactive({ name: '', category_id: null, responsavel: 'conjunto', amount: 0, is_paid: false })
 
@@ -292,6 +296,7 @@ watch(
 watch(showExpenseModal, (val) => {
   if (!val) {
     resetAddForm()
+    editTarget.value = null
   }
 })
 
@@ -306,6 +311,28 @@ onMounted(async () => {
 function openRent(expense) {
   rentExpense.value = expense
   showRent.value = true
+}
+
+function openEditModal(expense) {
+  editTarget.value = expense
+  addForm.name = expense.name
+  addForm.category_id = expense.category_id ?? null
+  addForm.responsavel = expense.responsavel
+  addForm.amount = parseFloat(expense.amount) || 0
+  addForm.is_paid = expense.is_paid
+  showExpenseModal.value = true
+}
+
+async function saveExpenseEdit() {
+  if (!editTarget.value) return
+  const payload = {
+    name: addForm.name.trim(),
+    category_id: addForm.category_id,
+    responsavel: addForm.responsavel,
+    ...(editTarget.value.expense_type !== 'rent' && { amount: addForm.amount }),
+  }
+  await store.updateExpenseFull(editTarget.value.id, payload)
+  showExpenseModal.value = false
 }
 
 async function quickAdd() {

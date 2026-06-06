@@ -3,11 +3,11 @@
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-brand-hairline-light dark:border-brand-hairline-dark bg-brand-canvas-soft-light/30 dark:bg-brand-canvas-dark/25">
-          <th class="text-left px-4 py-3 text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wide w-[140px]">
-            Categoria
-          </th>
           <th class="text-left px-4 py-3 text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wide">
             Despesa
+          </th>
+          <th class="text-left px-4 py-3 text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wide w-[140px]">
+            Categoria
           </th>
           <th class="text-right px-4 py-3 text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wide w-[120px]">
             Valor
@@ -15,7 +15,7 @@
           <th class="text-center px-3 py-3 text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wide w-[90px]">
             Status
           </th>
-          <th v-if="!store.isReadOnly" class="w-[50px]"></th>
+          <th v-if="!store.isReadOnly" class="w-[80px]"></th>
         </tr>
       </thead>
       <tbody class="divide-y divide-brand-hairline-light dark:divide-brand-hairline-dark/30">
@@ -25,27 +25,6 @@
           class="group hover:bg-brand-canvas-soft-light/40 dark:hover:bg-brand-canvas-soft-dark/30 transition-colors"
           :class="expense.is_paid ? 'opacity-60' : ''"
         >
-          <!-- Category -->
-          <td class="px-4 py-3.5 w-[140px]">
-            <div v-if="getCategory(expense.category_id)" class="flex items-center gap-2">
-              <div
-                class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center"
-                :style="{ backgroundColor: catColor(expense.category_id).light }"
-              >
-                <component
-                  :is="getIconComponent(getCategory(expense.category_id).icon)"
-                  :size="12"
-                  :stroke-width="2"
-                  :style="{ color: catColor(expense.category_id).text }"
-                />
-              </div>
-              <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark truncate max-w-[80px]">
-                {{ getCategory(expense.category_id).name }}
-              </span>
-            </div>
-            <span v-else class="text-xs text-brand-ink-mute-light/30 dark:text-brand-ink-mute-dark/30">—</span>
-          </td>
-
           <!-- Name + badges -->
           <td class="px-4 py-3.5">
             <div class="flex items-center gap-2 flex-wrap">
@@ -68,6 +47,27 @@
                 {{ respLabels[expense.responsavel] || 'Casal' }}
               </span>
             </div>
+          </td>
+
+          <!-- Category -->
+          <td class="px-4 py-3.5 w-[140px]">
+            <div v-if="getCategory(expense.category_id)" class="flex items-center gap-2">
+              <div
+                class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center"
+                :style="{ backgroundColor: catColor(expense.category_id).light }"
+              >
+                <component
+                  :is="getIconComponent(getCategory(expense.category_id).icon)"
+                  :size="12"
+                  :stroke-width="2"
+                  :style="{ color: catColor(expense.category_id).text }"
+                />
+              </div>
+              <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark truncate max-w-[80px]">
+                {{ getCategory(expense.category_id).name }}
+              </span>
+            </div>
+            <span v-else class="text-xs text-brand-ink-mute-light/30 dark:text-brand-ink-mute-dark/30">—</span>
           </td>
 
           <!-- Amount -->
@@ -118,22 +118,32 @@
             </button>
           </td>
 
-          <!-- Delete action -->
-          <td v-if="!store.isReadOnly" class="px-2 py-3.5 text-center w-[50px]">
-            <button
-              v-if="expense.category !== 'Caixinha'"
-              @click="$emit('delete', expense)"
-              class="opacity-0 group-hover:opacity-100 focus:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-red-500/10 hover:text-red-500 active:bg-red-500/20 transition-all mx-auto"
-              title="Excluir despesa"
-            >
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="3 6 5 6 21 6"/>
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                <path d="M10 11v6"/>
-                <path d="M14 11v6"/>
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-              </svg>
-            </button>
+          <!-- Actions: edit + delete -->
+          <td v-if="!store.isReadOnly" class="px-2 py-3.5 w-[80px]">
+            <div v-if="expense.category !== 'Caixinha'" class="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center justify-center gap-1 transition-all">
+              <button
+                @click="$emit('edit', expense)"
+                class="w-7 h-7 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-primary transition-all"
+                title="Editar despesa"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+              <button
+                @click="$emit('delete', expense)"
+                class="w-7 h-7 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-red-500/10 hover:text-red-500 active:bg-red-500/20 transition-all"
+                title="Excluir despesa"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                  <path d="M10 11v6"/><path d="M14 11v6"/>
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            </div>
           </td>
         </tr>
 
@@ -157,7 +167,7 @@ import { colorByKey, getIconComponent } from '../../utils/categories.js'
 import CurrencyInput from '../ui/CurrencyInput.vue'
 
 defineProps({ expenses: { type: Array, default: () => [] } })
-defineEmits(['open-rent', 'delete'])
+defineEmits(['open-rent', 'delete', 'edit'])
 
 const store = useDashboardStore()
 const catStore = useCategoriesStore()
