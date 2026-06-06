@@ -109,7 +109,7 @@
               :key="expense.id"
               :expense="expense"
               @open-rent="openRent"
-              @delete="confirmDelete"
+              @delete="deleteWithUndo"
             />
             <p v-if="!store.filteredExpenses.length" class="text-center py-10 text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm">
               Nenhuma despesa neste mês ainda.
@@ -121,7 +121,7 @@
             class="hidden md:block"
             :expenses="store.filteredExpenses"
             @open-rent="openRent"
-            @delete="confirmDelete"
+            @delete="deleteWithUndo"
           />
 
 
@@ -152,17 +152,33 @@
     <!-- Modals -->
     <RentModal v-model="showRent" :expense="rentExpense" />
     <TurnoverModal v-model="showTurnover" />
-    <ConfirmModal
-      v-model="showConfirmDelete"
-      title="Remover despesa"
-      :message="`Excluir a despesa '${deleteTarget?.name}'?`"
-      confirm-label="Excluir"
-      @confirm="doDelete"
-    />
+    <!-- Undo toast — aparece 5s após deletar uma despesa -->
+    <Teleport to="body">
+      <Transition name="toast-slide">
+        <div
+          v-if="undoState"
+          :key="undoKey"
+          class="fixed bottom-24 md:bottom-8 left-0 right-0 z-[200] flex justify-center px-4 pointer-events-none"
+        >
+          <div class="pointer-events-auto w-full max-w-sm rounded-xl bg-[#18181b] border border-white/10 shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between gap-4 px-4 py-3">
+              <span class="text-sm text-white truncate">"{{ undoState.expense.name }}" removida</span>
+              <button
+                @click="cancelUndo"
+                class="text-sm font-semibold text-brand-primary-soft shrink-0 hover:text-white transition-colors"
+              >Desfazer</button>
+            </div>
+            <div class="h-0.5 bg-white/10">
+              <div class="h-full bg-brand-primary toast-progress" />
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <BaseModal v-model="showExpenseModal" title="Nova Despesa" :full-screen-on-mobile="true">
       <div class="space-y-3">
         <input
-          ref="expenseNameInput"
           v-model="addForm.name"
           placeholder="Nome da despesa"
           class="w-full px-4 py-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
@@ -203,7 +219,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick, reactive, computed } from 'vue'
+import { ref, watch, onMounted, reactive, computed } from 'vue'
 import { useDashboardStore } from '../stores/dashboard.js'
 import BalanceSummary from '../components/dashboard/BalanceSummary.vue'
 import ExpenseCard from '../components/dashboard/ExpenseCard.vue'
@@ -214,7 +230,6 @@ import BaseModal from '../components/ui/BaseModal.vue'
 import CategoryPicker from '../components/ui/CategoryPicker.vue'
 import CurrencyInput from '../components/ui/CurrencyInput.vue'
 import AppSelect from '../components/ui/AppSelect.vue'
-import ConfirmModal from '../components/ui/ConfirmModal.vue'
 
 const store = useDashboardStore()
 
@@ -223,28 +238,32 @@ const rentExpense = ref(null)
 const showTurnover = ref(false)
 const showAddForm = ref(false)
 const showExpenseModal = ref(false)
-const expenseNameInput = ref(null)
 
 const addForm = reactive({ name: '', category_id: null, responsavel: 'conjunto', amount: 0, is_paid: false })
 
-const showConfirmDelete = ref(false)
-const deleteTarget = ref(null)
+const undoState = ref(null)  // { expense, timerId }
+const undoKey = ref(0)
 
-function confirmDelete(expense) {
-  deleteTarget.value = expense
-  showConfirmDelete.value = true
+function deleteWithUndo(expense) {
+  if (store.isReadOnly) return
+  if (undoState.value) {
+    clearTimeout(undoState.value.timerId)
+    store.hardDeleteExpense(undoState.value.expense.id)
+  }
+  store.removeExpenseLocally(expense.id)
+  const timerId = setTimeout(() => {
+    store.hardDeleteExpense(expense.id)
+    undoState.value = null
+  }, 5000)
+  undoKey.value++
+  undoState.value = { expense, timerId }
 }
 
-async function doDelete() {
-  if (!deleteTarget.value) return
-  try {
-    await store.deleteExpense(deleteTarget.value.id)
-  } catch (err) {
-    console.error(err)
-  } finally {
-    deleteTarget.value = null
-    showConfirmDelete.value = false
-  }
+function cancelUndo() {
+  if (!undoState.value) return
+  clearTimeout(undoState.value.timerId)
+  store.restoreExpense(undoState.value.expense)
+  undoState.value = null
 }
 
 const responsavelOpts = computed(() => [
@@ -337,5 +356,20 @@ async function quickAdd() {
 @keyframes form-in {
   from { opacity: 0; transform: translateY(-8px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Undo toast */
+.toast-slide-enter-active { animation: toast-in  0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.toast-slide-leave-active { animation: toast-out 0.2s ease-in forwards; }
+
+@keyframes toast-in  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toast-out { from { opacity: 1; transform: translateY(0);    } to { opacity: 0; transform: translateY(20px); } }
+
+.toast-progress {
+  animation: toast-shrink 5s linear forwards;
+}
+@keyframes toast-shrink {
+  from { width: 100%; }
+  to   { width: 0%; }
 }
 </style>

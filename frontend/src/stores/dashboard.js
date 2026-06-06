@@ -179,6 +179,20 @@ export const useDashboardStore = defineStore('dashboard', () => {
     expenses.value = expenses.value.filter((e) => e.id !== expenseId)
   }
 
+  function removeExpenseLocally(expenseId) {
+    expenses.value = expenses.value.filter((e) => e.id !== expenseId)
+  }
+
+  function restoreExpense(expense) {
+    expenses.value = [...expenses.value, expense]
+      .sort((a, b) => (a.display_order ?? 9999) - (b.display_order ?? 9999))
+  }
+
+  async function hardDeleteExpense(expenseId) {
+    try { await expensesApi.delete(expenseId) }
+    catch (e) { console.error('[delete]', e) }
+  }
+
   async function runTurnover() {
     saving.value = true
     try {
@@ -216,6 +230,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     saldoAlvaro, saldoAlexandra, paidCount,
     vaultExpense, vaultMonthAmount, vaultMonthPaid,
     fetchCurrent, fetchByMonth, updateIncome, updateExpenseAmount,
-    togglePaid, updateRent, addExpense, deleteExpense, runTurnover, setView, updateNames,
+    togglePaid, updateRent, addExpense, deleteExpense,
+    removeExpenseLocally, restoreExpense, hardDeleteExpense,
+    runTurnover, setView, updateNames,
   }
 })

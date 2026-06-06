@@ -2,7 +2,7 @@
   <div class="max-w-5xl mx-auto px-4 pt-5 pb-6 font-ss01">
 
     <!-- Spinner enquanto history/templates carregam -->
-    <div v-if="statsStore.loading" class="flex justify-center py-16">
+    <div v-if="statsStore.loading || dashboard.loading" class="flex justify-center py-16">
       <div class="w-5 h-5 rounded-full border-2 border-brand-hairline-light dark:border-brand-hairline-dark border-t-brand-primary animate-spin" />
     </div>
 
