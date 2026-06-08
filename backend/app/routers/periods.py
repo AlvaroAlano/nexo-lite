@@ -8,7 +8,6 @@ from app.database import get_db
 from app.models.period import MonthlyPeriod
 from app.models.expense import MonthlyExpense
 from app.schemas.period import PeriodResponse, PeriodUpdate, PeriodWithExpenses
-from app.schemas.expense import ExpenseResponse as _ExpenseResponse  # noqa: F401 — needed for PeriodWithExpenses forward ref
 from app.schemas.expense import ExpenseResponse
 from app.services.turnover import run_turnover
 from app.config import settings
