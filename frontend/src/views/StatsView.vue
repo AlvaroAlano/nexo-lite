@@ -1,8 +1,14 @@
 <template>
-  <div class="max-w-5xl mx-auto px-4 pt-5 pb-6 font-ss01">
+  <div
+    class="max-w-5xl mx-auto px-4 pt-5 pb-6 font-ss01"
+    @touchstart="handleTouchStart"
+    @touchmove="handleTouchMove"
+    @touchend="handleTouchEnd"
+  >
+    <PullRefreshIndicator :pull-distance="pullDistance" :refreshing="refreshing" />
 
     <!-- Spinner enquanto history/templates carregam -->
-    <div v-if="statsStore.loading || dashboard.loading" class="flex justify-center py-16">
+    <div v-if="(statsStore.loading || dashboard.loading) && !refreshing" class="flex justify-center py-16">
       <div class="w-5 h-5 rounded-full border-2 border-brand-hairline-light dark:border-brand-hairline-dark border-t-brand-primary animate-spin" />
     </div>
 
@@ -46,6 +52,8 @@
 import { computed, onMounted } from 'vue'
 import { useDashboardStore } from '../stores/dashboard.js'
 import { useStatsStore }     from '../stores/stats.js'
+import { usePullToRefresh } from '../composables/usePullToRefresh.js'
+import PullRefreshIndicator from '../components/ui/PullRefreshIndicator.vue'
 import StatCard          from '../components/stats/StatCard.vue'
 import WarBar            from '../components/stats/WarBar.vue'
 import FutureRadarChart  from '../components/stats/FutureRadarChart.vue'
@@ -60,10 +68,14 @@ const statsStore = useStatsStore()
 const PT_MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 
 onMounted(() => {
-  // Garante dados do dashboard mesmo se o usuário entrou direto em /stats
   if (!dashboard.period && !dashboard.loading) dashboard.fetchCurrent()
   statsStore.fetchAll()
 })
+
+const { pullDistance, refreshing, handleTouchStart, handleTouchMove, handleTouchEnd } =
+  usePullToRefresh(async () => {
+    await Promise.all([dashboard.fetchCurrent(), statsStore.fetchAll()])
+  })
 
 // ── Cabo de Guerra — soma de despesas por responsável do mês atual ───────────
 const warData = computed(() => {

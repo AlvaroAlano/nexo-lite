@@ -1,5 +1,11 @@
 <template>
-  <div class="max-w-4xl mx-auto px-4 pt-5 pb-6 font-ss01">
+  <div
+    class="max-w-4xl mx-auto px-4 pt-5 pb-6 font-ss01"
+    @touchstart="handleTouchStart"
+    @touchmove="handleTouchMove"
+    @touchend="handleTouchEnd"
+  >
+    <PullRefreshIndicator :pull-distance="pullDistance" :refreshing="refreshing" />
     <div class="mb-6">
       <h1 class="text-xl font-light tracking-tight text-brand-ink-light dark:text-white">Ajustes</h1>
       <p class="text-sm text-brand-ink-mute-light dark:text-brand-ink-mute-dark mt-1">Gerencie os membros, rendas e categorias do sistema.</p>
@@ -330,24 +336,37 @@
   </div>
 </template>
 <script setup>
-import { ref, reactive, watch, nextTick, onMounted } from 'vue'
+import { ref, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { Plus, MoreVertical } from 'lucide-vue-next'
+import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../utils/menuBus.js'
 import { useCategoriesStore } from '../stores/categories.js'
 import { useDashboardStore } from '../stores/dashboard.js'
 import { COLORS, CATEGORY_ICONS, colorByKey, getIconComponent } from '../utils/categories.js'
 import ConfirmModal from '../components/ui/ConfirmModal.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import CurrencyInput from '../components/ui/CurrencyInput.vue'
+import { usePullToRefresh } from '../composables/usePullToRefresh.js'
+import PullRefreshIndicator from '../components/ui/PullRefreshIndicator.vue'
 
 const store = useCategoriesStore()
 const dashboardStore = useDashboardStore()
 const saving = ref(false)
 
-onMounted(() => store.fetch())
+function closeSettingsMenu() { openCatMenuId.value = null }
+onMounted(() => { store.fetch(); document.addEventListener(CLOSE_MENUS_EVENT, closeSettingsMenu) })
+onUnmounted(() => document.removeEventListener(CLOSE_MENUS_EVENT, closeSettingsMenu))
+
+const { pullDistance, refreshing, handleTouchStart, handleTouchMove, handleTouchEnd } =
+  usePullToRefresh(() => store.fetch())
 
 const openCatMenuId = ref(null)
 function toggleCatMenu(id) {
-  openCatMenuId.value = openCatMenuId.value === id ? null : id
+  if (openCatMenuId.value === id) {
+    openCatMenuId.value = null
+  } else {
+    broadcastMenuOpen()
+    openCatMenuId.value = id
+  }
 }
 const editing = ref(null)
 const categoryNameInput = ref(null)

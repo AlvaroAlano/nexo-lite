@@ -132,24 +132,33 @@
                 </svg>
               </button>
               <Transition name="dropdown">
-                <div v-if="activeMenuId === expense.id" class="absolute right-0 top-8 z-30 min-w-[140px] rounded-xl bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark shadow-stripe-2 py-1 overflow-hidden">
+                <div v-if="activeMenuId === expense.id" class="absolute right-0 top-8 z-30 min-w-[150px] rounded-xl bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark shadow-stripe-2 py-1 overflow-hidden">
                   <button
                     @click.stop="onDetail(expense)"
-                    class="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+                    class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-xs text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
                   >
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
                     Ver detalhes
                   </button>
                   <button
                     @click.stop="onEdit(expense)"
-                    class="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+                    class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-xs text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
                   >
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
                     Editar
                   </button>
                   <div class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/40" />
                   <button
                     @click.stop="onDelete(expense)"
-                    class="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                    class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                   >
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                    </svg>
                     Excluir
                   </button>
                 </div>
@@ -170,12 +179,13 @@
 </template>
 
 <script setup>
-import { ref, nextTick, computed, onUnmounted } from 'vue'
+import { ref, nextTick, computed, onMounted, onUnmounted } from 'vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { useCategoriesStore } from '../../stores/categories.js'
 import { formatCurrency } from '../../utils/currency.js'
 import { colorByKey, getIconComponent } from '../../utils/categories.js'
 import CurrencyInput from '../ui/CurrencyInput.vue'
+import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../../utils/menuBus.js'
 
 defineProps({ expenses: { type: Array, default: () => [] } })
 const emit = defineEmits(['open-rent', 'delete', 'edit', 'click-detail'])
@@ -212,10 +222,9 @@ function toggleMenu(id) {
   if (activeMenuId.value === id) {
     closeMenu()
   } else {
+    broadcastMenuOpen()
     activeMenuId.value = id
-    setTimeout(() => {
-      document.addEventListener('click', closeMenu)
-    }, 0)
+    setTimeout(() => document.addEventListener('click', closeMenu), 0)
   }
 }
 
@@ -224,7 +233,9 @@ function closeMenu() {
   document.removeEventListener('click', closeMenu)
 }
 
+onMounted(() => document.addEventListener(CLOSE_MENUS_EVENT, closeMenu))
 onUnmounted(() => {
+  document.removeEventListener(CLOSE_MENUS_EVENT, closeMenu)
   document.removeEventListener('click', closeMenu)
 })
 

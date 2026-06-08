@@ -65,6 +65,10 @@ async def update_expense(
     if payload.is_paid is not None:
         expense.is_paid = payload.is_paid
         expense.paid_at = datetime.now(timezone.utc) if payload.is_paid else None
+    if payload.installment_current is not None:
+        expense.installment_current = payload.installment_current
+    if payload.installment_total is not None:
+        expense.installment_total = payload.installment_total
 
     return ExpenseResponse.model_validate(expense)
 

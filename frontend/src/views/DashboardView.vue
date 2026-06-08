@@ -5,48 +5,10 @@
     @touchmove="handleTouchMove"
     @touchend="handleTouchEnd"
   >
-    <!-- Pull-to-refresh indicator (mobile only) -->
-    <div
-      class="flex justify-center items-center overflow-hidden transition-all duration-200 pointer-events-none md:hidden bg-brand-canvas-soft-light/20 dark:bg-brand-canvas-soft-dark/10 rounded-xl"
-      :style="{
-        height: `${pullDistance}px`,
-        opacity: pullDistance > 0 ? 1 : 0,
-        marginBottom: pullDistance > 0 ? '12px' : '0px'
-      }"
-    >
-      <div class="flex items-center gap-2 py-2">
-        <svg
-          class="w-5 h-5 text-brand-primary animate-spin"
-          v-if="refreshing"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="3"
-        >
-          <path d="M21 12a9 9 0 11-6.21-8.56" />
-        </svg>
-        <svg
-          class="w-5 h-5 text-brand-ink-mute-light dark:text-brand-ink-mute-dark transition-transform"
-          v-else
-          :style="{ transform: `rotate(${Math.min(pullDistance * 4, 180)}deg)` }"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <polyline points="19 12 12 19 5 12" />
-        </svg>
-        <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark font-medium">
-          {{ refreshing ? 'Atualizando...' : (pullDistance >= 45 ? 'Solte para atualizar' : 'Puxe para atualizar') }}
-        </span>
-      </div>
-    </div>
+    <PullRefreshIndicator :pull-distance="pullDistance" :refreshing="refreshing" />
 
     <!-- Loading -->
-    <div v-if="store.loading" class="flex flex-col items-center justify-center py-20 gap-3">
+    <div v-if="store.loading && !refreshing" class="flex flex-col items-center justify-center py-20 gap-3">
       <div class="w-6 h-6 rounded-full border-2 border-brand-hairline-light dark:border-brand-hairline-dark border-t-brand-primary animate-spin" />
       <p class="text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm">Carregando…</p>
     </div>
@@ -247,6 +209,26 @@
           v-model="addForm.amount"
           input-class="w-full pr-4 py-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input font-tabular text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         />
+        <div v-if="editTarget?.expense_type === 'installment'" class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1 block">Parcela atual</label>
+            <input
+              v-model.number="addForm.installment_current"
+              type="number" min="1"
+              class="w-full px-4 py-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm font-tabular focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              placeholder="Ex: 3"
+            />
+          </div>
+          <div>
+            <label class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1 block">Total de parcelas</label>
+            <input
+              v-model.number="addForm.installment_total"
+              type="number" min="1"
+              class="w-full px-4 py-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm font-tabular focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+              placeholder="Ex: 12"
+            />
+          </div>
+        </div>
         <label v-if="!editTarget" @click="addForm.is_paid = !addForm.is_paid" class="flex items-center gap-3 py-1 cursor-pointer select-none">
           <div
             class="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-shrink-0 pointer-events-none"
@@ -275,6 +257,8 @@
 <script setup>
 import { ref, watch, onMounted, reactive, computed } from 'vue'
 import { useDashboardStore } from '../stores/dashboard.js'
+import { usePullToRefresh } from '../composables/usePullToRefresh.js'
+import PullRefreshIndicator from '../components/ui/PullRefreshIndicator.vue'
 import BalanceSummary from '../components/dashboard/BalanceSummary.vue'
 import ExpenseCard from '../components/dashboard/ExpenseCard.vue'
 import ExpenseTable from '../components/dashboard/ExpenseTable.vue'
@@ -302,59 +286,10 @@ function openDetailModal(expense) {
   showDetailModal.value = true
 }
 
-// Pull-to-refresh logic
-const pullDistance = ref(0)
-const refreshing = ref(false)
-let startY = 0
-let isPulling = false
+const { pullDistance, refreshing, handleTouchStart, handleTouchMove, handleTouchEnd } =
+  usePullToRefresh(() => store.fetchCurrent())
 
-function handleTouchStart(e) {
-  const scrollEl = document.querySelector('main')
-  if (!scrollEl || scrollEl.scrollTop > 0 || refreshing.value) return
-  
-  startY = e.touches[0].pageY
-  isPulling = true
-}
-
-function handleTouchMove(e) {
-  if (!isPulling || refreshing.value) return
-  const currentY = e.touches[0].pageY
-  const diff = currentY - startY
-  
-  if (diff > 0) {
-    pullDistance.value = Math.min(diff * 0.4, 60)
-    if (pullDistance.value > 10) {
-      if (e.cancelable) e.preventDefault()
-    }
-  } else {
-    pullDistance.value = 0
-    isPulling = false
-  }
-}
-
-async function handleTouchEnd() {
-  if (!isPulling) return
-  isPulling = false
-  
-  if (pullDistance.value >= 45) {
-    refreshing.value = true
-    pullDistance.value = 45
-    try {
-      await store.fetchCurrent()
-    } catch (err) {
-      console.error('Erro no pull-to-refresh:', err)
-    } finally {
-      setTimeout(() => {
-        refreshing.value = false
-        pullDistance.value = 0
-      }, 400)
-    }
-  } else {
-    pullDistance.value = 0
-  }
-}
-
-const addForm = reactive({ name: '', category_id: null, responsavel: 'conjunto', amount: 0, is_paid: false })
+const addForm = reactive({ name: '', category_id: null, responsavel: 'conjunto', amount: 0, is_paid: false, installment_current: null, installment_total: null })
 
 const undoState = ref(null)  // { expense, timerId }
 const undoKey = ref(0)
@@ -392,6 +327,8 @@ function resetAddForm() {
   addForm.category_id = null
   addForm.amount = 0
   addForm.responsavel = 'conjunto'
+  addForm.installment_current = null
+  addForm.installment_total = null
   addForm.is_paid = false
 }
 
@@ -433,6 +370,8 @@ function openEditModal(expense) {
   addForm.responsavel = expense.responsavel
   addForm.amount = parseFloat(expense.amount) || 0
   addForm.is_paid = expense.is_paid
+  addForm.installment_current = expense.installment_current ?? null
+  addForm.installment_total = expense.installment_total ?? null
   showExpenseModal.value = true
 }
 
@@ -443,6 +382,10 @@ async function saveExpenseEdit() {
     category_id: addForm.category_id,
     responsavel: addForm.responsavel,
     ...(editTarget.value.expense_type !== 'rent' && { amount: addForm.amount }),
+    ...(editTarget.value.expense_type === 'installment' && {
+      installment_current: addForm.installment_current,
+      installment_total: addForm.installment_total,
+    }),
   }
   await store.updateExpenseFull(editTarget.value.id, payload)
   showExpenseModal.value = false

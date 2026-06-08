@@ -1,5 +1,10 @@
 <template>
-  <div class="max-w-4xl mx-auto px-4 pt-5 pb-6 font-ss01">
+  <div
+    class="max-w-4xl mx-auto px-4 pt-5 pb-6 font-ss01"
+    @touchstart="handleTouchStart"
+    @touchmove="handleTouchMove"
+    @touchend="handleTouchEnd"
+  >
     <div class="mb-6">
       <h1 class="text-xl font-light tracking-tight text-brand-ink-light dark:text-white">Recorrências</h1>
       <p class="text-sm text-brand-ink-mute-light dark:text-brand-ink-mute-dark mt-1">
@@ -7,8 +12,10 @@
       </p>
     </div>
 
+    <PullRefreshIndicator :pull-distance="pullDistance" :refreshing="refreshing" />
+
     <!-- Loading -->
-    <div v-if="loading" class="flex justify-center py-12">
+    <div v-if="loading && !refreshing" class="flex justify-center py-12">
       <div class="w-5 h-5 rounded-full border-2 border-brand-hairline-light dark:border-brand-hairline-dark border-t-brand-primary animate-spin" />
     </div>
 
@@ -332,14 +339,17 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { MoreVertical } from 'lucide-vue-next'
 import { templatesApi } from '../services/api.js'
 import { formatCurrency } from '../utils/currency.js'
+import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../utils/menuBus.js'
 import CategoryPicker from '../components/ui/CategoryPicker.vue'
 import CurrencyInput from '../components/ui/CurrencyInput.vue'
 import AppSelect from '../components/ui/AppSelect.vue'
 import ConfirmModal from '../components/ui/ConfirmModal.vue'
+import { usePullToRefresh } from '../composables/usePullToRefresh.js'
+import PullRefreshIndicator from '../components/ui/PullRefreshIndicator.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import RentItemsEditor from '../components/ui/RentItemsEditor.vue'
 import { useDashboardStore } from '../stores/dashboard.js'
@@ -422,6 +432,9 @@ const installmentSummary = computed(() => {
 })
 
 onMounted(fetchTemplates)
+
+const { pullDistance, refreshing, handleTouchStart, handleTouchMove, handleTouchEnd } =
+  usePullToRefresh(fetchTemplates)
 
 async function fetchTemplates() {
   loading.value = true
@@ -546,8 +559,16 @@ async function toggleActive(tmpl) {
 
 const openMenuId = ref(null)
 function toggleMenu(id) {
-  openMenuId.value = openMenuId.value === id ? null : id
+  if (openMenuId.value === id) {
+    openMenuId.value = null
+  } else {
+    broadcastMenuOpen()
+    openMenuId.value = id
+  }
 }
+function closeAllMenus() { openMenuId.value = null }
+onMounted(() => document.addEventListener(CLOSE_MENUS_EVENT, closeAllMenus))
+onUnmounted(() => document.removeEventListener(CLOSE_MENUS_EVENT, closeAllMenus))
 
 const showConfirmDelete = ref(false)
 const deleteTarget = ref(null)

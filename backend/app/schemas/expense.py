@@ -120,6 +120,8 @@ class ExpenseUpdate(BaseModel):
     responsavel: Optional[Responsavel] = None
     amount: Optional[Decimal] = None
     is_paid: Optional[bool] = None
+    installment_current: Optional[int] = None
+    installment_total: Optional[int] = None
 
     @field_validator("amount", mode="before")
     @classmethod

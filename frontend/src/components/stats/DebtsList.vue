@@ -299,12 +299,13 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { PiggyBank, Trash2, Check, X, Wallet, Target, MoreVertical } from 'lucide-vue-next'
 import { useDebtsStore } from '../../stores/debts.js'
 import { useVaultStore } from '../../stores/vault.js'
 import CurrencyInput from '../ui/CurrencyInput.vue'
 import ConfirmModal from '../ui/ConfirmModal.vue'
+import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../../utils/menuBus.js'
 
 const store = useDebtsStore()
 const vault = useVaultStore()
@@ -322,8 +323,16 @@ const vaultBalance = computed(() => {
 // ── Menu mobile ──────────────────────────────────────────────────────────────
 const openMenuId = ref(null)
 function toggleMenu(id) {
-  openMenuId.value = openMenuId.value === id ? null : id
+  if (openMenuId.value === id) {
+    openMenuId.value = null
+  } else {
+    broadcastMenuOpen()
+    openMenuId.value = id
+  }
 }
+function closeDebtsMenu() { openMenuId.value = null }
+onMounted(() => document.addEventListener(CLOSE_MENUS_EVENT, closeDebtsMenu))
+onUnmounted(() => document.removeEventListener(CLOSE_MENUS_EVENT, closeDebtsMenu))
 
 // ── Foco manual — persiste no localStorage ────────────────────────────────────
 const FOCUS_KEY = 'nexo_focused_debt_id'
