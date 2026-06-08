@@ -102,6 +102,7 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
     )
     templates = tmpl_result.scalars().all()
 
+    caixinha_created = False
     for tmpl in templates:
         resp = getattr(tmpl, "responsavel", "conjunto") or "conjunto"
 
@@ -132,14 +133,14 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
             for item in tmpl_items:
                 item_type = item.get("type", "fixed")
                 if item_type == "installment":
-                    current = int(item.get("installment_current") or 0)
+                    inst_current = int(item.get("installment_current") or 0)
                     total_inst = int(item.get("installment_total") or 0)
-                    if total_inst > 0 and current > total_inst:
+                    if total_inst > 0 and inst_current >= total_inst:
                         # Completed — keep in template, skip clone
                         updated_tmpl_items.append(item)
                         continue
-                    cloned_items.append({**item, "installment_current": current})
-                    updated_tmpl_items.append({**item, "installment_current": current + 1})
+                    cloned_items.append({**item, "installment_current": inst_current})
+                    updated_tmpl_items.append({**item, "installment_current": inst_current + 1})
                 elif item_type == "variable":
                     # Reset to 0 each month — user fills in during check-in
                     cloned_items.append({**item, "amount": "0.00"})
@@ -149,7 +150,7 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
                     updated_tmpl_items.append(item)
 
             tmpl.rent_items = updated_tmpl_items
-            total = sum(_safe_decimal(i.get("amount", 0)) for i in cloned_items)
+            rent_total = sum(_safe_decimal(i.get("amount", 0)) for i in cloned_items)
             expense = MonthlyExpense(
                 period_id=new_period.id,
                 template_id=tmpl.id,
@@ -158,7 +159,7 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
                 category_id=tmpl.category_id,
                 expense_type="rent",
                 responsavel=resp,
-                amount=total,
+                amount=rent_total,
                 rent_items=cloned_items,
                 display_order=tmpl.display_order,
             )
@@ -174,12 +175,11 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
                 amount=_safe_decimal(tmpl.base_amount),
                 display_order=tmpl.display_order,
             )
+        if expense.name == "Caixinha" or expense.category == "Caixinha":
+            caixinha_created = True
         db.add(expense)
 
     # Always ensure Caixinha exists in the new period (independent of templates)
-    caixinha_created = any(
-        getattr(tmpl, "category", "") == "Caixinha" for tmpl in templates
-    )
     if not caixinha_created:
         db.add(MonthlyExpense(
             period_id=new_period.id,

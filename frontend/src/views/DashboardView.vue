@@ -255,7 +255,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, reactive, computed } from 'vue'
+import { ref, watch, onMounted, onUnmounted, reactive, computed } from 'vue'
 import { useDashboardStore } from '../stores/dashboard.js'
 import { usePullToRefresh } from '../composables/usePullToRefresh.js'
 import PullRefreshIndicator from '../components/ui/PullRefreshIndicator.vue'
@@ -358,6 +358,14 @@ onMounted(async () => {
   }
 })
 
+onUnmounted(() => {
+  if (undoState.value) {
+    clearTimeout(undoState.value.timerId)
+    store.hardDeleteExpense(undoState.value.expense.id)
+    undoState.value = null
+  }
+})
+
 function openRent(expense) {
   rentExpense.value = expense
   showRent.value = true
@@ -387,8 +395,12 @@ async function saveExpenseEdit() {
       installment_total: addForm.installment_total,
     }),
   }
-  await store.updateExpenseFull(editTarget.value.id, payload)
-  showExpenseModal.value = false
+  try {
+    await store.updateExpenseFull(editTarget.value.id, payload)
+    showExpenseModal.value = false
+  } catch {
+    // store.error já foi populado — modal permanece aberto para o usuário ver o erro
+  }
 }
 
 async function quickAdd() {

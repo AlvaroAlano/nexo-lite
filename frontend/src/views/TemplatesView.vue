@@ -19,6 +19,12 @@
       <div class="w-5 h-5 rounded-full border-2 border-brand-hairline-light dark:border-brand-hairline-dark border-t-brand-primary animate-spin" />
     </div>
 
+    <!-- Error -->
+    <div v-else-if="loadError" class="bg-red-500/10 border border-red-500/20 rounded-stripe-card p-5 text-center">
+      <p class="text-red-600 dark:text-red-400 text-sm font-medium">Não foi possível carregar os templates.</p>
+      <button @click="fetchTemplates" class="mt-3 text-xs text-red-600 dark:text-red-400 underline">Tentar novamente</button>
+    </div>
+
     <template v-else>
       <!-- Backdrop fecha menu mobile -->
       <div v-if="openMenuId" class="fixed inset-0 z-20" @click="openMenuId = null" />
@@ -369,6 +375,7 @@ const expenseTypeOpts = [
   { value: 'rent',        label: 'Aluguel' },
 ]
 const loading = ref(false)
+const loadError = ref(false)
 const saving = ref(false)
 const editTarget = ref(null)
 
@@ -438,9 +445,12 @@ const { pullDistance, refreshing, handleTouchStart, handleTouchMove, handleTouch
 
 async function fetchTemplates() {
   loading.value = true
+  loadError.value = false
   try {
     const { data } = await templatesApi.list()
     templates.value = data
+  } catch {
+    loadError.value = true
   } finally {
     loading.value = false
   }
@@ -517,11 +527,15 @@ async function addTemplate() {
 
     // Update paid counter on the template after creation
     if (isInstallment && form.value.installment_paid > 0) {
-      await templatesApi.update(tmpl.id, { installment_paid: form.value.installment_paid })
-      tmpl.installment_paid = form.value.installment_paid
+      try {
+        const { data: updated } = await templatesApi.update(tmpl.id, { installment_paid: form.value.installment_paid })
+        templates.value.push(updated)
+      } catch {
+        templates.value.push(tmpl)
+      }
+    } else {
+      templates.value.push(tmpl)
     }
-
-    templates.value.push(tmpl)
 
     // Optionally add to current open month
     if (form.value.addToCurrentMonth && dashboardStore.period?.id) {
@@ -531,7 +545,9 @@ async function addTemplate() {
         category_id: tmpl.category_id,
         expense_type: tmpl.expense_type,
         responsavel: tmpl.responsavel,
-        amount: tmpl.base_amount,
+        amount: isRent
+          ? (tmpl.rent_items || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0)
+          : tmpl.base_amount,
         ...(isInstallment && {
           installment_current: current,
           installment_total: tmpl.installment_total,

@@ -5,6 +5,55 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 
 ---
 
+## 2026-06-08 — Auditoria e correção sistemática: backend, frontend, integração e regras de negócio
+
+Análise em 4 partes via subagentes. Nenhuma RN principal estava quebrada, mas vários bugs silenciosos foram corrigidos.
+
+**Backend (críticos corrigidos):**
+- `turnover.py`: condição `>` → `>=` na parcela de aluguel (clonava uma vez a mais após último pagamento); variável `current` shadoweava o período aberto (renomeada `inst_current`)
+- `expenses.py`: `PATCH /expenses/{id}` passou a bloquear edição direta de `amount` em despesas de aluguel (400)
+- `periods.py`: income legado não mais atribui total ao Álvaro (deixava alexandra com 0)
+
+**Backend (médios/baixos):**
+- `/history`: N+1 queries → 1 query com JOIN + GROUP BY
+- `/turnover`: retorna 400 se não há período aberto
+- `/{year}/{month}`: valida `1 <= month <= 12`
+- `templates.py`: valida `installment_paid <= installment_total` no PATCH
+- `turnover.py`: Caixinha rastreada pelo nome da expense criada (não categoria do template)
+- `schemas/expense.py`: `list[dict]` → `list[RentItem]` nos schemas de input; campos legacy `rent_base/water/gas/extras` removidos do model e schema
+- `database.py`: `pool_timeout=30` adicionado
+- `periods.py`: update de income bloqueia período fechado
+- `PeriodWithExpenses` schema criado; endpoints `/current` e `/{year}/{month}` trocaram `response_model=dict`
+- Migration `009` criada para dropar colunas legacy do banco
+
+**Regras de negócio:**
+- Proteção do Caixinha (delete + detecção no turnover) agora usa `name OR category == "Caixinha"`
+- `free_cash` no histórico aplica `max(0, ...)` — consistente com carryover real
+- `TemplateCreate` valida `installment_total` obrigatório para `expense_type=installment`
+
+**Frontend (críticos):**
+- `deleteExpense`: rollback otimista se API falhar
+- `updateIncome`: expõe erro no `error.value` e relança
+- `DashboardView`: `onUnmounted` cancela timer do undo e executa delete pendente
+- `TemplatesView`: criação de template parcelado empurra para a lista independente do PATCH de `installment_paid`
+- `ExpenseDetailModal`: divisor entre rent items estava fora do escopo do `v-for` (`idx` inacessível) — corrigido com `<template>`
+
+**Frontend (médios/baixos):**
+- `categories.js`: `fetch(force=false)` — pull-to-refresh passa `true`
+- `SettingsView`: pull-to-refresh com force; feedback visual de erro no save de salários
+- `StatsView`: `fetchAll` com guard (só dispara se sem dados)
+- `useGamification`: fallback `|| 600` → `|| 0`; watcher de milestone registrado apenas uma vez
+- `App.vue`: removido `catStore.fetch()` redundante (router guard já cobre)
+- `TemplatesView`: error handling no `fetchTemplates` com state visível
+- `updateExpenseFull`: expõe erro; modal de edição só fecha em caso de sucesso
+
+**Integração:**
+- `runTurnover`: catch com erro exibido no `TurnoverModal` (modal não fecha em falha)
+- `updateExpenseAmount`: guard contra `expense_type === 'rent'` antes de chamar API
+- `addToCurrentMonth` para aluguel: recalcula `amount` de `rent_items` em vez de usar `base_amount`
+
+---
+
 ## 2026-06-08 — Feature: Pull-to-refresh no Mobile (Dashboard)
 
 **Contexto:** Aplicativos PWA instalados no mobile ou rodando em modo flex com `overflow-hidden` no body perdem o gesto nativo do browser de puxar para atualizar (pull-to-refresh). Para atualizar o app, o usuário precisava fechá-lo por completo e abri-lo novamente.

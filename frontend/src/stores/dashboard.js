@@ -114,9 +114,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
     if (!period.value || isReadOnly.value) return
     const amount = typeof value === 'number' ? value : parseCurrency(value)
     saving.value = true
+    error.value = null
     try {
       const { data } = await periodsApi.updateIncome(period.value.id, { [field]: amount })
       period.value = data
+    } catch (e) {
+      error.value = 'Não foi possível salvar a renda.'
+      console.error(e)
+      throw e
     } finally {
       saving.value = false
     }
@@ -124,11 +129,16 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   async function updateExpenseAmount(expenseId, rawValue) {
     if (isReadOnly.value) return
+    const expense = expenses.value.find((e) => e.id === expenseId)
+    if (expense?.expense_type === 'rent') return
     const amount = typeof rawValue === 'number' ? rawValue : parseCurrency(rawValue)
     saving.value = true
     try {
       const { data } = await expensesApi.update(expenseId, { amount })
       _replaceExpense(data)
+    } catch (e) {
+      error.value = 'Não foi possível salvar o valor.'
+      console.error(e)
     } finally {
       saving.value = false
     }
@@ -176,8 +186,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   async function deleteExpense(expenseId) {
     if (isReadOnly.value) return
-    await expensesApi.delete(expenseId)
+    const removed = expenses.value.find((e) => e.id === expenseId)
     expenses.value = expenses.value.filter((e) => e.id !== expenseId)
+    try {
+      await expensesApi.delete(expenseId)
+    } catch (e) {
+      if (removed) expenses.value = [...expenses.value, removed].sort((a, b) => (a.display_order ?? 9999) - (b.display_order ?? 9999))
+      throw e
+    }
   }
 
   function removeExpenseLocally(expenseId) {
@@ -197,9 +213,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
   async function updateExpenseFull(expenseId, payload) {
     if (isReadOnly.value) return
     saving.value = true
+    error.value = null
     try {
       const { data } = await expensesApi.update(expenseId, payload)
       _replaceExpense(data)
+    } catch (e) {
+      error.value = 'Não foi possível salvar as alterações.'
+      console.error(e)
+      throw e
     } finally {
       saving.value = false
     }
@@ -207,10 +228,15 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   async function runTurnover() {
     saving.value = true
+    error.value = null
     try {
       await periodsApi.turnover()
       await fetchCurrent()
       notFoundMonth.value = false
+    } catch (e) {
+      error.value = e.response?.data?.detail || 'Não foi possível fechar o mês.'
+      console.error(e)
+      throw e
     } finally {
       saving.value = false
     }

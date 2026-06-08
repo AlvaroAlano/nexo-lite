@@ -2,7 +2,10 @@ from pydantic import BaseModel, field_validator, computed_field
 from decimal import Decimal
 from datetime import datetime
 from uuid import UUID
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.schemas.expense import ExpenseResponse
 
 
 def safe_decimal(v) -> Decimal:
@@ -57,5 +60,12 @@ class PeriodResponse(BaseModel):
     @property
     def income_total(self) -> Decimal:
         return self.income_alvaro + self.income_alexandra
+
+    model_config = {"from_attributes": True}
+
+
+class PeriodWithExpenses(BaseModel):
+    period: "PeriodResponse"
+    expenses: list["ExpenseResponse"]
 
     model_config = {"from_attributes": True}

@@ -61,6 +61,8 @@ async def update_expense(
     elif payload.category is not None:
         expense.category = payload.category
     if payload.amount is not None:
+        if expense.expense_type == "rent":
+            raise HTTPException(status_code=400, detail="Use PATCH /expenses/{id}/rent to update rent amount")
         expense.amount = payload.amount
     if payload.is_paid is not None:
         expense.is_paid = payload.is_paid
@@ -121,7 +123,7 @@ async def delete_expense(
     expense = result.scalars().first()
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
-    if expense.category == "Caixinha":
+    if expense.name == "Caixinha" or expense.category == "Caixinha":
         raise HTTPException(status_code=403, detail="Caixinha expense cannot be deleted")
     await db.delete(expense)
     await db.flush()

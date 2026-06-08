@@ -23,7 +23,8 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] `"type": "module"` no package.json — remove warning ES module do Node — (2026-06-03)
 - [x] Backend testado: imports OK, uvicorn sobe, /health responde — (2026-06-03)
 - [x] Frontend testado: Vite 6.4.3 inicia em ~500ms — (2026-06-03)
-- [ ] Rodar migrations 001 e 002 no Supabase
+- [ ] Rodar migrations 001–008 no Supabase
+- [ ] Rodar migration 009 (dropar colunas legacy rent_base/water/gas/extras) no Supabase
 - [ ] Preencher `backend/.env` com DATABASE_URL real do Supabase
 - [ ] Testar fluxo completo com banco de dados conectado
 
@@ -40,9 +41,12 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Campo `responsavel` em models, schemas, routers e serviço de turnover — (2026-06-03)
 - [x] Campos `income_alvaro` / `income_alexandra` no model `MonthlyPeriod` — (2026-06-03)
 - [x] Router `/summary` com saldos por pessoa (saldo_alvaro, saldo_alexandra) — (2026-06-03)
+- [x] Auditoria completa de backend, frontend, integração e regras de negócio — (2026-06-08)
+- [x] Corrigir bugs críticos/médios/baixos identificados na auditoria — (2026-06-08)
 - [ ] Integrar Supabase Auth (trocar `get_user_id()` por JWT real)
 - [ ] Testes unitários do serviço de turnover (edge cases: sem period aberto, mês 12→1)
 - [ ] Endpoint `GET /periods` para listar histórico de todos os meses
+- [ ] Remover `summaryApi` de `api.js` e o endpoint `/summary` do backend (dead code)
 
 ## 🎨 Frontend
 

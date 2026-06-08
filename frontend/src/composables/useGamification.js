@@ -18,6 +18,7 @@ const MILESTONES      = [500, 1000, 2000, 3000, 5000, 10000]
 const DISMISSED_KEY   = 'nexo_dismissed_milestones'
 const dismissedSet    = new Set(JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]'))
 const activeMilestone = ref(null)
+let _milestoneWatcherRegistered = false
 
 const MOCK_INSIGHTS = [
   'Mês sob controle. Notei que a conta de energia subiu R$ 50 em relação à média, mas o aporte na Caixinha foi garantido. Mantenham o ritmo.',
@@ -35,7 +36,7 @@ export function useGamification() {
     const s = vault.summary
     if (s?.last_real_balance != null) return parseFloat(s.last_real_balance)
     if (s?.total_deposited  != null) return parseFloat(s.total_deposited)
-    return dashboard.vaultMonthAmount || 600
+    return dashboard.vaultMonthAmount || 0
   })
 
   // ── Próxima dívida alvo (snowball) ────────────────────────────────────────
@@ -108,6 +109,8 @@ export function useGamification() {
   )
 
   // ── Milestones ────────────────────────────────────────────────────────────
+  if (!_milestoneWatcherRegistered) {
+    _milestoneWatcherRegistered = true
   watch(caixinhaBalance, (val) => {
     if (activeMilestone.value) return
     for (const m of MILESTONES) {
@@ -118,6 +121,7 @@ export function useGamification() {
       }
     }
   })
+  }
 
   function dismissMilestone() {
     if (!activeMilestone.value) return

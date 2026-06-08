@@ -7,7 +7,8 @@ from datetime import datetime, timezone
 from app.database import get_db
 from app.models.period import MonthlyPeriod
 from app.models.expense import MonthlyExpense
-from app.schemas.period import PeriodResponse, PeriodUpdate
+from app.schemas.period import PeriodResponse, PeriodUpdate, PeriodWithExpenses
+from app.schemas.expense import ExpenseResponse as _ExpenseResponse  # noqa: F401 — needed for PeriodWithExpenses forward ref
 from app.schemas.expense import ExpenseResponse
 from app.services.turnover import run_turnover
 from app.config import settings
@@ -33,7 +34,7 @@ async def _fetch_period_with_expenses(db: AsyncSession, period: MonthlyPeriod) -
     }
 
 
-@router.get("/current", response_model=dict)
+@router.get("/current", response_model=PeriodWithExpenses)
 async def get_current_period(db: AsyncSession = Depends(get_db)):
     """Return the open period plus all its expenses. Creates one if none exists."""
     user_id = get_user_id()
@@ -68,33 +69,30 @@ async def get_periods_history(
     """Últimos N meses com free_cash e carryover calculados — alimenta gráficos de stats."""
     user_id = get_user_id()
     result = await db.execute(
-        select(MonthlyPeriod)
+        select(
+            MonthlyPeriod,
+            func.coalesce(func.sum(MonthlyExpense.amount), 0).label("total_expenses"),
+        )
+        .outerjoin(MonthlyExpense, MonthlyExpense.period_id == MonthlyPeriod.id)
         .where(MonthlyPeriod.user_id == user_id)
+        .group_by(MonthlyPeriod.id)
         .order_by(MonthlyPeriod.year.desc(), MonthlyPeriod.month.desc())
         .limit(limit)
     )
-    periods = result.scalars().all()
-
-    rows = []
-    for p in reversed(periods):  # ordem cronológica
-        exp_result = await db.execute(
-            select(func.coalesce(func.sum(MonthlyExpense.amount), 0))
-            .where(MonthlyExpense.period_id == p.id)
-        )
-        total_expenses = float(exp_result.scalar())
-        income    = float(p.income_alvaro or 0) + float(p.income_alexandra or 0)
-        carryover = float(p.carryover_balance or 0)
-        rows.append({
+    rows = result.all()
+    return [
+        {
             "year":              p.year,
             "month":             p.month,
-            "carryover_balance": carryover,
-            "total_expenses":    total_expenses,
-            "free_cash":         income + carryover - total_expenses,
-        })
-    return rows
+            "carryover_balance": float(p.carryover_balance or 0),
+            "total_expenses":    float(total_expenses),
+            "free_cash":         max(0.0, float(p.income_alvaro or 0) + float(p.income_alexandra or 0) + float(p.carryover_balance or 0) - float(total_expenses)),
+        }
+        for p, total_expenses in reversed(rows)
+    ]
 
 
-@router.get("/{year}/{month}", response_model=dict)
+@router.get("/{year}/{month}", response_model=PeriodWithExpenses)
 async def get_period_by_month(
     year: int,
     month: int,
@@ -104,6 +102,8 @@ async def get_period_by_month(
     Return a specific month's period. Used for month navigation.
     Returns 404 if the period doesn't exist (e.g., future month not yet created).
     """
+    if not (1 <= month <= 12):
+        raise HTTPException(status_code=422, detail="month must be between 1 and 12")
     user_id = get_user_id()
     result = await db.execute(
         select(MonthlyPeriod).where(
@@ -129,15 +129,16 @@ async def update_income(
     period = result.scalars().first()
     if period is None:
         raise HTTPException(status_code=404, detail="Period not found")
+    if period.status != "open":
+        raise HTTPException(status_code=400, detail="Cannot update income of a closed period")
 
     if payload.income_alvaro is not None:
         period.income_alvaro = payload.income_alvaro
     if payload.income_alexandra is not None:
         period.income_alexandra = payload.income_alexandra
-    # Legacy single-field update: assign to alvaro if other field not specified
+    # Legacy single-field update — only updates the total field, does not touch per-person fields
     if payload.income is not None and payload.income_alvaro is None and payload.income_alexandra is None:
         period.income = payload.income
-        period.income_alvaro = payload.income
 
     return PeriodResponse.model_validate(period)
 
@@ -149,5 +150,13 @@ async def month_turnover(db: AsyncSession = Depends(get_db)):
     Only callable when a period is open (RN-06).
     """
     user_id = get_user_id()
+    open_check = await db.execute(
+        select(MonthlyPeriod).where(
+            MonthlyPeriod.user_id == user_id,
+            MonthlyPeriod.status == "open",
+        )
+    )
+    if open_check.scalars().first() is None:
+        raise HTTPException(status_code=400, detail="No open period to close")
     new_period = await run_turnover(db, user_id)
     return PeriodResponse.model_validate(new_period)

@@ -69,7 +69,7 @@ const PT_MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','
 
 onMounted(() => {
   if (!dashboard.period && !dashboard.loading) dashboard.fetchCurrent()
-  statsStore.fetchAll()
+  if (!statsStore.history.length && !statsStore.loading) statsStore.fetchAll()
 })
 
 const { pullDistance, refreshing, handleTouchStart, handleTouchMove, handleTouchEnd } =

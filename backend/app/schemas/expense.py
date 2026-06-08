@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 from decimal import Decimal
 from datetime import datetime
 from uuid import UUID
@@ -44,12 +44,18 @@ class TemplateCreate(BaseModel):
     base_amount: Decimal = Decimal("0.00")
     installment_total: Optional[int] = None
     display_order: int = 0
-    rent_items: list[dict] = []
+    rent_items: list[RentItem] = []
 
     @field_validator("base_amount", mode="before")
     @classmethod
     def validate_amount(cls, v):
         return safe_decimal(v)
+
+    @model_validator(mode="after")
+    def require_installment_total(self):
+        if self.expense_type == "installment" and not self.installment_total:
+            raise ValueError("installment_total is required for installment templates")
+        return self
 
 
 class TemplateUpdate(BaseModel):
@@ -63,7 +69,7 @@ class TemplateUpdate(BaseModel):
     installment_total: Optional[int] = None
     installment_paid: Optional[int] = None
     display_order: Optional[int] = None
-    rent_items: Optional[list[dict]] = None
+    rent_items: Optional[list[RentItem]] = None
 
     @field_validator("base_amount", mode="before")
     @classmethod
@@ -105,7 +111,7 @@ class ExpenseCreate(BaseModel):
     installment_current: Optional[int] = None
     installment_total: Optional[int] = None
     display_order: int = 0
-    rent_items: list[dict] = []
+    rent_items: list[RentItem] = []
 
     @field_validator("amount", mode="before")
     @classmethod
@@ -149,10 +155,6 @@ class ExpenseResponse(BaseModel):
     paid_at: Optional[datetime]
     installment_current: Optional[int]
     installment_total: Optional[int]
-    rent_base: Decimal    # legacy
-    rent_water: Decimal   # legacy
-    rent_gas: Decimal     # legacy
-    rent_extras: Decimal  # legacy
     rent_items: list[dict] = []
     display_order: int
     created_at: datetime

@@ -64,6 +64,10 @@ async def update_template(
         raise HTTPException(status_code=404, detail="Template not found")
 
     update_data = payload.model_dump(exclude_none=True)
+    if "installment_paid" in update_data:
+        total = update_data.get("installment_total") or tmpl.installment_total or 1
+        if update_data["installment_paid"] > total:
+            raise HTTPException(status_code=400, detail="installment_paid cannot exceed installment_total")
     if "category_id" in update_data and update_data["category_id"] is not None:
         cat = (await db.execute(select(Category).where(Category.id == update_data["category_id"]))).scalars().first()
         if cat:

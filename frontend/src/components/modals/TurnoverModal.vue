@@ -48,6 +48,7 @@
     </div>
 
     <template #footer>
+      <p v-if="turnoverError" class="text-xs text-red-500 text-center mb-2">{{ turnoverError }}</p>
       <div class="flex gap-3">
         <button
           @click="open = false"
@@ -68,7 +69,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import BaseModal from '../ui/BaseModal.vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { formatCurrency } from '../../utils/currency.js'
@@ -105,8 +106,15 @@ const carryover = computed(() =>
   Math.max(0, totalAvailable.value - store.totalCommitted)
 )
 
+const turnoverError = ref(null)
+
 async function confirm() {
-  await store.runTurnover()
-  open.value = false
+  turnoverError.value = null
+  try {
+    await store.runTurnover()
+    open.value = false
+  } catch (e) {
+    turnoverError.value = e.response?.data?.detail || 'Não foi possível fechar o mês.'
+  }
 }
 </script>

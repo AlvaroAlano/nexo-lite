@@ -76,21 +76,23 @@
           Itens do Aluguel
         </h4>
         <div v-if="expense.rent_items && expense.rent_items.length" class="rounded-xl overflow-hidden border border-brand-hairline-light dark:border-brand-hairline-dark/50 bg-white dark:bg-brand-canvas-soft-dark/40">
-          <div v-for="(item, idx) in expense.rent_items" :key="item.id" class="px-4 py-3 text-sm flex items-center justify-between">
-            <div>
-              <p class="font-semibold text-brand-ink-light dark:text-white">{{ item.name }}</p>
-              <div class="flex items-center gap-1.5 mt-0.5">
-                <span class="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0" :class="itemTypeBadge(item.type)">
-                  {{ itemTypeLabel(item.type) }}
-                </span>
-                <span v-if="item.type === 'installment' && item.installment_current" class="text-[10px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark font-tabular">
-                  {{ item.installment_current }}/{{ item.installment_total }}
-                </span>
+          <template v-for="(item, idx) in expense.rent_items" :key="item.id">
+            <div class="px-4 py-3 text-sm flex items-center justify-between">
+              <div>
+                <p class="font-semibold text-brand-ink-light dark:text-white">{{ item.name }}</p>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <span class="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0" :class="itemTypeBadge(item.type)">
+                    {{ itemTypeLabel(item.type) }}
+                  </span>
+                  <span v-if="item.type === 'installment' && item.installment_current" class="text-[10px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark font-tabular">
+                    {{ item.installment_current }}/{{ item.installment_total }}
+                  </span>
+                </div>
               </div>
+              <span class="font-tabular font-semibold text-brand-ink-light dark:text-white">{{ formatCurrency(item.amount) }}</span>
             </div>
-            <span class="font-tabular font-semibold text-brand-ink-light dark:text-white">{{ formatCurrency(item.amount) }}</span>
-          </div>
-          <div v-if="idx < expense.rent_items.length - 1" class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/30 mx-4" />
+            <div v-if="idx < expense.rent_items.length - 1" class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/30 mx-4" />
+          </template>
         </div>
         <p v-else class="text-sm text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-center py-4 bg-brand-canvas-soft-light/20 dark:bg-brand-canvas-soft-dark/10 rounded-xl">
           Nenhum sub-item cadastrado neste aluguel.

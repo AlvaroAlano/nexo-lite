@@ -63,7 +63,8 @@
           </div>
         </div>
       </div>
-      <div class="flex justify-end">
+      <div class="flex items-center justify-end gap-3">
+        <p v-if="saveError" class="text-xs text-red-500">Erro ao salvar. Tente novamente.</p>
         <button
           @click="saveMembersAndSalaries"
           :disabled="isSavingMembers"
@@ -357,7 +358,7 @@ onMounted(() => { store.fetch(); document.addEventListener(CLOSE_MENUS_EVENT, cl
 onUnmounted(() => document.removeEventListener(CLOSE_MENUS_EVENT, closeSettingsMenu))
 
 const { pullDistance, refreshing, handleTouchStart, handleTouchMove, handleTouchEnd } =
-  usePullToRefresh(() => store.fetch())
+  usePullToRefresh(() => store.fetch(true))
 
 const openCatMenuId = ref(null)
 function toggleCatMenu(id) {
@@ -387,6 +388,7 @@ function openAddCategory() {
 const nameAlvaro = ref('')
 const nameAlexandra = ref('')
 const isSavingMembers = ref(false)
+const saveError = ref(false)
 
 watch(() => dashboardStore.nameAlvaro, (val) => {
   nameAlvaro.value = val
@@ -410,11 +412,9 @@ watch(() => dashboardStore.incomeAlexandra, (val) => {
 
 async function saveMembersAndSalaries() {
   isSavingMembers.value = true
+  saveError.value = false
   try {
-    // Salva os nomes localmente na store/localStorage
     dashboardStore.updateNames(nameAlvaro.value, nameAlexandra.value)
-
-    // Atualiza as rendas no banco de dados para o período atual (se não for somente leitura)
     if (!dashboardStore.isReadOnly) {
       await Promise.all([
         dashboardStore.updateIncome('income_alvaro', salaryAlvaro.value),
@@ -422,6 +422,7 @@ async function saveMembersAndSalaries() {
       ])
     }
   } catch (err) {
+    saveError.value = true
     console.error('Erro ao salvar membros e rendas:', err)
   } finally {
     isSavingMembers.value = false

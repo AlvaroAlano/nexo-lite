@@ -44,11 +44,6 @@ class MonthlyExpense(Base):
     paid_at = Column(DateTime(timezone=True))
     installment_current = Column(Integer)
     installment_total = Column(Integer)
-    # Rent breakdown — only used when expense_type = 'rent'
-    rent_base = Column(Numeric(12, 2), nullable=False, default=0)   # legacy
-    rent_water = Column(Numeric(12, 2), nullable=False, default=0)  # legacy
-    rent_gas = Column(Numeric(12, 2), nullable=False, default=0)    # legacy
-    rent_extras = Column(Numeric(12, 2), nullable=False, default=0) # legacy
     rent_items = Column(JSONB, nullable=False, server_default='[]')
     category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
     display_order = Column(Integer, nullable=False, default=0)

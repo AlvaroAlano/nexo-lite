@@ -19,15 +19,11 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppHeader from './components/layout/AppHeader.vue'
 import BottomNav from './components/layout/BottomNav.vue'
 import MilestoneToast from './components/ui/MilestoneToast.vue'
-import { useCategoriesStore } from './stores/categories.js'
-
-const catStore = useCategoriesStore()
-onMounted(() => catStore.fetch())
 
 const routeOrder = { dashboard: 0, templates: 1, settings: 2, stats: 3 }
 const transitionName = ref('slide-left')

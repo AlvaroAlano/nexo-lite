@@ -9,8 +9,8 @@ export const useCategoriesStore = defineStore('categories', () => {
 
   const byId = computed(() => Object.fromEntries(categories.value.map(c => [c.id, c])))
 
-  async function fetch() {
-    if (categories.value.length) return
+  async function fetch(force = false) {
+    if (!force && categories.value.length) return
     loading.value = true
     try {
       const { data } = await categoriesApi.list()
