@@ -24,6 +24,25 @@
         </p>
       </div>
 
+      <!-- ─── Stage 1.5: Typewriter Intro ──────────────── -->
+      <div
+        v-else-if="stage === 'intro'"
+        key="intro"
+        class="absolute inset-0 flex flex-col items-center justify-center select-none px-10"
+      >
+        <p class="text-3xl md:text-4xl font-light text-white tracking-tight text-center leading-snug">
+          <TypewriterText
+            :text="introPhrases"
+            :speed="55"
+            :delete-speed="25"
+            :delay="700"
+            :loop="false"
+            cursor="|"
+            @done="onIntroDone"
+          />
+        </p>
+      </div>
+
       <!-- ─── Stage 2: Device Binding ────────────────────── -->
       <div
         v-else-if="stage === 'bind'"
@@ -306,6 +325,18 @@ const pinAriaLabel = computed(() => {
   return `${pin.value.length} de 4 dígitos inseridos`
 })
 
+// Intro typewriter phrases (loop: false — plays once and holds last phrase)
+const introPhrases = ["Organize.", "Controle.", "Nexo Lite."]
+
+function onIntroDone() {
+  // Hold "Nexo Lite." for 1s before advancing
+  setTimeout(() => {
+    const saved = localStorage.getItem('nexo_owner')
+    if (saved) { owner.value = saved; stage.value = 'vault' }
+    else        { stage.value = 'bind' }
+  }, 1000)
+}
+
 // Typewriter phrases — personalized greeting by time of day
 const typewriterPhrases = computed(() => {
   const h = new Date().getHours()
@@ -431,14 +462,8 @@ onMounted(() => {
   checkBiometricAvailability()
 
   setTimeout(() => {
-    const saved = localStorage.getItem('nexo_owner')
-    if (saved) {
-      owner.value = saved
-      stage.value = 'vault'
-    } else {
-      stage.value = 'bind'
-    }
-  }, 1800)
+    stage.value = 'intro'
+  }, 1200)
 
   window.addEventListener('keydown', handleKeyboard)
 })

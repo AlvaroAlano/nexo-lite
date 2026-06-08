@@ -14,6 +14,8 @@ const props = defineProps({
   delay:       { type: Number, default: 1500 },
 })
 
+const emit = defineEmits(['done'])
+
 const textArray   = computed(() => Array.isArray(props.text) ? props.text : [props.text])
 const displayText = ref('')
 const charIndex   = ref(0)
@@ -23,13 +25,22 @@ let timer = null
 
 function tick() {
   const word = textArray.value[wordIndex.value] || ''
+  const isLast = wordIndex.value === textArray.value.length - 1
+
   if (!deleting.value) {
     if (charIndex.value < word.length) {
       displayText.value += word[charIndex.value]
       charIndex.value++
       timer = setTimeout(tick, props.speed)
     } else if (props.loop) {
+      // loop: always delete and cycle
       timer = setTimeout(() => { deleting.value = true; tick() }, props.delay)
+    } else if (!isLast) {
+      // non-loop, more phrases to show: delete and advance
+      timer = setTimeout(() => { deleting.value = true; tick() }, props.delay)
+    } else {
+      // non-loop, last phrase fully typed: emit done and stay
+      emit('done')
     }
   } else {
     if (displayText.value.length > 0) {
@@ -38,13 +49,15 @@ function tick() {
     } else {
       deleting.value = false
       charIndex.value = 0
-      wordIndex.value = (wordIndex.value + 1) % textArray.value.length
+      wordIndex.value = props.loop
+        ? (wordIndex.value + 1) % textArray.value.length
+        : wordIndex.value + 1
       timer = setTimeout(tick, props.speed)
     }
   }
 }
 
-onMounted(() => { timer = setTimeout(tick, props.speed * 4) })
+onMounted(() => { timer = setTimeout(tick, props.speed * 3) })
 onUnmounted(() => clearTimeout(timer))
 
 watch(() => props.text, () => {
