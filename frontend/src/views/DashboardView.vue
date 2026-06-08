@@ -1,5 +1,49 @@
 <template>
-  <div class="max-w-5xl mx-auto px-4 pt-5 pb-6 font-ss01">
+  <div
+    class="max-w-5xl mx-auto px-4 pt-5 pb-6 font-ss01 relative"
+    @touchstart="handleTouchStart"
+    @touchmove="handleTouchMove"
+    @touchend="handleTouchEnd"
+  >
+    <!-- Pull-to-refresh indicator (mobile only) -->
+    <div
+      class="flex justify-center items-center overflow-hidden transition-all duration-200 pointer-events-none md:hidden bg-brand-canvas-soft-light/20 dark:bg-brand-canvas-soft-dark/10 rounded-xl"
+      :style="{
+        height: `${pullDistance}px`,
+        opacity: pullDistance > 0 ? 1 : 0,
+        marginBottom: pullDistance > 0 ? '12px' : '0px'
+      }"
+    >
+      <div class="flex items-center gap-2 py-2">
+        <svg
+          class="w-5 h-5 text-brand-primary animate-spin"
+          v-if="refreshing"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3"
+        >
+          <path d="M21 12a9 9 0 11-6.21-8.56" />
+        </svg>
+        <svg
+          class="w-5 h-5 text-brand-ink-mute-light dark:text-brand-ink-mute-dark transition-transform"
+          v-else
+          :style="{ transform: `rotate(${Math.min(pullDistance * 4, 180)}deg)` }"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <polyline points="19 12 12 19 5 12" />
+        </svg>
+        <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark font-medium">
+          {{ refreshing ? 'Atualizando...' : (pullDistance >= 45 ? 'Solte para atualizar' : 'Puxe para atualizar') }}
+        </span>
+      </div>
+    </div>
 
     <!-- Loading -->
     <div v-if="store.loading" class="flex flex-col items-center justify-center py-20 gap-3">
@@ -256,6 +300,58 @@ const selectedDetailExpense = ref(null)
 function openDetailModal(expense) {
   selectedDetailExpense.value = expense
   showDetailModal.value = true
+}
+
+// Pull-to-refresh logic
+const pullDistance = ref(0)
+const refreshing = ref(false)
+let startY = 0
+let isPulling = false
+
+function handleTouchStart(e) {
+  const scrollEl = document.querySelector('main')
+  if (!scrollEl || scrollEl.scrollTop > 0 || refreshing.value) return
+  
+  startY = e.touches[0].pageY
+  isPulling = true
+}
+
+function handleTouchMove(e) {
+  if (!isPulling || refreshing.value) return
+  const currentY = e.touches[0].pageY
+  const diff = currentY - startY
+  
+  if (diff > 0) {
+    pullDistance.value = Math.min(diff * 0.4, 60)
+    if (pullDistance.value > 10) {
+      if (e.cancelable) e.preventDefault()
+    }
+  } else {
+    pullDistance.value = 0
+    isPulling = false
+  }
+}
+
+async function handleTouchEnd() {
+  if (!isPulling) return
+  isPulling = false
+  
+  if (pullDistance.value >= 45) {
+    refreshing.value = true
+    pullDistance.value = 45
+    try {
+      await store.fetchCurrent()
+    } catch (err) {
+      console.error('Erro no pull-to-refresh:', err)
+    } finally {
+      setTimeout(() => {
+        refreshing.value = false
+        pullDistance.value = 0
+      }, 400)
+    }
+  } else {
+    pullDistance.value = 0
+  }
 }
 
 const addForm = reactive({ name: '', category_id: null, responsavel: 'conjunto', amount: 0, is_paid: false })

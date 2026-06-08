@@ -5,6 +5,19 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 
 ---
 
+## 2026-06-08 — Feature: Pull-to-refresh no Mobile (Dashboard)
+
+**Contexto:** Aplicativos PWA instalados no mobile ou rodando em modo flex com `overflow-hidden` no body perdem o gesto nativo do browser de puxar para atualizar (pull-to-refresh). Para atualizar o app, o usuário precisava fechá-lo por completo e abri-lo novamente.
+
+**Criado / Alterado:**
+- Alterado `views/DashboardView.vue`:
+  - Adicionados eventos de toque (`touchstart`, `touchmove`, `touchend`) no container do Dashboard.
+  - Implementada a detecção se a rolagem está no topo e o cálculo de distância com resistência física dinâmica.
+  - Adicionado o componente de Pull-to-refresh (exclusivo para mobile) com transição suave, seta rotativa que se transforma em spinner e texto de instrução reativo.
+  - Disparado `store.fetchCurrent()` ao soltar no limiar de 45px e resetado o estado.
+
+---
+
 ## 2026-06-08 — Fix: Suporte a Safe Area (Notch / Status Bar) no iOS
 
 **Contexto:** No iPhone 13 (e outros aparelhos iOS com notch/câmera física no topo), a barra de status translúcida causava sobreposição do cabeçalho da aplicação e cabeçalhos de modais de tela cheia, impedindo a interação com os botões.
