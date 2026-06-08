@@ -47,5 +47,10 @@ export const useCategoriesStore = defineStore('categories', () => {
     categories.value = categories.value.filter(c => c.id !== id)
   }
 
-  return { categories, loading, byId, fetch, getColor, getCategory, create, update, remove }
+  function clear() {
+    categories.value = []
+  }
+
+  return { categories, loading, byId, fetch, getColor, getCategory, create, update, remove, clear }
 })
+

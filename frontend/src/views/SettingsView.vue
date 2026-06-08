@@ -330,7 +330,7 @@
   </div>
 </template>
 <script setup>
-import { ref, reactive, watch, nextTick } from 'vue'
+import { ref, reactive, watch, nextTick, onMounted } from 'vue'
 import { Plus, MoreVertical } from 'lucide-vue-next'
 import { useCategoriesStore } from '../stores/categories.js'
 import { useDashboardStore } from '../stores/dashboard.js'
@@ -342,6 +342,8 @@ import CurrencyInput from '../components/ui/CurrencyInput.vue'
 const store = useCategoriesStore()
 const dashboardStore = useDashboardStore()
 const saving = ref(false)
+
+onMounted(() => store.fetch())
 
 const openCatMenuId = ref(null)
 function toggleCatMenu(id) {

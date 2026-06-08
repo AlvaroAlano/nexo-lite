@@ -1,5 +1,8 @@
 <template>
-  <div class="flex items-center gap-3 py-3.5">
+  <div
+    @click="$emit('click-detail', expense)"
+    class="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-brand-canvas-soft-light/10 dark:hover:bg-brand-canvas-soft-dark/10 transition-colors rounded-xl px-2 -mx-2"
+  >
     <!-- Category icon -->
     <div
       class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center"
@@ -43,7 +46,7 @@
     <!-- Amount + actions: tudo numa única linha horizontal -->
     <div class="flex-shrink-0 flex items-center gap-2">
       <!-- Valor (ou input de edição) -->
-      <div class="flex flex-col items-end">
+      <div class="flex flex-col items-end" @click.stop>
         <span
           v-if="!editing"
           @click="!isRent && startEdit()"
@@ -75,37 +78,45 @@
         </button>
       </div>
 
-      <!-- Editar -->
-      <button
-        v-if="!store.isReadOnly && expense.category !== 'Caixinha'"
-        @click="$emit('edit', expense)"
-        class="w-5 h-5 flex items-center justify-center rounded-md text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-primary active:opacity-60 transition-all flex-shrink-0"
-        title="Editar despesa"
-      >
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-        </svg>
-      </button>
-
-      <!-- Excluir -->
-      <button
-        v-if="!store.isReadOnly && expense.category !== 'Caixinha'"
-        @click="$emit('delete', expense)"
-        class="w-5 h-5 flex items-center justify-center rounded-md text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-red-500/10 hover:text-red-500 active:bg-red-500/20 transition-all flex-shrink-0"
-        title="Excluir despesa"
-      >
-        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-          <path d="M10 11v6"/><path d="M14 11v6"/>
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-        </svg>
-      </button>
+      <!-- Opções (3 pontinhos) -->
+      <div v-if="!store.isReadOnly && expense.category !== 'Caixinha'" class="relative" @click.stop>
+        <button
+          @click.stop="toggleMenu"
+          class="w-7 h-7 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-primary active:opacity-60 transition-all flex-shrink-0"
+          title="Opções"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+          </svg>
+        </button>
+        <Transition name="dropdown">
+          <div v-if="menuOpen" class="absolute right-0 top-8 z-30 min-w-[140px] rounded-xl bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark shadow-stripe-2 py-1 overflow-hidden">
+            <button
+              @click.stop="onDetail"
+              class="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+            >
+              Ver detalhes
+            </button>
+            <button
+              @click.stop="onEdit"
+              class="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+            >
+              Editar
+            </button>
+            <div class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/40" />
+            <button
+              @click.stop="onDelete"
+              class="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            >
+              Excluir
+            </button>
+          </div>
+        </Transition>
+      </div>
 
       <!-- Toggle pago -->
       <button
-        @click="store.togglePaid(expense.id)"
+        @click.stop="store.togglePaid(expense.id)"
         class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
         :class="expense.is_paid
           ? 'bg-emerald-500 border-emerald-500'
@@ -120,7 +131,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { useCategoriesStore } from '../../stores/categories.js'
 import { formatCurrency } from '../../utils/currency.js'
@@ -130,7 +141,7 @@ import CurrencyInput from '../ui/CurrencyInput.vue'
 const props = defineProps({
   expense: { type: Object, required: true },
 })
-defineEmits(['open-rent', 'delete', 'edit'])
+const emit = defineEmits(['open-rent', 'delete', 'edit', 'click-detail'])
 
 const store = useDashboardStore()
 const catStore = useCategoriesStore()
@@ -154,6 +165,40 @@ const responsavelColor = computed(() => RESP_COLORS[props.expense.responsavel] |
 
 const editing = ref(false)
 const editValue = ref(0)
+const menuOpen = ref(false)
+
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
+  if (menuOpen.value) {
+    setTimeout(() => {
+      document.addEventListener('click', closeMenu)
+    }, 0)
+  }
+}
+
+function closeMenu() {
+  menuOpen.value = false
+  document.removeEventListener('click', closeMenu)
+}
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeMenu)
+})
+
+function onDetail() {
+  closeMenu()
+  emit('click-detail', props.expense)
+}
+
+function onEdit() {
+  closeMenu()
+  emit('edit', props.expense)
+}
+
+function onDelete() {
+  closeMenu()
+  emit('delete', props.expense)
+}
 
 function startEdit() {
   editValue.value = parseFloat(props.expense.amount) || 0
@@ -171,3 +216,12 @@ function cancelEdit() {
   editing.value = false
 }
 </script>
+
+<style scoped>
+.dropdown-enter-active { animation: dropdown-pop 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.dropdown-leave-active { animation: dropdown-pop 0.1s ease-in reverse forwards; }
+@keyframes dropdown-pop {
+  from { opacity: 0; transform: scale(0.88) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+</style>

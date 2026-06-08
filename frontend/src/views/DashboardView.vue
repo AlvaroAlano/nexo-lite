@@ -111,6 +111,7 @@
               @open-rent="openRent"
               @delete="deleteWithUndo"
               @edit="openEditModal"
+              @click-detail="openDetailModal"
             />
             <p v-if="!store.filteredExpenses.length" class="text-center py-10 text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm">
               Nenhuma despesa neste mês ainda.
@@ -124,6 +125,7 @@
             @open-rent="openRent"
             @delete="deleteWithUndo"
             @edit="openEditModal"
+            @click-detail="openDetailModal"
           />
 
 
@@ -154,6 +156,13 @@
     <!-- Modals -->
     <RentModal v-model="showRent" :expense="rentExpense" />
     <TurnoverModal v-model="showTurnover" />
+    <ExpenseDetailModal
+      v-model="showDetailModal"
+      :expense="selectedDetailExpense"
+      @edit="openEditModal"
+      @open-rent="openRent"
+      @delete="deleteWithUndo"
+    />
     <!-- Undo toast — aparece 5s após deletar uma despesa -->
     <Teleport to="body">
       <Transition name="toast-slide">
@@ -231,6 +240,7 @@ import BaseModal from '../components/ui/BaseModal.vue'
 import CategoryPicker from '../components/ui/CategoryPicker.vue'
 import CurrencyInput from '../components/ui/CurrencyInput.vue'
 import AppSelect from '../components/ui/AppSelect.vue'
+import ExpenseDetailModal from '../components/modals/ExpenseDetailModal.vue'
 
 const store = useDashboardStore()
 
@@ -240,6 +250,13 @@ const showTurnover = ref(false)
 const showAddForm = ref(false)
 const showExpenseModal = ref(false)
 const editTarget = ref(null)
+const showDetailModal = ref(false)
+const selectedDetailExpense = ref(null)
+
+function openDetailModal(expense) {
+  selectedDetailExpense.value = expense
+  showDetailModal.value = true
+}
 
 const addForm = reactive({ name: '', category_id: null, responsavel: 'conjunto', amount: 0, is_paid: false })
 

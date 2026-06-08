@@ -23,7 +23,11 @@
               : 'w-full max-w-md rounded-stripe-card h-auto'"
           >
             <!-- Header -->
-            <div class="flex items-center justify-between pl-5 pr-3 md:px-5 py-4 border-b border-brand-hairline-light dark:border-brand-hairline-dark flex-shrink-0">
+            <div
+              class="flex items-center justify-between pl-5 pr-3 md:px-5 border-b border-brand-hairline-light dark:border-brand-hairline-dark flex-shrink-0"
+              :class="fullScreenOnMobile ? 'py-4 md:py-4' : 'py-4'"
+              :style="fullScreenOnMobile ? 'padding-top: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.75rem)); padding-bottom: 1rem;' : ''"
+            >
               <h2 class="font-medium tracking-tight text-brand-ink-light dark:text-white text-base">{{ title }}</h2>
               <button
                 @click="close"

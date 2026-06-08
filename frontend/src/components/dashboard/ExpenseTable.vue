@@ -22,7 +22,8 @@
         <tr
           v-for="expense in expenses"
           :key="expense.id"
-          class="group hover:bg-brand-canvas-soft-light/40 dark:hover:bg-brand-canvas-soft-dark/30 transition-colors"
+          @click="$emit('click-detail', expense)"
+          class="group hover:bg-brand-canvas-soft-light/45 dark:hover:bg-brand-canvas-soft-dark/30 transition-colors cursor-pointer"
           :class="expense.is_paid ? 'opacity-60' : ''"
         >
           <!-- Name + badges -->
@@ -71,10 +72,10 @@
           </td>
 
           <!-- Amount -->
-          <td class="px-4 py-3.5 text-right w-[120px]">
+          <td class="px-4 py-3.5 text-right w-[120px]" @click.stop>
             <template v-if="expense.expense_type === 'rent'">
               <button
-                @click="$emit('open-rent', expense)"
+                @click.stop="$emit('open-rent', expense)"
                 class="font-tabular font-medium text-brand-ink-light dark:text-white hover:text-brand-primary transition-colors inline-flex items-center gap-1"
               >
                 {{ formatCurrency(expense.amount) }}
@@ -84,7 +85,7 @@
             <template v-else>
               <span
                 v-if="editingId !== expense.id"
-                @click="startEdit(expense)"
+                @click.stop="startEdit(expense)"
                 class="font-tabular font-medium text-brand-ink-light dark:text-white cursor-pointer hover:text-brand-primary transition-colors"
               >
                 {{ formatCurrency(expense.amount) }}
@@ -103,9 +104,9 @@
           </td>
 
           <!-- Paid toggle -->
-          <td class="px-3 py-3.5 text-center w-[90px]">
+          <td class="px-3 py-3.5 text-center w-[90px]" @click.stop>
             <button
-              @click="store.togglePaid(expense.id)"
+              @click.stop="store.togglePaid(expense.id)"
               class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all active:scale-95"
               :class="expense.is_paid
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
@@ -118,31 +119,41 @@
             </button>
           </td>
 
-          <!-- Actions: edit + delete -->
-          <td v-if="!store.isReadOnly" class="px-2 py-3.5 w-[80px]">
-            <div v-if="expense.category !== 'Caixinha'" class="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center justify-center gap-1 transition-all">
+          <!-- Actions: 3-dot dropdown menu -->
+          <td v-if="!store.isReadOnly" class="px-2 py-3.5 w-[80px]" @click.stop>
+            <div v-if="expense.category !== 'Caixinha'" class="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center justify-center relative transition-all">
               <button
-                @click="$emit('edit', expense)"
-                class="w-7 h-7 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-primary transition-all"
-                title="Editar despesa"
-              >
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-              </button>
-              <button
-                @click="$emit('delete', expense)"
-                class="w-7 h-7 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-red-500/10 hover:text-red-500 active:bg-red-500/20 transition-all"
-                title="Excluir despesa"
+                @click.stop="toggleMenu(expense.id)"
+                class="w-7 h-7 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 hover:text-brand-primary active:opacity-60 transition-all"
+                title="Opções"
               >
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                  <path d="M10 11v6"/><path d="M14 11v6"/>
-                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
                 </svg>
               </button>
+              <Transition name="dropdown">
+                <div v-if="activeMenuId === expense.id" class="absolute right-0 top-8 z-30 min-w-[140px] rounded-xl bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark shadow-stripe-2 py-1 overflow-hidden">
+                  <button
+                    @click.stop="onDetail(expense)"
+                    class="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+                  >
+                    Ver detalhes
+                  </button>
+                  <button
+                    @click.stop="onEdit(expense)"
+                    class="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+                  >
+                    Editar
+                  </button>
+                  <div class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/40" />
+                  <button
+                    @click.stop="onDelete(expense)"
+                    class="w-full flex items-center gap-2 px-3.5 py-2 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </Transition>
             </div>
           </td>
         </tr>
@@ -159,7 +170,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, computed } from 'vue'
+import { ref, nextTick, computed, onUnmounted } from 'vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { useCategoriesStore } from '../../stores/categories.js'
 import { formatCurrency } from '../../utils/currency.js'
@@ -167,7 +178,7 @@ import { colorByKey, getIconComponent } from '../../utils/categories.js'
 import CurrencyInput from '../ui/CurrencyInput.vue'
 
 defineProps({ expenses: { type: Array, default: () => [] } })
-defineEmits(['open-rent', 'delete', 'edit'])
+const emit = defineEmits(['open-rent', 'delete', 'edit', 'click-detail'])
 
 const store = useDashboardStore()
 const catStore = useCategoriesStore()
@@ -195,6 +206,42 @@ function catColor(id) {
 const editingId = ref(null)
 const editValue = ref(0)
 const editInputRef = ref(null)
+const activeMenuId = ref(null)
+
+function toggleMenu(id) {
+  if (activeMenuId.value === id) {
+    closeMenu()
+  } else {
+    activeMenuId.value = id
+    setTimeout(() => {
+      document.addEventListener('click', closeMenu)
+    }, 0)
+  }
+}
+
+function closeMenu() {
+  activeMenuId.value = null
+  document.removeEventListener('click', closeMenu)
+}
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeMenu)
+})
+
+function onDetail(expense) {
+  closeMenu()
+  emit('click-detail', expense)
+}
+
+function onEdit(expense) {
+  closeMenu()
+  emit('edit', expense)
+}
+
+function onDelete(expense) {
+  closeMenu()
+  emit('delete', expense)
+}
 
 function startEdit(expense) {
   editingId.value = expense.id
@@ -213,3 +260,12 @@ function cancelEdit() {
   editingId.value = null
 }
 </script>
+
+<style scoped>
+.dropdown-enter-active { animation: dropdown-pop 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.dropdown-leave-active { animation: dropdown-pop 0.1s ease-in reverse forwards; }
+@keyframes dropdown-pop {
+  from { opacity: 0; transform: scale(0.88) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+</style>

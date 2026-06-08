@@ -1,5 +1,8 @@
 <template>
-  <header class="sticky top-0 z-30 bg-white/90 dark:bg-brand-canvas-dark/90 backdrop-blur-md border-b border-brand-hairline-light dark:border-brand-hairline-dark transition-colors duration-150">
+  <header
+    class="sticky top-0 z-30 bg-white/90 dark:bg-brand-canvas-dark/90 backdrop-blur-md border-b border-brand-hairline-light dark:border-brand-hairline-dark transition-colors duration-150"
+    style="padding-top: env(safe-area-inset-top, 0px);"
+  >
     <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
       <!-- Logo (desktop) -->
       <RouterLink to="/" class="hidden md:flex items-center gap-2 flex-shrink-0">

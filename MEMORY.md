@@ -5,6 +5,41 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 
 ---
 
+## 2026-06-08 — Fix: Suporte a Safe Area (Notch / Status Bar) no iOS
+
+**Contexto:** No iPhone 13 (e outros aparelhos iOS com notch/câmera física no topo), a barra de status translúcida causava sobreposição do cabeçalho da aplicação e cabeçalhos de modais de tela cheia, impedindo a interação com os botões.
+
+**Criado / Alterado:**
+- Alterado `components/layout/AppHeader.vue`: adicionado padding superior usando a variável de ambiente CSS `env(safe-area-inset-top, 0px)` para empurrar o conteúdo do header para fora da área do notch.
+- Alterado `components/ui/BaseModal.vue`: adicionado cálculo dinâmico de padding superior no cabeçalho do modal base se estiver em modo `fullScreenOnMobile`, garantindo que botões e títulos fiquem visíveis e clicáveis em modais tela inteira no iOS.
+
+---
+
+## 2026-06-08 — Feature: Modal de detalhes e menu 3 pontinhos na Dashboard
+
+**Contexto:** Melhorar a UX na Dashboard de despesas ao ocultar botões diretos de ações (editar/excluir) e reuni-los em um menu dropdown vertical de 3 pontinhos, além de introduzir a visualização detalhada de qualquer despesa (composição do aluguel inclusa) ao clicar no card ou na linha correspondente.
+
+**Criado / Alterado:**
+- Criado `components/modals/ExpenseDetailModal.vue`: exibe informações estruturadas da despesa (nome, valor, status de pagamento, categoria com ícone e cor, responsável, progresso de parcelas e lista detalhada de sub-itens de aluguel se houver), além de oferecer ações rápidas.
+- Alterado `components/dashboard/ExpenseCard.vue` (mobile) e `ExpenseTable.vue` (desktop):
+  - Habilitado evento de clique para abrir o modal de detalhes e propagação de clique bloqueada nas outras interações.
+  - Substituídos botões fixos de edição e exclusão pelo menu de 3 pontinhos vertical com dropdown flutuante (opções: Ver detalhes, Editar, Excluir).
+- Alterado `views/DashboardView.vue`: importado `ExpenseDetailModal`, definidos estados controladores e conectados todos os eventos de clique e ações filhas.
+
+---
+
+## 2026-06-08 — Fix: Sincronização e carregamento de categorias no Login/SPA
+
+**Contexto:** Ao carregar a aplicação pela primeira vez sem estar autenticado, o `App.vue` realizava o fetch das categorias no `onMounted` e falhava/retornava vazio por falta de autorização. Com o redirecionamento para `/auth`, o usuário digitava o PIN e entrava na Dashboard (sem recarregar o `App.vue`), mantendo o store de categorias vazio. As categorias só apareciam após recarregar a página manualmente (F5) enquanto logado.
+
+**Criado / Alterado:**
+- Alterado `stores/categories.js`: adicionada a função `clear()` para redefinir `categories.value = []`.
+- Alterado `router/index.js`: importado `useCategoriesStore` e chamada a action `catStore.fetch()` no `beforeEach` caso o usuário esteja autenticado, garantindo o carregamento ao passar pelo login ou em qualquer transição de rota de segurança.
+- Alterado `views/SettingsView.vue` e `components/ui/CategoryPicker.vue`: adicionada chamada resiliente `store.fetch()` no `onMounted` como garantia dupla caso o store ainda esteja vazio.
+- Alterado `views/AuthView.vue`: adicionada chamada para `catStore.fetch()` no sucesso da autenticação (via PIN ou biometria) e `catStore.clear()` junto a `sessionStorage.removeItem('nexo_authenticated')` no `switchProfile()`.
+
+---
+
 ## 2026-06-06 — Fix: Fluxo de edição de categorias no mobile
 
 **Contexto:** O formulário de edição de categorias no mobile ficava oculto (`hidden md:block`), impossibilitando a edição a partir do menu de 3 pontos. Além disso, o watcher de abertura do modal limpava o estado de edição sempre que era aberto.

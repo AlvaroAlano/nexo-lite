@@ -103,6 +103,9 @@ function handleOutside(e) {
   const inDropdown = dropdownRef.value?.contains(e.target)
   if (!inRoot && !inDropdown) open.value = false
 }
-onMounted(() => document.addEventListener('click', handleOutside))
+onMounted(() => {
+  document.addEventListener('click', handleOutside)
+  store.fetch().catch((err) => console.error('Erro ao buscar categorias no CategoryPicker:', err))
+})
 onUnmounted(() => document.removeEventListener('click', handleOutside))
 </script>

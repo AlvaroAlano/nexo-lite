@@ -193,6 +193,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useCategoriesStore } from '../stores/categories.js'
 
 const router = useRouter()
 
@@ -305,6 +306,8 @@ async function biometricLogin() {
     pinState.value = 'success'
     vibrate([30, 50, 30])
     sessionStorage.setItem('nexo_authenticated', '1')
+    const catStore = useCategoriesStore()
+    catStore.fetch().catch((err) => console.error('Erro ao carregar categorias após biometria:', err))
     setTimeout(() => router.push('/'), 900)
   } catch {
     // Usuário cancelou ou dispositivo não suportado — ignora silenciosamente
@@ -395,6 +398,8 @@ function validatePin() {
     pinState.value = 'success'
     vibrate([30, 50, 30])
     sessionStorage.setItem('nexo_authenticated', '1')
+    const catStore = useCategoriesStore()
+    catStore.fetch().catch((err) => console.error('Erro ao carregar categorias após PIN:', err))
     setTimeout(() => router.push('/'), 900)
   } else {
     pinState.value = 'error'
@@ -419,10 +424,14 @@ function pinDotClass(position) {
 
 function switchProfile() {
   localStorage.removeItem('nexo_owner')
+  sessionStorage.removeItem('nexo_authenticated')
   owner.value = null
   pin.value = []
   pinState.value = 'idle'
   stage.value = 'bind'
+  
+  const catStore = useCategoriesStore()
+  catStore.clear()
 }
 </script>
 

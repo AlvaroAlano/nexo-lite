@@ -77,6 +77,9 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Ocultar FAB no mobile na rota de Ajustes e adicionar botão '+ Categoria' ao lado do cabeçalho de Categorias — (2026-06-03)
 - [x] Ajustar espaçamento acima da Virada de Mês no mobile para reduzir o espaço sob a Caixinha — (2026-06-06)
 - [x] Corrigir fluxo de edição de categorias no mobile abrindo o modal dinamicamente — (2026-06-06)
+- [x] Corrigir carregamento de categorias no login/início garantindo sincronia com a autenticação e recarregamento redundante nos componentes — (2026-06-08)
+- [x] Ocultar botões de ações na Dashboard em dropdown de 3 pontinhos e abrir modal de visualização detalhada da despesa no clique do card/linha — (2026-06-08)
+- [x] Corrigir suporte a safe areas (notch/câmera e barra de status superior) no iOS no cabeçalho e modais em tela cheia — (2026-06-08)
 
 ## 🔐 Auth
 
