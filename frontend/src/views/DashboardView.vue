@@ -438,16 +438,16 @@ async function quickAdd() {
   100% { opacity: 1; transform: scale(1); }
 }
 
-/* Form: slides down softly */
+/* Form: slides down softly — ease-out-expo entry, quick exit */
 .form-slide-enter-active {
-  animation: form-in 0.24s ease-out forwards;
+  animation: form-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 .form-slide-leave-active {
-  animation: form-in 0.16s ease-in reverse forwards;
+  animation: form-in 0.15s cubic-bezier(0.4, 0, 1, 1) reverse forwards;
 }
 
 @keyframes form-in {
-  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  from { opacity: 0; transform: translateY(-10px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 

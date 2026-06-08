@@ -41,23 +41,25 @@ watch(
 </script>
 
 <style>
+/* Enter: ease-out-expo — snappy deceleration, graceful landing */
 .slide-left-enter-active,
-.slide-left-leave-active,
-.slide-right-enter-active,
-.slide-right-leave-active {
-  transition: opacity 180ms ease, transform 180ms ease;
+.slide-right-enter-active {
+  transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Leaving view: absolute so it doesn't affect layout height */
+/* Leave: ease-in — quick, clean departure */
 .slide-left-leave-active,
 .slide-right-leave-active {
   position: absolute;
   inset: 0;
+  transition: opacity 160ms cubic-bezier(0.4, 0, 1, 1),
+              transform 160ms cubic-bezier(0.4, 0, 1, 1);
 }
 
-.slide-left-enter-from { opacity: 0; transform: translateX(20px); }
-.slide-left-leave-to  { opacity: 0; transform: translateX(-20px); }
+.slide-left-enter-from  { opacity: 0; transform: translateX(14px) scale(0.99); }
+.slide-left-leave-to    { opacity: 0; transform: translateX(-14px) scale(0.99); }
 
-.slide-right-enter-from { opacity: 0; transform: translateX(-20px); }
-.slide-right-leave-to  { opacity: 0; transform: translateX(20px); }
+.slide-right-enter-from { opacity: 0; transform: translateX(-14px) scale(0.99); }
+.slide-right-leave-to   { opacity: 0; transform: translateX(14px) scale(0.99); }
 </style>

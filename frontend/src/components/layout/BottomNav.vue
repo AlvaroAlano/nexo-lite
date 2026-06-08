@@ -1,9 +1,9 @@
 <template>
   <Transition
-    enter-active-class="transition-opacity duration-200"
-    leave-active-class="transition-opacity duration-150"
-    enter-from-class="opacity-0"
-    leave-to-class="opacity-0"
+    enter-active-class="transition-[opacity,transform] duration-300 ease-out"
+    leave-active-class="transition-[opacity,transform] duration-200 ease-in"
+    enter-from-class="opacity-0 translate-y-3"
+    leave-to-class="opacity-0 translate-y-2"
   >
   <div
     v-show="!isModalOpen"

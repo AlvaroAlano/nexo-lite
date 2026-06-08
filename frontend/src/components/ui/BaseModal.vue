@@ -94,29 +94,42 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* ── Backdrop ───────────────────────────────────────────────── */
-.modal-backdrop-enter-active { transition: opacity 280ms ease-out; }
-.modal-backdrop-leave-active { transition: opacity 220ms ease-in; }
+/* ── Backdrop ─────────────────────────────────────────────────
+   Ease-out-expo in, ease-in out — backdrop breathes with the modal */
+.modal-backdrop-enter-active { transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+.modal-backdrop-leave-active { transition: opacity 220ms cubic-bezier(0.4, 0, 1, 1); }
 .modal-backdrop-enter-from,
 .modal-backdrop-leave-to    { opacity: 0; }
 
-/* ── Bottom sheet (mobile) — spring physics ─────────────────── */
+/* ── Bottom sheet (mobile) — iOS-style spring, untouched ─────── */
 .modal-sheet-enter-active { transition: transform 420ms cubic-bezier(0.32, 0.72, 0, 1); }
 .modal-sheet-leave-active { transition: transform 280ms cubic-bezier(0.4, 0, 1, 1); }
 .modal-sheet-enter-from,
 .modal-sheet-leave-to     { transform: translateY(100%); }
 
-/* Desktop override: sheet becomes centered scale+fade */
+/* ── Desktop: gentle spring scale-up (barely overshoots) ────── */
 @media (min-width: 768px) {
-  .modal-sheet-enter-active { transition: opacity 200ms ease-out, transform 220ms ease-out; }
-  .modal-sheet-leave-active { transition: opacity 160ms ease-in,  transform 160ms ease-in; }
+  .modal-sheet-enter-active {
+    transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
+                transform 300ms cubic-bezier(0.34, 1.06, 0.64, 1);
+  }
+  .modal-sheet-leave-active {
+    transition: opacity 180ms cubic-bezier(0.4, 0, 1, 1),
+                transform 180ms cubic-bezier(0.4, 0, 1, 1);
+  }
   .modal-sheet-enter-from,
-  .modal-sheet-leave-to     { opacity: 0; transform: scale(0.96) translateY(6px); }
+  .modal-sheet-leave-to { opacity: 0; transform: scale(0.93) translateY(10px); }
 }
 
-/* ── Centered modal (non-sheet) ─────────────────────────────── */
-.modal-center-enter-active { transition: opacity 200ms ease-out, transform 220ms ease-out; }
-.modal-center-leave-active { transition: opacity 160ms ease-in,  transform 160ms ease-in; }
+/* ── Centered modal (non-sheet) — same spring feel ───────────── */
+.modal-center-enter-active {
+  transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 300ms cubic-bezier(0.34, 1.06, 0.64, 1);
+}
+.modal-center-leave-active {
+  transition: opacity 180ms cubic-bezier(0.4, 0, 1, 1),
+              transform 180ms cubic-bezier(0.4, 0, 1, 1);
+}
 .modal-center-enter-from,
-.modal-center-leave-to     { opacity: 0; transform: scale(0.96) translateY(6px); }
+.modal-center-leave-to { opacity: 0; transform: scale(0.93) translateY(10px); }
 </style>
