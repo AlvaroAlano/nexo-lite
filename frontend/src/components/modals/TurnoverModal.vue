@@ -25,11 +25,11 @@
         <p class="font-medium text-brand-ink-light dark:text-white text-xs uppercase tracking-wide">Previsão de saldo rolado</p>
         <div class="flex justify-between text-brand-ink-mute-light dark:text-brand-ink-mute-dark">
           <span>Renda + Saldo anterior</span>
-          <span class="font-tabular">{{ formatCurrency(totalAvailable) }}</span>
+          <span class="font-tabular">{{ maskCurrency(totalAvailable) }}</span>
         </div>
         <div class="flex justify-between text-brand-ink-mute-light dark:text-brand-ink-mute-dark">
           <span>Comprometido</span>
-          <span class="font-tabular">− {{ formatCurrency(store.totalCommitted) }}</span>
+          <span class="font-tabular">− {{ maskCurrency(store.totalCommitted) }}</span>
         </div>
         <div class="border-t border-brand-hairline-light dark:border-brand-hairline-dark pt-2 flex justify-between font-semibold">
           <span class="text-brand-ink-light dark:text-white">Vai para {{ nextMonthLabel }}</span>
@@ -37,7 +37,7 @@
             class="font-tabular"
             :class="carryover >= 0 ? 'text-emerald-600' : 'text-red-500'"
           >
-            {{ formatCurrency(carryover) }}
+            {{ maskCurrency(carryover) }}
           </span>
         </div>
       </div>
@@ -72,13 +72,14 @@
 import { computed, ref } from 'vue'
 import BaseModal from '../ui/BaseModal.vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
-import { formatCurrency } from '../../utils/currency.js'
+import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import { monthLabel } from '../../utils/date.js'
 
 const props = defineProps({ modelValue: Boolean })
 const emit = defineEmits(['update:modelValue'])
 
 const store = useDashboardStore()
+const { maskCurrency } = usePrivacyMode()
 
 const open = computed({
   get: () => props.modelValue,

@@ -78,7 +78,7 @@
                 @click.stop="$emit('open-rent', expense)"
                 class="font-tabular font-medium text-brand-ink-light dark:text-white hover:text-brand-primary transition-colors inline-flex items-center gap-1"
               >
-                {{ formatCurrency(expense.amount) }}
+                {{ maskCurrency(expense.amount) }}
                 <span class="text-[10px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark">↗</span>
               </button>
             </template>
@@ -88,7 +88,7 @@
                 @click.stop="startEdit(expense)"
                 class="font-tabular font-medium text-brand-ink-light dark:text-white cursor-pointer hover:text-brand-primary transition-colors"
               >
-                {{ formatCurrency(expense.amount) }}
+                {{ maskCurrency(expense.amount) }}
               </span>
               <CurrencyInput
                 v-else
@@ -182,12 +182,13 @@
 import { ref, nextTick, computed, onMounted, onUnmounted } from 'vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { useCategoriesStore } from '../../stores/categories.js'
-import { formatCurrency } from '../../utils/currency.js'
+import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import { colorByKey, getIconComponent } from '../../utils/categories.js'
 import CurrencyInput from '../ui/CurrencyInput.vue'
 import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../../utils/menuBus.js'
 
 defineProps({ expenses: { type: Array, default: () => [] } })
+const { maskCurrency } = usePrivacyMode()
 const emit = defineEmits(['open-rent', 'delete', 'edit', 'click-detail'])
 
 const store = useDashboardStore()

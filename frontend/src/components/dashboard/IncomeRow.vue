@@ -8,7 +8,7 @@
       class="font-tabular font-medium text-white text-sm transition-colors"
       :class="!readonly ? 'cursor-pointer hover:text-brand-primary-soft' : ''"
     >
-      {{ formatCurrency(value) }}
+      {{ maskCurrency(value) }}
     </span>
     <CurrencyInput
       v-else
@@ -26,8 +26,10 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
-import { formatCurrency } from '../../utils/currency.js'
+import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import CurrencyInput from '../ui/CurrencyInput.vue'
+
+const { maskCurrency } = usePrivacyMode()
 
 const props = defineProps({
   label: String,

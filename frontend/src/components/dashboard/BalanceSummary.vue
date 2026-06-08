@@ -239,7 +239,7 @@
 import { ref, computed, watch } from 'vue'
 import { ChevronDown, PiggyBank, Bot } from 'lucide-vue-next'
 import { useDashboardStore } from '../../stores/dashboard.js'
-import { formatCurrency } from '../../utils/currency.js'
+import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import { useGamification } from '../../composables/useGamification.js'
 import IncomeRow from './IncomeRow.vue'
 import FreeCashDisplay from './FreeCashDisplay.vue'
@@ -247,7 +247,7 @@ import BaseModal from '../ui/BaseModal.vue'
 import CurrencyInput from '../ui/CurrencyInput.vue'
 
 const store = useDashboardStore()
-const fmt = formatCurrency
+const { maskCurrency: fmt } = usePrivacyMode()
 
 const {
   isAnalyzing, aiInsight, showInsightModal, analyzeMonth,

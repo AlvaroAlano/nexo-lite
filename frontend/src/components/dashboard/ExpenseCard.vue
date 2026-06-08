@@ -58,7 +58,7 @@
             !isRent ? 'cursor-pointer hover:text-brand-primary dark:hover:text-brand-primary-soft' : '',
           ]"
         >
-          {{ formatCurrency(expense.amount) }}
+          {{ maskCurrency(expense.amount) }}
         </span>
         <CurrencyInput
           v-else
@@ -143,8 +143,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { useCategoriesStore } from '../../stores/categories.js'
-import { formatCurrency } from '../../utils/currency.js'
+import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import { colorByKey, getIconComponent } from '../../utils/categories.js'
+const { maskCurrency } = usePrivacyMode()
 import CurrencyInput from '../ui/CurrencyInput.vue'
 import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../../utils/menuBus.js'
 

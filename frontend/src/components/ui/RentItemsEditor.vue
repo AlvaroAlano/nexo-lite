@@ -101,7 +101,8 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import CurrencyInput from './CurrencyInput.vue'
 import AppSelect from './AppSelect.vue'
-import { formatCurrency as fmt } from '../../utils/currency.js'
+import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
+const { maskCurrency: fmt } = usePrivacyMode()
 
 const props = defineProps({ modelValue: { type: Array, default: () => [] } })
 const emit  = defineEmits(['update:modelValue'])

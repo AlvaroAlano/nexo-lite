@@ -107,6 +107,29 @@
           </svg>
         </button>
 
+        <!-- Privacy mode toggle -->
+        <button
+          @click="togglePrivacy"
+          class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors active:scale-95"
+          :class="isPrivate
+            ? 'text-amber-500 bg-amber-500/10 hover:bg-amber-500/20'
+            : 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark'"
+          :title="isPrivate ? 'Revelar valores' : 'Ocultar valores'"
+          :aria-label="isPrivate ? 'Revelar valores' : 'Ocultar valores'"
+        >
+          <!-- Eye-off icon (values hidden) -->
+          <svg v-if="isPrivate" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+          <!-- Eye icon (values visible) -->
+          <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+
         <button
           @click="toggleTheme"
           class="w-8 h-8 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark transition-colors active:scale-95"
@@ -143,9 +166,11 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
+import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import { monthLabel } from '../../utils/date.js'
 
 const store = useDashboardStore()
+const { isPrivate, toggle: togglePrivacy } = usePrivacyMode()
 
 // Local nav state — tracks what month we're displaying
 const navYear = ref(null)

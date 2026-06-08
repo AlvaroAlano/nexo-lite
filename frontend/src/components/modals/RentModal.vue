@@ -109,7 +109,7 @@
       <!-- Total -->
       <div class="flex items-center justify-between pt-1">
         <span class="text-sm text-brand-ink-mute-light dark:text-brand-ink-mute-dark">Total do boleto</span>
-        <span class="font-tabular font-bold text-xl text-brand-ink-light dark:text-white">{{ formatCurrency(liveTotal) }}</span>
+        <span class="font-tabular font-bold text-xl text-brand-ink-light dark:text-white">{{ maskCurrency(liveTotal) }}</span>
       </div>
     </div>
 
@@ -131,9 +131,10 @@ import BaseModal from '../ui/BaseModal.vue'
 import CurrencyInput from '../ui/CurrencyInput.vue'
 import AppSelect from '../ui/AppSelect.vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
-import { formatCurrency } from '../../utils/currency.js'
+import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 
 const props = defineProps({ modelValue: Boolean, expense: { type: Object, default: null } })
+const { maskCurrency } = usePrivacyMode()
 const emit = defineEmits(['update:modelValue'])
 
 const store = useDashboardStore()

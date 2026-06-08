@@ -10,7 +10,7 @@
       :class="value >= 0 ? 'text-brand-primary dark:text-emerald-400' : 'text-red-400'"
       style="letter-spacing: -1.2px;"
     >
-      {{ formatCurrency(value) }}
+      {{ maskCurrency(value) }}
     </p>
     <p v-if="value < 0" class="text-red-400 text-xs mt-1">
       Despesas excedem a renda disponível
@@ -19,7 +19,8 @@
 </template>
 
 <script setup>
-import { formatCurrency } from '../../utils/currency.js'
+import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
+const { maskCurrency } = usePrivacyMode()
 defineProps({
   value: { type: Number, default: 0 },
   label: { type: String, default: 'Livre' },

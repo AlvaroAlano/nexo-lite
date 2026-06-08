@@ -157,14 +157,14 @@
             <!-- Amount + installment -->
             <div class="text-right flex-shrink-0">
               <p class="font-tabular font-medium text-brand-ink-light dark:text-white text-sm">
-                {{ formatCurrency(tmpl.base_amount) }}
+                {{ maskCurrency(tmpl.base_amount) }}
               </p>
               <template v-if="tmpl.expense_type === 'installment'">
                 <p class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark font-tabular">
                   {{ tmpl.installment_paid }}/{{ tmpl.installment_total }} pagas
                 </p>
                 <p class="text-[10px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark/60 font-tabular mt-0.5">
-                  Total: {{ formatCurrency(tmpl.base_amount * tmpl.installment_total) }}
+                  Total: {{ maskCurrency(tmpl.base_amount * tmpl.installment_total) }}
                 </p>
               </template>
             </div>
@@ -348,7 +348,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { MoreVertical } from 'lucide-vue-next'
 import { templatesApi } from '../services/api.js'
-import { formatCurrency } from '../utils/currency.js'
+import { usePrivacyMode } from '../composables/usePrivacyMode.js'
 import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../utils/menuBus.js'
 import CategoryPicker from '../components/ui/CategoryPicker.vue'
 import CurrencyInput from '../components/ui/CurrencyInput.vue'
@@ -359,6 +359,7 @@ import PullRefreshIndicator from '../components/ui/PullRefreshIndicator.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
 import RentItemsEditor from '../components/ui/RentItemsEditor.vue'
 import { useDashboardStore } from '../stores/dashboard.js'
+const { maskCurrency } = usePrivacyMode()
 
 const dashboardStore = useDashboardStore()
 const templates = ref([])
@@ -428,12 +429,12 @@ const installmentSummary = computed(() => {
     remainingInstallments,
     amountPaid,
     amountRemaining,
-    totalText: `Total da compra: ${formatCurrency(totalValue)} (${totalInstallments}× de ${formatCurrency(valuePerInstallment)})`,
+    totalText: `Total da compra: ${maskCurrency(totalValue)} (${totalInstallments}× de ${maskCurrency(valuePerInstallment)})`,
     paidText: paidInstallments > 0
-      ? `Você já pagou ${paidInstallments} parcela(s) de ${formatCurrency(valuePerInstallment)} (${formatCurrency(amountPaid)} pago).`
+      ? `Você já pagou ${paidInstallments} parcela(s) de ${maskCurrency(valuePerInstallment)} (${maskCurrency(amountPaid)} pago).`
       : 'Nenhuma parcela paga ainda.',
     remainingText: remainingInstallments > 0
-      ? `Falta(m) ${remainingInstallments} parcela(s) de ${formatCurrency(valuePerInstallment)} (${formatCurrency(amountRemaining)} restante).`
+      ? `Falta(m) ${remainingInstallments} parcela(s) de ${maskCurrency(valuePerInstallment)} (${maskCurrency(amountRemaining)} restante).`
       : 'Parcelamento totalmente quitado!'
   }
 })

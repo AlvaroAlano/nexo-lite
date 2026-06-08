@@ -85,6 +85,7 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Ocultar botões de ações na Dashboard em dropdown de 3 pontinhos e abrir modal de visualização detalhada da despesa no clique do card/linha — (2026-06-08)
 - [x] Corrigir suporte a safe areas (notch/câmera e barra de status superior) no iOS no cabeçalho e modais em tela cheia — (2026-06-08)
 - [x] Adicionar gesto Pull-to-refresh no mobile para recarregar o mês atual de forma rápida sem precisar fechar e reabrir o app — (2026-06-08)
+- [x] Botão de modo privacidade (ícone olho) no AppHeader para mascarar todos os valores monetários — (2026-06-08)
 
 ## 🔐 Auth
 

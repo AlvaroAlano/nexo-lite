@@ -9,7 +9,7 @@
         </h3>
         
         <p class="text-3xl font-bold font-tabular text-brand-ink-light dark:text-white tracking-tight">
-          {{ formatCurrency(expense.amount) }}
+          {{ maskCurrency(expense.amount) }}
         </p>
 
         <!-- Status Badge -->
@@ -89,7 +89,7 @@
                   </span>
                 </div>
               </div>
-              <span class="font-tabular font-semibold text-brand-ink-light dark:text-white">{{ formatCurrency(item.amount) }}</span>
+              <span class="font-tabular font-semibold text-brand-ink-light dark:text-white">{{ maskCurrency(item.amount) }}</span>
             </div>
             <div v-if="idx < expense.rent_items.length - 1" class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/30 mx-4" />
           </template>
@@ -157,9 +157,10 @@ import { computed } from 'vue'
 import BaseModal from '../ui/BaseModal.vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { useCategoriesStore } from '../../stores/categories.js'
-import { formatCurrency } from '../../utils/currency.js'
+import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import { colorByKey, getIconComponent } from '../../utils/categories.js'
 
+const { maskCurrency } = usePrivacyMode()
 const props = defineProps({
   modelValue: Boolean,
   expense: { type: Object, default: null }
