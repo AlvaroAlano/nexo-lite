@@ -4,11 +4,12 @@
     <span class="text-brand-ink-mute-dark text-sm">{{ label }}</span>
     <span
       v-if="!editing"
-      @click="!readonly && startEdit()"
-      class="font-tabular font-medium text-white text-sm transition-colors"
-      :class="!readonly ? 'cursor-pointer hover:text-brand-primary-soft' : ''"
+      @click="!readonly && !hidden && startEdit()"
+      class="font-tabular font-medium text-white text-sm transition-colors select-none"
+      :class="!readonly && !hidden ? 'cursor-pointer hover:text-brand-primary-soft' : ''"
     >
-      {{ maskCurrency(value) }}
+      <span v-if="hidden" class="tracking-widest opacity-50">••••••</span>
+      <span v-else>{{ maskCurrency(value) }}</span>
     </span>
     <CurrencyInput
       v-else
@@ -34,8 +35,9 @@ const { maskCurrency } = usePrivacyMode()
 const props = defineProps({
   label: String,
   value: Number,
-  field: String,   // 'income_alvaro' | 'income_alexandra'
+  field: String,
   readonly: Boolean,
+  hidden: { type: Boolean, default: false },
 })
 
 const store = useDashboardStore()

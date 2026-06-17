@@ -70,6 +70,16 @@
                     </div>
                     <span class="text-brand-ink-mute-dark text-[10px] font-tabular">{{ progressPct }}%</span>
 
+                    <!-- Revelar salários -->
+                    <button
+                      @click="incomesRevealed = !incomesRevealed"
+                      class="w-6 h-6 flex items-center justify-center rounded-lg text-brand-ink-mute-dark hover:text-white hover:bg-white/10 transition-all active:scale-90"
+                      :title="incomesRevealed ? 'Ocultar rendas' : 'Revelar rendas'"
+                    >
+                      <EyeOff v-if="incomesRevealed" :size="13" />
+                      <Eye v-else :size="13" />
+                    </button>
+
                     <!-- Épico 2: Auditor IA -->
                     <button
                       @click="analyzeMonth"
@@ -86,8 +96,8 @@
                 </div>
 
                 <div class="space-y-2 mb-3">
-                  <IncomeRow :label="store.nameAlvaro" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" />
-                  <IncomeRow :label="store.nameAlexandra" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" />
+                  <IncomeRow :label="store.nameAlvaro" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" :hidden="!incomesRevealed" />
+                  <IncomeRow :label="store.nameAlexandra" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" :hidden="!incomesRevealed" />
                 </div>
 
                 <div v-if="store.carryover > 0" class="flex justify-between mb-2">
@@ -188,7 +198,7 @@
               </div>
 
               <div v-else-if="store.currentView === 'alvaro'">
-                <IncomeRow :label="`Renda de ${store.nameAlvaro}`" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" />
+                <IncomeRow :label="`Renda de ${store.nameAlvaro}`" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" :hidden="!incomesRevealed" />
                 <div class="border-t border-brand-hairline-dark/20 my-3" />
                 <div class="flex justify-between mb-1">
                   <span class="text-brand-ink-mute-dark text-sm">Contas de {{ store.nameAlvaro }}</span>
@@ -198,7 +208,7 @@
               </div>
 
               <div v-else-if="store.currentView === 'alexandra'">
-                <IncomeRow :label="`Renda de ${store.nameAlexandra}`" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" />
+                <IncomeRow :label="`Renda de ${store.nameAlexandra}`" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" :hidden="!incomesRevealed" />
                 <div class="border-t border-brand-hairline-dark/20 my-3" />
                 <div class="flex justify-between mb-1">
                   <span class="text-brand-ink-mute-dark text-sm">Contas de {{ store.nameAlexandra }}</span>
@@ -237,7 +247,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { ChevronDown, PiggyBank, Bot } from 'lucide-vue-next'
+import { ChevronDown, PiggyBank, Bot, Eye, EyeOff } from 'lucide-vue-next'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import { useGamification } from '../../composables/useGamification.js'
@@ -257,6 +267,7 @@ const {
   payoffEstimate,
 } = useGamification()
 
+const incomesRevealed = ref(false)
 const editingGoal  = ref(false)
 const goalEditVal  = ref(0)
 

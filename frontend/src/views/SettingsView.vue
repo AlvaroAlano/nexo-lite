@@ -13,9 +13,17 @@
 
     <!-- Members & Salaries Section -->
     <div class="bg-white dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-stripe-card p-5 shadow-stripe-1 mb-6 transition-colors duration-150">
-      <h3 class="font-medium text-brand-ink-light dark:text-white text-sm mb-4">
-        Membros e Rendas (Mês Atual)
-      </h3>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-medium text-brand-ink-light dark:text-white text-sm">Membros e Rendas (Mês Atual)</h3>
+        <button
+          @click="salariesRevealed = !salariesRevealed"
+          class="flex items-center gap-1.5 text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-brand-ink-light dark:hover:text-white transition-colors"
+        >
+          <EyeOff v-if="salariesRevealed" :size="14" />
+          <Eye v-else :size="14" />
+          {{ salariesRevealed ? 'Ocultar rendas' : 'Revelar rendas' }}
+        </button>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <!-- Membro 1 -->
         <div class="space-y-2">
@@ -29,7 +37,9 @@
             />
             <div class="w-full sm:w-36 flex items-center justify-between px-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark rounded-stripe-input">
               <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mr-1">R$</span>
+              <span v-if="!salariesRevealed" class="font-tabular text-sm text-brand-ink-mute-light dark:text-brand-ink-mute-dark tracking-widest py-2">••••••</span>
               <CurrencyInput
+                v-else
                 v-model="salaryAlvaro"
                 @confirm="saveMembersAndSalaries"
                 :disabled="dashboardStore.isReadOnly"
@@ -52,7 +62,9 @@
             />
             <div class="w-full sm:w-36 flex items-center justify-between px-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark rounded-stripe-input">
               <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mr-1">R$</span>
+              <span v-if="!salariesRevealed" class="font-tabular text-sm text-brand-ink-mute-light dark:text-brand-ink-mute-dark tracking-widest py-2">••••••</span>
               <CurrencyInput
+                v-else
                 v-model="salaryAlexandra"
                 @confirm="saveMembersAndSalaries"
                 :disabled="dashboardStore.isReadOnly"
@@ -338,7 +350,7 @@
 </template>
 <script setup>
 import { ref, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { Plus, MoreVertical } from 'lucide-vue-next'
+import { Plus, MoreVertical, Eye, EyeOff } from 'lucide-vue-next'
 import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../utils/menuBus.js'
 import { useCategoriesStore } from '../stores/categories.js'
 import { useDashboardStore } from '../stores/dashboard.js'
@@ -401,6 +413,7 @@ watch(() => dashboardStore.nameAlexandra, (val) => {
 // Salaries local state synced with dashboardStore
 const salaryAlvaro = ref(0)
 const salaryAlexandra = ref(0)
+const salariesRevealed = ref(false)
 
 watch(() => dashboardStore.incomeAlvaro, (val) => {
   salaryAlvaro.value = val
