@@ -114,10 +114,31 @@
 
         <!-- ── RIGHT: Expense list + turnover ── -->
         <div>
+          <!-- Search bar -->
+          <div class="relative mb-3">
+            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-ink-mute-light dark:text-brand-ink-mute-dark pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              v-model="searchQuery"
+              placeholder="Buscar despesa..."
+              class="w-full pl-9 pr-9 py-2.5 text-sm bg-brand-canvas-soft-light dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-xl text-brand-ink-light dark:text-white placeholder:text-brand-ink-mute-light dark:placeholder:text-brand-ink-mute-dark focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all"
+            />
+            <button
+              v-if="searchQuery"
+              @click="searchQuery = ''"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-brand-ink-light dark:hover:text-white transition-colors"
+            >
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
           <!-- Mobile: compact rows -->
           <div class="divide-y divide-brand-hairline-light/60 dark:divide-brand-hairline-dark/50 md:hidden">
             <ExpenseCard
-              v-for="expense in store.filteredExpenses"
+              v-for="expense in visibleExpenses"
               :key="expense.id"
               :expense="expense"
               @open-rent="openRent"
@@ -125,15 +146,15 @@
               @edit="openEditModal"
               @click-detail="openDetailModal"
             />
-            <p v-if="!store.filteredExpenses.length" class="text-center py-10 text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm">
-              Nenhuma despesa neste mês ainda.
+            <p v-if="!visibleExpenses.length" class="text-center py-10 text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm">
+              {{ searchQuery ? 'Nenhuma despesa encontrada.' : 'Nenhuma despesa neste mês ainda.' }}
             </p>
           </div>
 
           <!-- Desktop: table with category column -->
           <ExpenseTable
             class="hidden md:block"
-            :expenses="store.filteredExpenses"
+            :expenses="visibleExpenses"
             @open-rent="openRent"
             @delete="deleteWithUndo"
             @edit="openEditModal"
@@ -359,6 +380,20 @@ import ExpenseDetailModal from '../components/modals/ExpenseDetailModal.vue'
 const store = useDashboardStore()
 const debtsStore = useDebtsStore()
 
+// ── Search ─────────────────────────────────────────────────────────────────────
+const searchQuery = ref('')
+
+const visibleExpenses = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return store.filteredExpenses
+  return store.filteredExpenses.filter((e) =>
+    e.name.toLowerCase().includes(q) ||
+    (e.category || '').toLowerCase().includes(q) ||
+    String(parseFloat(e.amount) || 0).includes(q)
+  )
+})
+
+// ── Loans ──────────────────────────────────────────────────────────────────────
 const activeLoans = computed(() =>
   debtsStore.debts.filter((d) => d.status === 'ativo')
 )

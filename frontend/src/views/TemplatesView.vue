@@ -26,6 +26,42 @@
     </div>
 
     <template v-else>
+      <!-- ── Previsão do próximo mês ───────────────────────────────────── -->
+      <div v-if="activeTemplates.length" class="mb-5 rounded-xl border border-brand-hairline-light dark:border-brand-hairline-dark/60 bg-white dark:bg-brand-canvas-soft-dark/40 p-4 space-y-3">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-0.5">Próximo mês</p>
+            <p class="text-xl font-bold font-tabular text-brand-ink-light dark:text-white">
+              {{ fmtCurrency(nextMonthTotal) }}
+              <span class="text-sm font-normal text-brand-ink-mute-light dark:text-brand-ink-mute-dark ml-1">comprometidos</span>
+            </p>
+            <p v-if="incomeTotal" class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mt-0.5">
+              de {{ fmtCurrency(incomeTotal) }} de renda ·
+              <span :class="forecastPct >= 90 ? 'text-red-500 dark:text-red-400 font-semibold' : forecastPct >= 70 ? 'text-amber-500 dark:text-amber-400 font-semibold' : 'text-emerald-600 dark:text-emerald-400 font-semibold'">
+                {{ forecastPct }}% comprometido
+              </span>
+            </p>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <p class="text-[10px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark">{{ activeTemplates.length }} recorrências</p>
+            <p v-if="freeForecast >= 0" class="text-sm font-semibold font-tabular text-emerald-600 dark:text-emerald-400 mt-0.5">
+              {{ fmtCurrency(freeForecast) }} livre
+            </p>
+            <p v-else class="text-sm font-semibold font-tabular text-red-500 dark:text-red-400 mt-0.5">
+              {{ fmtCurrency(Math.abs(freeForecast)) }} acima
+            </p>
+          </div>
+        </div>
+        <!-- Progress bar -->
+        <div v-if="incomeTotal" class="h-1.5 w-full bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+          <div
+            class="h-full rounded-full transition-all duration-700"
+            :class="forecastPct >= 90 ? 'bg-red-500' : forecastPct >= 70 ? 'bg-amber-400' : 'bg-emerald-500'"
+            :style="{ width: Math.min(forecastPct, 100) + '%' }"
+          />
+        </div>
+      </div>
+
       <!-- Backdrop fecha menu mobile -->
       <div v-if="openMenuId" class="fixed inset-0 z-20" @click="openMenuId = null" />
 
@@ -626,6 +662,37 @@ function responsavelBadge(r) {
   if (r === 'alvaro')    return 'bg-brand-primary/10 text-brand-primary dark:bg-brand-primary/20 dark:text-brand-primary-soft'
   if (r === 'alexandra') return 'bg-pink-500/10 text-pink-600 dark:bg-pink-500/20 dark:text-pink-400'
   return 'bg-brand-canvas-soft-light text-brand-ink-mute-light dark:bg-brand-canvas-dark dark:text-brand-ink-mute-dark'
+}
+
+// ── Forecast do próximo mês ───────────────────────────────────────────────────
+const activeTemplates = computed(() => templates.value.filter((t) => t.is_active))
+
+const nextMonthTotal = computed(() =>
+  activeTemplates.value
+    .filter((t) => t.expense_type !== 'installment' || (t.installment_paid ?? 0) < (t.installment_total ?? 0))
+    .reduce((sum, t) => {
+      if (t.expense_type === 'rent') {
+        const rentSum = (t.rent_items || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0)
+        return sum + (rentSum || parseFloat(t.base_amount) || 0)
+      }
+      return sum + (parseFloat(t.base_amount) || 0)
+    }, 0)
+)
+
+const incomeTotal = computed(() =>
+  (parseFloat(dashboardStore.period?.income_alvaro) || 0) +
+  (parseFloat(dashboardStore.period?.income_alexandra) || 0)
+)
+
+const forecastPct = computed(() => {
+  if (!incomeTotal.value) return 0
+  return Math.min(100, Math.round((nextMonthTotal.value / incomeTotal.value) * 100))
+})
+
+const freeForecast = computed(() => incomeTotal.value - nextMonthTotal.value)
+
+function fmtCurrency(n) {
+  return (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 </script>
 
