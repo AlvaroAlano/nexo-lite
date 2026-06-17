@@ -27,7 +27,17 @@
 
     <template v-else>
       <!-- ── Previsão do próximo mês ───────────────────────────────────── -->
-      <div v-if="activeTemplates.length" class="mb-5 rounded-xl border border-brand-hairline-light dark:border-brand-hairline-dark/60 bg-white dark:bg-brand-canvas-soft-dark/40 p-4 space-y-3">
+      <ForecastModal
+        v-model="forecastModalOpen"
+        :templates="templates"
+        :income-total="incomeTotal"
+      />
+
+      <div
+        v-if="activeTemplates.length"
+        class="mb-5 rounded-xl border border-brand-hairline-light dark:border-brand-hairline-dark/60 bg-white dark:bg-brand-canvas-soft-dark/40 p-4 space-y-3 cursor-pointer hover:border-brand-primary/30 transition-colors"
+        @click="forecastModalOpen = true"
+      >
         <div class="flex items-start justify-between gap-3">
           <div>
             <p class="text-[10px] font-bold uppercase tracking-wider text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-0.5">Próximo mês</p>
@@ -59,6 +69,13 @@
             :class="forecastPct >= 90 ? 'bg-red-500' : forecastPct >= 70 ? 'bg-amber-400' : 'bg-emerald-500'"
             :style="{ width: Math.min(forecastPct, 100) + '%' }"
           />
+        </div>
+        <!-- CTA -->
+        <div class="flex items-center justify-end gap-1 pt-0.5">
+          <span class="text-[10px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark">Ver projeção de 12 meses</span>
+          <svg class="w-3 h-3 text-brand-ink-mute-light dark:text-brand-ink-mute-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
         </div>
       </div>
 
@@ -390,6 +407,7 @@ import CategoryPicker from '../components/ui/CategoryPicker.vue'
 import CurrencyInput from '../components/ui/CurrencyInput.vue'
 import AppSelect from '../components/ui/AppSelect.vue'
 import ConfirmModal from '../components/ui/ConfirmModal.vue'
+import ForecastModal from '../components/modals/ForecastModal.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh.js'
 import PullRefreshIndicator from '../components/ui/PullRefreshIndicator.vue'
 import BaseModal from '../components/ui/BaseModal.vue'
@@ -399,6 +417,7 @@ const { maskCurrency } = usePrivacyMode()
 
 const dashboardStore = useDashboardStore()
 const templates = ref([])
+const forecastModalOpen = ref(false)
 
 const responsavelOpts = computed(() => [
   { value: 'conjunto',  label: 'Casal (Conjunto)' },
