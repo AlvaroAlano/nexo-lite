@@ -24,7 +24,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const quickAddTemplateOpen = ref(false)
   const quickAddCategoryOpen = ref(false)
   const fabMenuOpen = ref(false)
-  const balanceSummaryCollapsed = ref(false)
+  const balanceSummaryCollapsed = ref(localStorage.getItem('nexo_balance_collapsed') === 'true')
 
   // ── Read-only: past months have status = 'closed' ─────────────────────────
   const isReadOnly = computed(() => period.value?.status === 'closed')

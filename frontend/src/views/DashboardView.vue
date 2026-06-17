@@ -143,54 +143,80 @@
 
           <!-- ── Empréstimos Ativos ──────────────────────────────────────── -->
           <div v-if="activeLoans.length" class="mt-5 md:mt-6">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="text-[11px] font-bold uppercase tracking-wider text-brand-ink-mute-light dark:text-brand-ink-mute-dark">
+            <!-- Header sanfona -->
+            <button
+              @click="toggleLoans"
+              class="flex items-center justify-between w-full mb-2 group"
+            >
+              <h3 class="text-[11px] font-bold uppercase tracking-wider text-brand-ink-mute-light dark:text-brand-ink-mute-dark flex items-center gap-1.5">
                 Empréstimos
+                <span class="bg-brand-canvas-soft-light dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-full px-1.5 py-0.5 text-[9px] font-bold text-brand-ink-mute-light dark:text-brand-ink-mute-dark">
+                  {{ activeLoans.length }}
+                </span>
               </h3>
-              <button
-                @click="debtsStore.openLoanModal()"
-                class="text-[10px] text-brand-primary dark:text-brand-primary-soft font-semibold hover:underline"
-              >
-                + novo
-              </button>
-            </div>
-            <div class="rounded-xl overflow-hidden border border-brand-hairline-light dark:border-brand-hairline-dark/60 bg-white dark:bg-brand-canvas-soft-dark/40">
-              <template v-for="(loan, idx) in activeLoans" :key="loan.id">
+              <div class="flex items-center gap-2">
                 <button
-                  @click="debtsStore.openLoanModal(loan)"
-                  class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/60 transition-colors active:opacity-70"
+                  @click.stop="debtsStore.openLoanModal()"
+                  class="text-[10px] text-brand-primary dark:text-brand-primary-soft font-semibold hover:underline"
                 >
-                  <!-- Direction badge -->
-                  <span
-                    class="flex-shrink-0 text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border"
-                    :class="loan.direction === 'me_deve'
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-red-500/10 border-red-400/20 text-red-500 dark:text-red-400'"
-                  >
-                    {{ loan.direction === 'me_deve' ? 'Me deve' : 'Eu devo' }}
-                  </span>
-
-                  <!-- Name -->
-                  <span class="flex-1 min-w-0 text-sm font-medium text-brand-ink-light dark:text-white truncate">
-                    {{ loan.name }}
-                  </span>
-
-                  <!-- Due date (overdue indicator) -->
-                  <span
-                    v-if="loan.due_date"
-                    class="flex-shrink-0 text-[10px] font-medium"
-                    :class="isLoanOverdue(loan) ? 'text-red-500 dark:text-red-400' : 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark'"
-                  >
-                    {{ isLoanOverdue(loan) ? 'Atrasado' : fmtLoanDate(loan.due_date) }}
-                  </span>
-
-                  <!-- Amount -->
-                  <span class="flex-shrink-0 text-sm font-semibold font-tabular" :class="loan.direction === 'me_deve' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'">
-                    {{ fmtLoanAmt(loan.estimated_amount) }}
-                  </span>
+                  + novo
                 </button>
-                <div v-if="idx < activeLoans.length - 1" class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/30 mx-4" />
-              </template>
+                <svg
+                  class="w-3.5 h-3.5 text-brand-ink-mute-light dark:text-brand-ink-mute-dark transition-transform duration-300"
+                  :class="loansCollapsed ? '' : 'rotate-180'"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+            </button>
+
+            <!-- Lista sanfona -->
+            <div
+              class="overflow-hidden transition-all duration-300 ease-in-out"
+              :style="loansCollapsed ? 'max-height: 0; opacity: 0;' : 'max-height: 600px; opacity: 1;'"
+            >
+              <div class="rounded-xl overflow-hidden border border-brand-hairline-light dark:border-brand-hairline-dark/60 bg-white dark:bg-brand-canvas-soft-dark/40">
+                <template v-for="(loan, idx) in activeLoans" :key="loan.id">
+                  <button
+                    @click="debtsStore.openLoanModal(loan)"
+                    class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/60 transition-colors active:opacity-70"
+                  >
+                    <!-- Direction badge -->
+                    <span
+                      class="flex-shrink-0 text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border"
+                      :class="loan.direction === 'me_deve'
+                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-red-500/10 border-red-400/20 text-red-500 dark:text-red-400'"
+                    >
+                      {{ loan.direction === 'me_deve' ? 'Me deve' : 'Eu devo' }}
+                    </span>
+
+                    <!-- Name -->
+                    <span class="flex-1 min-w-0 text-sm font-medium text-brand-ink-light dark:text-white truncate">
+                      {{ loan.name }}
+                    </span>
+
+                    <!-- Due date -->
+                    <span
+                      v-if="loan.due_date"
+                      class="flex-shrink-0 text-[10px] font-medium"
+                      :class="isLoanOverdue(loan) ? 'text-red-500 dark:text-red-400' : 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark'"
+                    >
+                      {{ isLoanOverdue(loan) ? 'Atrasado' : fmtLoanDate(loan.due_date) }}
+                    </span>
+
+                    <!-- Amount -->
+                    <span
+                      class="flex-shrink-0 text-sm font-semibold font-tabular"
+                      :class="loan.direction === 'me_deve' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'"
+                    >
+                      {{ fmtLoanAmt(loan.estimated_amount) }}
+                    </span>
+                  </button>
+                  <div v-if="idx < activeLoans.length - 1" class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/30 mx-4" />
+                </template>
+              </div>
             </div>
           </div>
 
@@ -336,6 +362,13 @@ const debtsStore = useDebtsStore()
 const activeLoans = computed(() =>
   debtsStore.debts.filter((d) => d.status === 'ativo')
 )
+
+const loansCollapsed = ref(localStorage.getItem('nexo_loans_collapsed') === 'true')
+
+function toggleLoans() {
+  loansCollapsed.value = !loansCollapsed.value
+  localStorage.setItem('nexo_loans_collapsed', String(loansCollapsed.value))
+}
 
 function isLoanOverdue(loan) {
   if (!loan.due_date) return false

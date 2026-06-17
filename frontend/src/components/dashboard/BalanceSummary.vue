@@ -277,7 +277,10 @@ const tabs = computed(() => [
 
 const collapsed = computed({
   get: () => store.balanceSummaryCollapsed,
-  set: (v) => { store.balanceSummaryCollapsed = v },
+  set: (v) => {
+    store.balanceSummaryCollapsed = v
+    localStorage.setItem('nexo_balance_collapsed', String(v))
+  },
 })
 
 const viewOrder = { geral: 0, alvaro: 1, alexandra: 2 }
