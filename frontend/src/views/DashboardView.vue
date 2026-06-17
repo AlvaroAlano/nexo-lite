@@ -57,15 +57,21 @@
         <div class="md:sticky md:top-[60px] md:self-start">
           <BalanceSummary />
 
-          <!-- Add expense — desktop sidebar -->
-          <div v-if="!store.isReadOnly" class="hidden md:block">
+          <!-- Add expense / loan — desktop sidebar -->
+          <div v-if="!store.isReadOnly" class="hidden md:block space-y-2">
             <Transition name="btn-bounce">
-              <div v-if="!showAddForm">
+              <div v-if="!showAddForm" class="space-y-2">
                 <button
                   @click="showAddForm = true"
                   class="w-full py-2.5 rounded-stripe-input border border-dashed border-brand-hairline-light dark:border-brand-hairline-dark text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm font-medium hover:border-brand-primary hover:text-brand-primary dark:hover:text-white transition-colors"
                 >
                   + Nova despesa
+                </button>
+                <button
+                  @click="debtsStore.openLoanModal()"
+                  class="w-full py-2.5 rounded-stripe-input border border-dashed border-brand-hairline-light dark:border-brand-hairline-dark text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm font-medium hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                >
+                  + Registrar empréstimo
                 </button>
               </div>
             </Transition>
@@ -257,6 +263,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted, reactive, computed } from 'vue'
 import { useDashboardStore } from '../stores/dashboard.js'
+import { useDebtsStore } from '../stores/debts.js'
 import { usePullToRefresh } from '../composables/usePullToRefresh.js'
 import PullRefreshIndicator from '../components/ui/PullRefreshIndicator.vue'
 import BalanceSummary from '../components/dashboard/BalanceSummary.vue'
@@ -271,6 +278,7 @@ import AppSelect from '../components/ui/AppSelect.vue'
 import ExpenseDetailModal from '../components/modals/ExpenseDetailModal.vue'
 
 const store = useDashboardStore()
+const debtsStore = useDebtsStore()
 
 const showRent = ref(false)
 const rentExpense = ref(null)
