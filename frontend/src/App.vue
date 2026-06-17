@@ -15,6 +15,7 @@
 
     <BottomNav v-if="!isAuth" />
     <MilestoneToast v-if="!isAuth" />
+    <LoanModal v-if="!isAuth" />
   </div>
 </template>
 
@@ -24,6 +25,7 @@ import { useRoute } from 'vue-router'
 import AppHeader from './components/layout/AppHeader.vue'
 import BottomNav from './components/layout/BottomNav.vue'
 import MilestoneToast from './components/ui/MilestoneToast.vue'
+import LoanModal from './components/modals/LoanModal.vue'
 
 const routeOrder = { dashboard: 0, templates: 1, settings: 2, stats: 3 }
 const transitionName = ref('slide-left')

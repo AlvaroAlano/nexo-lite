@@ -45,12 +45,22 @@ export const summaryApi = {
   get: (periodId) => http.get(`/summary/${periodId}`),
 }
 
-// ─── Debts (Dívidas Ativas) ──────────────────────────────────────────────────
+// ─── Debts (Dívidas / Empréstimos) ───────────────────────────────────────────
 export const debtsApi = {
-  list:   ()           => http.get('/debts/'),
-  create: (data)       => http.post('/debts/', data),
-  update: (id, data)   => http.patch(`/debts/${id}`, data),
-  delete: (id)         => http.delete(`/debts/${id}`),
+  list:         ()           => http.get('/debts/'),
+  create:       (data)       => http.post('/debts/', data),
+  update:       (id, data)   => http.patch(`/debts/${id}`, data),
+  settle:       (id)         => http.patch(`/debts/${id}/settle`),
+  delete:       (id)         => http.delete(`/debts/${id}`),
+  listPayments: (id)         => http.get(`/debts/${id}/payments`),
+  addPayment:   (id, data)   => http.post(`/debts/${id}/payments`, data),
+}
+
+// ─── Expense Notes ────────────────────────────────────────────────────────────
+export const expenseNotesApi = {
+  list:   (expenseId)           => http.get(`/expenses/${expenseId}/notes`),
+  create: (expenseId, data)     => http.post(`/expenses/${expenseId}/notes`, data),
+  delete: (expenseId, noteId)   => http.delete(`/expenses/${expenseId}/notes/${noteId}`),
 }
 
 // ─── Vault (Caixinha) ────────────────────────────────────────────────────────

@@ -4,11 +4,14 @@ from sqlalchemy import select
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime, timezone
+from typing import List
 
 from app.database import get_db
 from app.models.expense import MonthlyExpense
+from app.models.expense_note import ExpenseNote
 from app.models.category import Category
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate, RentUpdate, ExpenseResponse
+from app.schemas.expense_note import ExpenseNoteCreate, ExpenseNoteResponse
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 
@@ -126,4 +129,43 @@ async def delete_expense(
     if expense.name == "Caixinha" or expense.category == "Caixinha":
         raise HTTPException(status_code=403, detail="Caixinha expense cannot be deleted")
     await db.delete(expense)
+    await db.flush()
+
+
+# ── Expense Notes ─────────────────────────────────────────────────────────────
+
+@router.get("/{expense_id}/notes", response_model=List[ExpenseNoteResponse])
+async def list_notes(expense_id: UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(ExpenseNote)
+        .where(ExpenseNote.expense_id == expense_id)
+        .order_by(ExpenseNote.created_at.desc())
+    )
+    return [ExpenseNoteResponse.model_validate(n) for n in result.scalars().all()]
+
+
+@router.post("/{expense_id}/notes", response_model=ExpenseNoteResponse, status_code=201)
+async def add_note(
+    expense_id: UUID,
+    payload: ExpenseNoteCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    expense = (await db.execute(select(MonthlyExpense).where(MonthlyExpense.id == expense_id))).scalars().first()
+    if expense is None:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    note = ExpenseNote(expense_id=expense_id, body=payload.body, created_by=payload.created_by)
+    db.add(note)
+    await db.flush()
+    return ExpenseNoteResponse.model_validate(note)
+
+
+@router.delete("/{expense_id}/notes/{note_id}", status_code=204)
+async def delete_note(expense_id: UUID, note_id: UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(ExpenseNote).where(ExpenseNote.id == note_id, ExpenseNote.expense_id == expense_id)
+    )
+    note = result.scalars().first()
+    if note is None:
+        raise HTTPException(status_code=404, detail="Note not found")
+    await db.delete(note)
     await db.flush()

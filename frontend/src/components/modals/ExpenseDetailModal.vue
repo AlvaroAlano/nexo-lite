@@ -99,6 +99,90 @@
         </p>
       </div>
 
+      <!-- ── Observações ──────────────────────────────────────────────────── -->
+      <div class="space-y-3">
+        <button
+          @click="notesOpen = !notesOpen"
+          class="flex items-center justify-between w-full group"
+        >
+          <h4 class="text-xs font-bold uppercase tracking-wider text-brand-ink-mute-light dark:text-brand-ink-mute-dark flex items-center gap-1.5">
+            <MessageSquare :size="11" />
+            Observações
+            <span v-if="notes.length" class="bg-brand-primary/10 text-brand-primary dark:text-brand-primary-soft px-1.5 py-0.5 rounded-full text-[9px] font-bold">
+              {{ notes.length }}
+            </span>
+          </h4>
+          <ChevronDown
+            :size="14"
+            class="text-brand-ink-mute-light dark:text-brand-ink-mute-dark transition-transform duration-200"
+            :class="notesOpen ? 'rotate-180' : ''"
+          />
+        </button>
+
+        <Transition name="notes-slide">
+          <div v-if="notesOpen" class="space-y-3">
+
+            <!-- Add note form -->
+            <div class="space-y-2">
+              <textarea
+                v-model="newNoteBody"
+                placeholder="Adicionar observação..."
+                rows="2"
+                class="w-full bg-brand-canvas-soft-light dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-xl px-3.5 py-3 text-sm text-brand-ink-light dark:text-white placeholder:text-brand-ink-mute-light dark:placeholder:text-brand-ink-mute-dark focus:outline-none focus:ring-2 focus:ring-brand-primary/30 transition-all resize-none"
+              />
+              <div class="flex items-center gap-2">
+                <select
+                  v-model="newNoteAuthor"
+                  class="flex-1 bg-brand-canvas-soft-light dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-xl px-3 py-2 text-sm text-brand-ink-light dark:text-white focus:outline-none"
+                >
+                  <option :value="store.nameAlvaro">{{ store.nameAlvaro }}</option>
+                  <option :value="store.nameAlexandra">{{ store.nameAlexandra }}</option>
+                </select>
+                <button
+                  @click="submitNote"
+                  :disabled="!newNoteBody.trim() || savingNote"
+                  class="flex-shrink-0 px-4 py-2 rounded-xl bg-brand-primary text-white text-xs font-semibold hover:bg-brand-primary-hover disabled:opacity-40 transition-colors active:scale-95"
+                >
+                  Salvar
+                </button>
+              </div>
+            </div>
+
+            <!-- Loading -->
+            <div v-if="loadingNotes" class="flex justify-center py-4">
+              <div class="w-4 h-4 rounded-full border-2 border-brand-hairline-light dark:border-brand-hairline-dark border-t-brand-primary animate-spin" />
+            </div>
+
+            <!-- Notes list -->
+            <div v-else-if="notes.length" class="rounded-xl overflow-hidden border border-brand-hairline-light dark:border-brand-hairline-dark/50 bg-white dark:bg-brand-canvas-soft-dark/40">
+              <div v-for="(note, idx) in notes" :key="note.id">
+                <div class="px-4 py-3 flex items-start gap-3">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1.5 mb-1">
+                      <span class="text-[10px] font-semibold text-brand-primary dark:text-brand-primary-soft">{{ note.created_by }}</span>
+                      <span class="text-[10px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark">·</span>
+                      <span class="text-[10px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark">{{ fmtDatetime(note.created_at) }}</span>
+                    </div>
+                    <p class="text-sm text-brand-ink-light dark:text-white leading-relaxed">{{ note.body }}</p>
+                  </div>
+                  <button
+                    @click="deleteNote(note)"
+                    class="flex-shrink-0 p-1 rounded-md text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 :size="12" />
+                  </button>
+                </div>
+                <div v-if="idx < notes.length - 1" class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/30 mx-4" />
+              </div>
+            </div>
+
+            <p v-else class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-center py-3">
+              Nenhuma observação ainda.
+            </p>
+          </div>
+        </Transition>
+      </div>
+
     </div>
 
     <!-- Footer Actions -->
@@ -153,12 +237,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { MessageSquare, ChevronDown, Trash2 } from 'lucide-vue-next'
 import BaseModal from '../ui/BaseModal.vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { useCategoriesStore } from '../../stores/categories.js'
 import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import { colorByKey, getIconComponent } from '../../utils/categories.js'
+import { expenseNotesApi } from '../../services/api.js'
 
 const { maskCurrency } = usePrivacyMode()
 const props = defineProps({
@@ -241,4 +327,82 @@ function deleteExpense() {
   emit('delete', props.expense)
   open.value = false
 }
+
+// ── Observações ────────────────────────────────────────────────────────────────
+const notesOpen    = ref(false)
+const notes        = ref([])
+const loadingNotes = ref(false)
+const savingNote   = ref(false)
+const newNoteBody  = ref('')
+const newNoteAuthor = ref(store.nameAlvaro)
+
+watch(
+  () => props.modelValue,
+  (v) => {
+    if (v && props.expense) {
+      loadNotes()
+    } else {
+      notes.value = []
+      notesOpen.value = false
+      newNoteBody.value = ''
+    }
+  }
+)
+
+watch(notesOpen, (v) => {
+  if (v && !notes.value.length && !loadingNotes.value) loadNotes()
+})
+
+async function loadNotes() {
+  if (!props.expense) return
+  loadingNotes.value = true
+  try {
+    const { data } = await expenseNotesApi.list(props.expense.id)
+    notes.value = data
+  } finally {
+    loadingNotes.value = false
+  }
+}
+
+async function submitNote() {
+  if (!newNoteBody.value.trim() || !props.expense) return
+  savingNote.value = true
+  try {
+    const { data } = await expenseNotesApi.create(props.expense.id, {
+      body: newNoteBody.value.trim(),
+      created_by: newNoteAuthor.value,
+    })
+    notes.value.unshift(data)
+    newNoteBody.value = ''
+  } finally {
+    savingNote.value = false
+  }
+}
+
+async function deleteNote(note) {
+  if (!props.expense) return
+  notes.value = notes.value.filter((n) => n.id !== note.id)
+  try {
+    await expenseNotesApi.delete(props.expense.id, note.id)
+  } catch {
+    await loadNotes()
+  }
+}
+
+function fmtDatetime(d) {
+  if (!d) return ''
+  return new Date(d).toLocaleString('pt-BR', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
 </script>
+
+<style scoped>
+.notes-slide-enter-active { animation: notes-in 0.18s ease-out forwards; }
+.notes-slide-leave-active { animation: notes-in 0.12s ease-in reverse forwards; }
+@keyframes notes-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>

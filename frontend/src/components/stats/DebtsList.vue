@@ -38,15 +38,25 @@
         >
           <!-- Badge + actions -->
           <div class="flex items-center justify-between mb-2">
-            <span
-              class="flex items-center gap-1 text-[10px] font-semibold rounded-full px-2 py-0.5 border"
-              :class="focusedCovered
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                : 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary dark:text-brand-primary-soft'"
-            >
-              <Target :size="9" />
-              {{ focusedCovered ? 'Pronto para quitar' : 'Foco' }}
-            </span>
+            <div class="flex items-center gap-1.5">
+              <span
+                class="flex items-center gap-1 text-[10px] font-semibold rounded-full px-2 py-0.5 border"
+                :class="focusedCovered
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-brand-primary/10 border-brand-primary/20 text-brand-primary dark:text-brand-primary-soft'"
+              >
+                <Target :size="9" />
+                {{ focusedCovered ? 'Pronto para quitar' : 'Foco' }}
+              </span>
+              <span
+                class="text-[9px] font-semibold rounded-full px-1.5 py-0.5 border"
+                :class="focusedDebt.direction === 'me_deve'
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                  : 'bg-red-500/10 border-red-400/20 text-red-500 dark:text-red-400'"
+              >
+                {{ focusedDebt.direction === 'me_deve' ? 'Me deve' : 'Eu devo' }}
+              </span>
+            </div>
 
             <div class="flex items-center gap-1.5">
               <!-- Valor editável -->
@@ -104,10 +114,18 @@
             </div>
           </div>
 
-          <!-- Nome -->
-          <p class="text-base font-semibold text-brand-ink-light dark:text-white mb-2 truncate">
-            {{ focusedDebt.name }}
-          </p>
+          <!-- Nome + clique para detalhe -->
+          <button
+            @click="debtsStore.openLoanModal(focusedDebt)"
+            class="text-left w-full mb-2"
+          >
+            <p class="text-base font-semibold text-brand-ink-light dark:text-white truncate hover:text-brand-primary dark:hover:text-brand-primary-soft transition-colors">
+              {{ focusedDebt.name }}
+            </p>
+            <p v-if="focusedDebt.due_date" class="text-[10px] mt-0.5" :class="isOverdue(focusedDebt) ? 'text-red-500 dark:text-red-400' : 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark'">
+              Prazo: {{ fmtDate(focusedDebt.due_date) }}{{ isOverdue(focusedDebt) ? ' · Em atraso' : '' }}
+            </p>
+          </button>
 
           <!-- Barra de progresso -->
           <div class="h-2 w-full bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden mb-1.5">
@@ -142,7 +160,17 @@
             class="group"
           >
             <div class="flex items-center gap-2 mb-1">
-              <span class="text-sm text-brand-ink-light dark:text-white truncate flex-1 min-w-0">{{ debt.name }}</span>
+              <button @click="debtsStore.openLoanModal(debt)" class="flex items-center gap-1.5 flex-1 min-w-0 text-left">
+                <span class="text-sm text-brand-ink-light dark:text-white truncate hover:text-brand-primary dark:hover:text-brand-primary-soft transition-colors">{{ debt.name }}</span>
+                <span
+                  class="text-[8px] font-semibold rounded-full px-1.5 py-0.5 border flex-shrink-0"
+                  :class="debt.direction === 'me_deve'
+                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-red-500/10 border-red-400/20 text-red-500 dark:text-red-400'"
+                >
+                  {{ debt.direction === 'me_deve' ? 'Me deve' : 'Eu devo' }}
+                </span>
+              </button>
               <span class="text-[10px] font-tabular text-brand-ink-mute-light dark:text-brand-ink-mute-dark flex-shrink-0 w-8 text-right">
                 {{ coveragePct(debt) }}%
               </span>
@@ -237,50 +265,13 @@
         </div>
       </template>
 
-      <!-- Adicionar nova dívida -->
-      <div>
-        <Transition name="form-slide">
-          <form
-            v-if="showAddForm"
-            @submit.prevent="addDebt"
-            class="flex items-center gap-2 p-3 bg-brand-canvas-soft-light dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-xl"
-          >
-            <input
-              v-model="addForm.name"
-              placeholder="Nome da dívida"
-              required
-              autofocus
-              class="flex-1 min-w-0 bg-transparent text-sm text-brand-ink-light dark:text-white placeholder:text-brand-ink-mute-light dark:placeholder:text-brand-ink-mute-dark focus:outline-none"
-            />
-            <CurrencyInput
-              v-model="addForm.amount"
-              input-class="w-28 text-right text-sm py-1 px-2 bg-white dark:bg-brand-canvas-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-lg text-brand-ink-light dark:text-white"
-            />
-            <button
-              type="submit"
-              :disabled="!addForm.name.trim() || store.saving"
-              class="flex-shrink-0 p-1.5 rounded-lg bg-brand-primary text-white disabled:opacity-40 hover:bg-brand-primary-hover transition-colors"
-            >
-              <Check :size="13" />
-            </button>
-            <button
-              type="button"
-              @click="showAddForm = false"
-              class="flex-shrink-0 p-1.5 rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-brand-ink-light dark:hover:text-white transition-colors"
-            >
-              <X :size="13" />
-            </button>
-          </form>
-        </Transition>
-
-        <button
-          v-if="!showAddForm"
-          @click="openAddForm"
-          class="w-full mt-1 py-2 rounded-xl border border-dashed border-brand-hairline-light dark:border-brand-hairline-dark text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:border-brand-primary hover:text-brand-primary dark:hover:text-white transition-colors"
-        >
-          + Nova dívida
-        </button>
-      </div>
+      <!-- Adicionar novo empréstimo -->
+      <button
+        @click="debtsStore.openLoanModal()"
+        class="w-full mt-1 py-2 rounded-xl border border-dashed border-brand-hairline-light dark:border-brand-hairline-dark text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:border-brand-primary hover:text-brand-primary dark:hover:text-white transition-colors"
+      >
+        + Novo empréstimo
+      </button>
     </template>
 
     <!-- Backdrop fecha menus mobile -->
@@ -308,6 +299,7 @@ import ConfirmModal from '../ui/ConfirmModal.vue'
 import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../../utils/menuBus.js'
 
 const store = useDebtsStore()
+const debtsStore = store
 const vault = useVaultStore()
 
 onMounted(() => store.fetchDebts())
@@ -395,19 +387,15 @@ function cancelEdit() {
   editing.value = null
 }
 
-// ── Adicionar ─────────────────────────────────────────────────────────────────
-const showAddForm = ref(false)
-const addForm     = ref({ name: '', amount: 0 })
-
-function openAddForm() {
-  addForm.value = { name: '', amount: 0 }
-  showAddForm.value = true
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function isOverdue(debt) {
+  if (!debt.due_date || debt.status === 'quitado') return false
+  return new Date(debt.due_date) < new Date()
 }
 
-async function addDebt() {
-  if (!addForm.value.name.trim()) return
-  await store.createDebt(addForm.value.name.trim(), addForm.value.amount)
-  showAddForm.value = false
+function fmtDate(d) {
+  if (!d) return ''
+  return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 // ── Exclusão ──────────────────────────────────────────────────────────────────
