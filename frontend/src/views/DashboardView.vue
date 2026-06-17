@@ -141,6 +141,59 @@
           />
 
 
+          <!-- ── Empréstimos Ativos ──────────────────────────────────────── -->
+          <div v-if="activeLoans.length" class="mt-5 md:mt-6">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-[11px] font-bold uppercase tracking-wider text-brand-ink-mute-light dark:text-brand-ink-mute-dark">
+                Empréstimos
+              </h3>
+              <button
+                @click="debtsStore.openLoanModal()"
+                class="text-[10px] text-brand-primary dark:text-brand-primary-soft font-semibold hover:underline"
+              >
+                + novo
+              </button>
+            </div>
+            <div class="rounded-xl overflow-hidden border border-brand-hairline-light dark:border-brand-hairline-dark/60 bg-white dark:bg-brand-canvas-soft-dark/40">
+              <template v-for="(loan, idx) in activeLoans" :key="loan.id">
+                <button
+                  @click="debtsStore.openLoanModal(loan)"
+                  class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/60 transition-colors active:opacity-70"
+                >
+                  <!-- Direction badge -->
+                  <span
+                    class="flex-shrink-0 text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border"
+                    :class="loan.direction === 'me_deve'
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-red-500/10 border-red-400/20 text-red-500 dark:text-red-400'"
+                  >
+                    {{ loan.direction === 'me_deve' ? 'Me deve' : 'Eu devo' }}
+                  </span>
+
+                  <!-- Name -->
+                  <span class="flex-1 min-w-0 text-sm font-medium text-brand-ink-light dark:text-white truncate">
+                    {{ loan.name }}
+                  </span>
+
+                  <!-- Due date (overdue indicator) -->
+                  <span
+                    v-if="loan.due_date"
+                    class="flex-shrink-0 text-[10px] font-medium"
+                    :class="isLoanOverdue(loan) ? 'text-red-500 dark:text-red-400' : 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark'"
+                  >
+                    {{ isLoanOverdue(loan) ? 'Atrasado' : fmtLoanDate(loan.due_date) }}
+                  </span>
+
+                  <!-- Amount -->
+                  <span class="flex-shrink-0 text-sm font-semibold font-tabular" :class="loan.direction === 'me_deve' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'">
+                    {{ fmtLoanAmt(loan.estimated_amount) }}
+                  </span>
+                </button>
+                <div v-if="idx < activeLoans.length - 1" class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/30 mx-4" />
+              </template>
+            </div>
+          </div>
+
           <!-- Turnover -->
           <div v-if="!store.isReadOnly" class="mt-6 md:mt-8 pt-6 md:pt-6 border-t border-brand-hairline-light dark:border-brand-hairline-dark">
             <div class="flex items-center justify-between">
@@ -280,6 +333,24 @@ import ExpenseDetailModal from '../components/modals/ExpenseDetailModal.vue'
 const store = useDashboardStore()
 const debtsStore = useDebtsStore()
 
+const activeLoans = computed(() =>
+  debtsStore.debts.filter((d) => d.status === 'ativo')
+)
+
+function isLoanOverdue(loan) {
+  if (!loan.due_date) return false
+  return new Date(loan.due_date) < new Date()
+}
+
+function fmtLoanDate(d) {
+  if (!d) return ''
+  return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+}
+
+function fmtLoanAmt(n) {
+  return (parseFloat(n) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
 const showRent = ref(false)
 const rentExpense = ref(null)
 const showTurnover = ref(false)
@@ -360,6 +431,7 @@ watch(showExpenseModal, (val) => {
 
 onMounted(async () => {
   await store.fetchCurrent()
+  if (!debtsStore.debts.length) debtsStore.fetchDebts()
   if (store.quickAddOpen && !store.isReadOnly && store.period) {
     showExpenseModal.value = true
     store.quickAddOpen = false
