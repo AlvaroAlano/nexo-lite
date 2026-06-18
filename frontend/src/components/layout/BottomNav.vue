@@ -72,7 +72,7 @@
           >
             <component :is="item.icon" :size="22" stroke-width="2" class="flex-shrink-0" />
             <span
-              class="overflow-hidden whitespace-nowrap text-[10px] font-semibold"
+              class="overflow-hidden whitespace-nowrap text-[11px] font-semibold"
               :style="labelStyle(item.name)"
             >{{ item.label }}</span>
           </button>
@@ -130,7 +130,7 @@ const allItems = [
 function labelStyle(name) {
   const active = route.name === name
   return {
-    maxWidth: active ? '64px' : '0px',
+    maxWidth: active ? '74px' : '0px',
     opacity: active ? '1' : '0',
     paddingLeft: active ? '6px' : '0px',
     transition:
