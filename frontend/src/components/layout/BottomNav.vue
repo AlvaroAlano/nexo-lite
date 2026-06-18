@@ -7,7 +7,7 @@
   >
   <div
     v-show="!isModalOpen"
-    class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[9999] w-max pointer-events-none md:hidden"
+    class="absolute bottom-3 left-1/2 -translate-x-1/2 z-[9999] w-max pointer-events-none md:hidden"
     style="padding-bottom: env(safe-area-inset-bottom, 0px);"
   >
     <!-- FAB speed-dial options (dashboard only) -->
@@ -37,19 +37,19 @@
       </div>
     </Transition>
 
-    <nav class="pointer-events-auto bg-brand-canvas-soft-light/95 dark:bg-brand-canvas-soft-dark/95 backdrop-blur-xl border border-brand-hairline-light dark:border-brand-hairline-dark rounded-full flex items-center p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_6px_rgba(0,0,0,0.06)] gap-0.5">
+    <nav class="pointer-events-auto bg-brand-canvas-soft-light/95 dark:bg-brand-canvas-soft-dark/95 backdrop-blur-xl border border-brand-hairline-light dark:border-brand-hairline-dark rounded-full flex items-center p-2 shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_6px_rgba(0,0,0,0.06)] gap-0.5">
         <template v-for="(item, i) in allItems" :key="i">
 
           <div
             v-if="item.type === 'fab'"
             class="flex items-center justify-center transition-all duration-300 ease-in-out overflow-hidden"
-            :class="route.name !== 'stats' && route.name !== 'settings' ? 'w-11 mx-0.5' : 'w-0 mx-0'"
+            :class="route.name !== 'stats' && route.name !== 'settings' ? 'w-12 mx-0.5' : 'w-0 mx-0'"
           >
             <Transition name="fab-pop">
               <button
                 v-if="route.name !== 'stats' && route.name !== 'settings'"
                 @click="openAdd"
-                class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
+                class="w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
                 :class="store.fabMenuOpen && route.name === 'dashboard'
                   ? 'bg-brand-ink-light dark:bg-white'
                   : 'bg-brand-primary hover:bg-brand-primary-hover'"
@@ -64,13 +64,13 @@
           <button
             v-if="item.type === 'route'"
             @click="router.push(item.to)"
-            class="flex items-center rounded-full px-3 py-2 transition-colors duration-200 min-w-[44px] justify-center active:opacity-60"
+            class="flex items-center rounded-full px-3.5 py-2.5 transition-colors duration-200 min-w-[48px] justify-center active:opacity-60"
             :class="route.name === item.name
               ? 'bg-brand-primary/[0.10] dark:bg-brand-primary/[0.18] text-brand-primary dark:text-brand-primary-soft'
               : 'text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-brand-ink-light dark:hover:text-white'"
             :aria-label="item.label"
           >
-            <component :is="item.icon" :size="21" stroke-width="2" class="flex-shrink-0" />
+            <component :is="item.icon" :size="22" stroke-width="2" class="flex-shrink-0" />
             <span
               class="overflow-hidden whitespace-nowrap text-[10px] font-semibold"
               :style="labelStyle(item.name)"
