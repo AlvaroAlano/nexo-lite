@@ -12,7 +12,7 @@
       <div class="w-5 h-5 rounded-full border-2 border-brand-hairline-light dark:border-brand-hairline-dark border-t-brand-primary animate-spin" />
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+    <div v-else class="stagger-in grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
 
       <!-- 0: Caixinha — dados via useVaultStore (já integrado) -->
       <StatCard class="md:col-span-2" title="Caixinha" subtitle="Reserva financeira — aportes e rendimento acumulado">
@@ -22,6 +22,11 @@
       <!-- 1: Dívidas Ativas — dados via useDebtsStore (já integrado) -->
       <StatCard class="md:col-span-2" title="Dívidas Ativas" subtitle="Quanto a Caixinha já cobre de cada dívida">
         <DebtsList />
+      </StatCard>
+
+      <!-- 1.5: Plano de Quitação — motor snowball/avalanche com projeção -->
+      <StatCard class="md:col-span-2" title="Plano de Quitação" subtitle="Sua rota para zerar as dívidas — escolha a estratégia e o ritmo">
+        <PayoffPlan />
       </StatCard>
 
       <!-- 2: Radar de Comprometimento — projeção via templates -->
@@ -61,6 +66,7 @@ import LiquidityDonut    from '../components/stats/LiquidityDonut.vue'
 import FreeCashChart     from '../components/stats/FreeCashChart.vue'
 import VaultStats        from '../components/stats/VaultStats.vue'
 import DebtsList         from '../components/stats/DebtsList.vue'
+import PayoffPlan        from '../components/stats/PayoffPlan.vue'
 
 const dashboard  = useDashboardStore()
 const statsStore = useStatsStore()

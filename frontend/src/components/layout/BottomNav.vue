@@ -134,7 +134,7 @@ function labelStyle(name) {
     opacity: active ? '1' : '0',
     paddingLeft: active ? '6px' : '0px',
     transition:
-      'max-width 320ms cubic-bezier(0.34,1.56,0.64,1), opacity 180ms ease, padding-left 200ms ease',
+      'max-width 320ms var(--ease-spring), opacity 180ms ease, padding-left 200ms ease',
   }
 }
 
@@ -163,7 +163,7 @@ async function openLoan() {
 </script>
 
 <style scoped>
-.fab-pop-enter-active { animation: fab-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.fab-pop-enter-active { animation: fab-in 0.3s var(--ease-spring) forwards; }
 .fab-pop-leave-active { animation: fab-in 0.15s ease-in reverse forwards; }
 @keyframes fab-in {
   from { opacity: 0; transform: scale(0.4); }
@@ -171,7 +171,7 @@ async function openLoan() {
 }
 
 .speed-dial-enter-active {
-  animation: speed-dial-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: speed-dial-in 0.2s var(--ease-spring) forwards;
 }
 .speed-dial-leave-active {
   animation: speed-dial-in 0.12s ease-in reverse forwards;

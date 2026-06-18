@@ -405,7 +405,7 @@ function typeBadgeClass(t) {
 
 <style scoped>
 .forecast-slide-enter-active {
-  animation: forecast-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: forecast-in 0.28s var(--ease-out-expo) forwards;
 }
 .forecast-slide-leave-active {
   animation: forecast-in 0.18s ease-in reverse forwards;

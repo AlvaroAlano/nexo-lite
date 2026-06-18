@@ -37,6 +37,7 @@ async def create_debt(payload: DebtCreate, db: AsyncSession = Depends(get_db)):
         direction=payload.direction,
         estimated_amount=payload.estimated_amount,
         original_amount=original,
+        interest_rate=payload.interest_rate,
         loan_date=payload.loan_date,
         due_date=payload.due_date,
         display_order=payload.display_order,
@@ -65,6 +66,8 @@ async def update_debt(
         debt.estimated_amount = payload.estimated_amount
     if payload.original_amount is not None:
         debt.original_amount = payload.original_amount
+    if payload.interest_rate is not None:
+        debt.interest_rate = payload.interest_rate
     if payload.loan_date is not None:
         debt.loan_date = payload.loan_date
     if payload.due_date is not None:

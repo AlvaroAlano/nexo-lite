@@ -185,7 +185,7 @@
                     />
                   </div>
                   <p class="text-[10px] font-tabular text-brand-ink-mute-dark mt-1">
-                    {{ fmt(caixinhaBalance) }} / {{ fmt(nextTargetDebt.amount) }}
+                    {{ fmt(caixinhaBalance) }} / {{ fmt(nextTargetDebt.estimated_amount) }}
                     <span class="ml-1 text-white/40">({{ vaultProgressPct.toFixed(0) }}%)</span>
                   </p>
                   <p v-if="payoffEstimate === 0" class="text-[10px] text-emerald-400 mt-1">

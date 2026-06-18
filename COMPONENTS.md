@@ -88,6 +88,14 @@ Select estilizado no padrão do sistema (rounded-xl, seta ChevronDown Lucide, `a
 
 ---
 
+### `NeonWave.vue`
+Onda neon animada em `<canvas>` 2D (sem dependências). Núcleo branco com fade nas pontas + cópias índigo/esmeralda deslocadas (aberração cromática) e brilho aditivo. Preenche o container pai (`w-full h-full`). Respeita `prefers-reduced-motion` (renderiza quadro estático). Usado na entrada do `AuthView`.
+```vue
+<div class="relative h-48"><NeonWave /></div>
+```
+
+---
+
 ### `CategoryPicker.vue`
 Dropdown de seleção de categoria com ícone Lucide + cor da paleta.
 - `v-model` recebe e emite o `id` (UUID string) da categoria
@@ -150,6 +158,22 @@ Biblioteca: **Lucide** (`lucide-vue-next`)
 - `stroke-width="2"` para ícones pequenos (badges, inline)
 - `stroke-width="2.5"` para ícones de ação (check, close)
 
+### Movimento (tokens em `:root`, ver `assets/main.css`)
+Use **sempre** estes tokens em transições/animações — nunca `cubic-bezier(...)` cru.
+| Token | Uso |
+|-------|-----|
+| `var(--ease-out-expo)` | entradas (desaceleração ágil) |
+| `var(--ease-in)` | saídas (partida limpa) |
+| `var(--ease-in-out)` | loops/pulsos |
+| `var(--ease-out-quint)` | menus/dropdowns |
+| `var(--ease-spring)` | mola com overshoot (pops/FAB) |
+| `var(--ease-spring-soft)` | mola sutil (modal desktop) |
+| `var(--ease-sheet)` | bottom sheet iOS |
+
+- Entrada 250–400ms, saída ~60–70% disso. Só `transform`/`opacity`.
+- Util `.stagger-in` anima filhos diretos em cascata (até 8).
+- `prefers-reduced-motion` é tratado globalmente em `main.css`.
+
 ---
 
 ## `stats/` — Visualizações de Estatísticas
@@ -161,6 +185,21 @@ Card wrapper padrão para todos os gráficos da tela de Estatísticas.
 ```vue
 <StatCard title="Cabo de Guerra" subtitle="Distribuição de carga financeira">
   <WarBar :data="warData" />
+</StatCard>
+```
+
+---
+
+### `PayoffPlan.vue`
+Motor de quitação de dívidas. Lê `useDebtsStore` (dívidas `eu_devo` ativas) + `useVaultStore` (sugestão de aporte). Sem props.
+- Seletor de estratégia: **Bola de Neve** (menor saldo primeiro) vs **Avalanche** (maior juro primeiro), com badge dinâmico de economia.
+- Aporte mensal ajustável (CurrencyInput + slider + chips), persistido no `localStorage`.
+- Projeção: data em que fica livre, meses, juros totais; alerta quando o aporte é menor que os juros mensais.
+- Comparação de economia entre estratégias + timeline "ordem de ataque".
+- Cálculo em `composables/usePayoffPlan.js` (`simulatePayoff` é função pura, testável).
+```vue
+<StatCard title="Plano de Quitação" subtitle="...">
+  <PayoffPlan />
 </StatCard>
 ```
 

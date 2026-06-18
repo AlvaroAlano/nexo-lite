@@ -15,6 +15,7 @@ class Debt(Base):
     direction        = Column(String(20), nullable=False, default="eu_devo")
     estimated_amount = Column(Numeric(12, 2), nullable=False, default=0)
     original_amount  = Column(Numeric(12, 2))
+    interest_rate    = Column(Numeric(6, 2), nullable=False, default=0)  # % ao mês
     status           = Column(String(20), nullable=False, default="ativo")
     loan_date        = Column(Date)
     due_date         = Column(Date)

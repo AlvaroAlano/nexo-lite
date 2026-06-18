@@ -27,6 +27,7 @@ class DebtCreate(BaseModel):
     direction: str = "eu_devo"
     estimated_amount: Decimal = Decimal("0.00")
     original_amount: Optional[Decimal] = None
+    interest_rate: Decimal = Decimal("0.00")
     loan_date: Optional[date] = None
     due_date: Optional[date] = None
     display_order: int = 0
@@ -37,6 +38,7 @@ class DebtUpdate(BaseModel):
     direction: Optional[str] = None
     estimated_amount: Optional[Decimal] = None
     original_amount: Optional[Decimal] = None
+    interest_rate: Optional[Decimal] = None
     loan_date: Optional[date] = None
     due_date: Optional[date] = None
     status: Optional[str] = None
@@ -49,6 +51,7 @@ class DebtResponse(BaseModel):
     direction: str
     estimated_amount: Decimal
     original_amount: Optional[Decimal]
+    interest_rate: Decimal
     status: str
     loan_date: Optional[date]
     due_date: Optional[date]

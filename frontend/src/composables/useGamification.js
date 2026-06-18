@@ -39,16 +39,19 @@ export function useGamification() {
     return dashboard.vaultMonthAmount || 0
   })
 
-  // ── Próxima dívida alvo (snowball) ────────────────────────────────────────
+  // ── Próxima dívida alvo (snowball) — só o que eu devo e ainda está ativo ───
   const nextTargetDebt = computed(() => {
-    const sorted = [...debtsStore.debts]
+    const payable = debtsStore.debts.filter(
+      (d) => d.direction === 'eu_devo' && d.status !== 'quitado'
+    )
+    const sorted = [...payable]
       .sort((a, b) => parseFloat(a.estimated_amount) - parseFloat(b.estimated_amount))
-    return sorted[0] ?? { name: 'Renner', amount: 2000 }
+    return sorted[0] ?? { name: 'Renner', estimated_amount: 2000 }
   })
 
   // ── Poder de Quitação (%) ─────────────────────────────────────────────────
   const vaultProgressPct = computed(() => {
-    const target = parseFloat(nextTargetDebt.value?.amount) || 1
+    const target = parseFloat(nextTargetDebt.value?.estimated_amount) || 1
     return Math.min((caixinhaBalance.value / target) * 100, 100)
   })
 
@@ -88,7 +91,7 @@ export function useGamification() {
 
   // ── Estimativa de quitação ────────────────────────────────────────────────
   const payoffEstimate = computed(() => {
-    const remaining = parseFloat(nextTargetDebt.value?.amount) - caixinhaBalance.value
+    const remaining = parseFloat(nextTargetDebt.value?.estimated_amount) - caixinhaBalance.value
     if (remaining <= 0) return 0
 
     const history  = vault.summary?.history ?? []

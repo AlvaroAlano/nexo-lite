@@ -27,7 +27,8 @@ import BottomNav from './components/layout/BottomNav.vue'
 import MilestoneToast from './components/ui/MilestoneToast.vue'
 import LoanModal from './components/modals/LoanModal.vue'
 
-const routeOrder = { dashboard: 0, templates: 1, settings: 2, stats: 3 }
+// Ordem visual das abas (BottomNav/AppHeader) — define o sentido do slide
+const routeOrder = { dashboard: 0, stats: 1, templates: 2, settings: 3 }
 const transitionName = ref('slide-left')
 const route = useRoute()
 const isAuth = computed(() => route.name === 'auth')
@@ -46,8 +47,8 @@ watch(
 /* Enter: ease-out-expo — snappy deceleration, graceful landing */
 .slide-left-enter-active,
 .slide-right-enter-active {
-  transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
-              transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 220ms var(--ease-out-expo),
+              transform 220ms var(--ease-out-expo);
 }
 
 /* Leave: ease-in — quick, clean departure */
@@ -55,8 +56,8 @@ watch(
 .slide-right-leave-active {
   position: absolute;
   inset: 0;
-  transition: opacity 160ms cubic-bezier(0.4, 0, 1, 1),
-              transform 160ms cubic-bezier(0.4, 0, 1, 1);
+  transition: opacity 160ms var(--ease-in),
+              transform 160ms var(--ease-in);
 }
 
 .slide-left-enter-from  { opacity: 0; transform: translateX(14px) scale(0.99); }

@@ -44,7 +44,7 @@ const fmtMilestone = computed(() =>
 </script>
 
 <style scoped>
-.toast-enter-active { animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.toast-enter-active { animation: toast-in 0.35s var(--ease-out-quint) forwards; }
 .toast-leave-active { animation: toast-in 0.2s ease-in reverse forwards; }
 
 @keyframes toast-in {

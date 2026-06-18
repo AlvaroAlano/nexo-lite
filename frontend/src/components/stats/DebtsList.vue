@@ -31,6 +31,7 @@
       <template v-else>
         <!-- ══ FOCO: dívida mais próxima de quitar ══════════════════════════════ -->
         <div
+          v-if="focusedDebt"
           class="rounded-xl p-3.5 border transition-colors"
           :class="focusedCovered
             ? 'border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10'
@@ -248,8 +249,48 @@
           </div>
         </div>
 
+        <!-- ══ Te devem (recebíveis — não entram na cobertura da caixinha) ══════ -->
+        <div v-if="receivableDebts.length" class="space-y-2 pt-1">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-brand-ink-mute-light dark:text-brand-ink-mute-dark">Te devem</p>
+          <div
+            v-for="debt in receivableDebts"
+            :key="debt.id"
+            class="flex items-center gap-2"
+          >
+            <button @click="debtsStore.openLoanModal(debt)" class="flex items-center gap-1.5 flex-1 min-w-0 text-left">
+              <span class="text-sm text-brand-ink-light dark:text-white truncate hover:text-emerald-500 transition-colors">{{ debt.name }}</span>
+              <span class="text-[8px] font-semibold rounded-full px-1.5 py-0.5 border bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex-shrink-0">Me deve</span>
+            </button>
+            <span class="text-sm font-tabular text-emerald-600 dark:text-emerald-400 flex-shrink-0">{{ fmt(debt.estimated_amount) }}</span>
+          </div>
+        </div>
+
+        <!-- ══ Quitadas (recolhível — acessível para reabrir) ═══════════════════ -->
+        <div v-if="settledDebts.length" class="pt-1">
+          <button
+            @click="showSettled = !showSettled"
+            class="flex items-center gap-1.5 text-[11px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-brand-ink-light dark:hover:text-white transition-colors"
+          >
+            <ChevronRight :size="12" class="transition-transform" :class="showSettled ? 'rotate-90' : ''" />
+            Quitadas ({{ settledDebts.length }})
+          </button>
+          <div v-if="showSettled" class="space-y-1.5 mt-2">
+            <div
+              v-for="debt in settledDebts"
+              :key="debt.id"
+              class="flex items-center gap-2"
+            >
+              <button @click="debtsStore.openLoanModal(debt)" class="flex items-center gap-1.5 flex-1 min-w-0 text-left">
+                <Check :size="12" class="text-emerald-500 flex-shrink-0" />
+                <span class="text-sm text-brand-ink-mute-light dark:text-brand-ink-mute-dark line-through truncate">{{ debt.name }}</span>
+              </button>
+              <span class="text-xs font-tabular text-brand-ink-mute-light dark:text-brand-ink-mute-dark flex-shrink-0">{{ fmt(debt.original_amount || debt.estimated_amount) }}</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Resumo geral -->
-        <div class="pt-3 border-t border-brand-hairline-light dark:border-brand-hairline-dark flex items-center justify-between">
+        <div v-if="payableDebts.length" class="pt-3 border-t border-brand-hairline-light dark:border-brand-hairline-dark flex items-center justify-between">
           <span class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark">Cobertura geral</span>
           <div class="flex items-center gap-2">
             <div class="w-20 h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
@@ -291,7 +332,7 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
-import { PiggyBank, Trash2, Check, X, Wallet, Target, MoreVertical } from 'lucide-vue-next'
+import { PiggyBank, Trash2, Check, X, Wallet, Target, MoreVertical, ChevronRight } from 'lucide-vue-next'
 import { useDebtsStore } from '../../stores/debts.js'
 import { useVaultStore } from '../../stores/vault.js'
 import CurrencyInput from '../ui/CurrencyInput.vue'
@@ -326,6 +367,18 @@ function closeDebtsMenu() { openMenuId.value = null }
 onMounted(() => document.addEventListener(CLOSE_MENUS_EVENT, closeDebtsMenu))
 onUnmounted(() => document.removeEventListener(CLOSE_MENUS_EVENT, closeDebtsMenu))
 
+// ── Buckets: pagáveis (eu devo, ativas), recebíveis (me devem), quitadas ──────
+const payableDebts = computed(() =>
+  store.debts.filter((d) => d.direction === 'eu_devo' && d.status !== 'quitado')
+)
+const receivableDebts = computed(() =>
+  store.debts.filter((d) => d.direction === 'me_deve' && d.status !== 'quitado')
+)
+const settledDebts = computed(() =>
+  store.debts.filter((d) => d.status === 'quitado')
+)
+const showSettled = ref(false)
+
 // ── Foco manual — persiste no localStorage ────────────────────────────────────
 const FOCUS_KEY = 'nexo_focused_debt_id'
 const focusedDebtId = ref(localStorage.getItem(FOCUS_KEY) || null)
@@ -337,34 +390,51 @@ function setFocus(debt) {
 
 const focusedDebt = computed(() => {
   if (focusedDebtId.value) {
-    const found = store.debts.find((d) => String(d.id) === focusedDebtId.value)
+    const found = payableDebts.value.find((d) => String(d.id) === focusedDebtId.value)
     if (found) return found
   }
-  // fallback: menor dívida se nenhuma selecionada ou selecionada foi deletada
-  return [...store.debts].sort((a, b) => parseFloat(a.estimated_amount) - parseFloat(b.estimated_amount))[0] ?? null
+  // fallback: menor dívida pagável se nenhuma selecionada ou a selecionada saiu da lista
+  return [...payableDebts.value].sort((a, b) => parseFloat(a.estimated_amount) - parseFloat(b.estimated_amount))[0] ?? null
 })
 const otherDebts = computed(() =>
-  store.debts
+  payableDebts.value
     .filter((d) => d.id !== focusedDebt.value?.id)
     .sort((a, b) => parseFloat(a.estimated_amount) - parseFloat(b.estimated_amount))
 )
-const focusedCovered = computed(() =>
-  focusedDebt.value ? coveragePct(focusedDebt.value) >= 100 : false
-)
 
-// ── Totais ────────────────────────────────────────────────────────────────────
-const totalDebt = computed(() =>
-  store.debts.reduce((s, d) => s + parseFloat(d.estimated_amount), 0)
-)
-const overallCoverage = computed(() =>
-  totalDebt.value > 0 ? (vaultBalance.value / totalDebt.value) * 100 : 0
-)
+// ── Alocação snowball: a caixinha é um pote único, aplicada no foco primeiro ───
+// e o que sobra "transborda" para as próximas (ordem crescente). Sem double-count.
+const allocation = computed(() => {
+  const order = focusedDebt.value ? [focusedDebt.value, ...otherDebts.value] : otherDebts.value
+  let remaining = vaultBalance.value
+  const map = {}
+  for (const d of order) {
+    const amt = parseFloat(d.estimated_amount) || 0
+    const applied = Math.min(remaining, amt)
+    map[d.id] = applied
+    remaining = Math.max(0, remaining - applied)
+  }
+  return map
+})
 
 const coveragePct = (debt) => {
   const amt = parseFloat(debt.estimated_amount)
   if (!amt) return 0
-  return parseFloat(((vaultBalance.value / amt) * 100).toFixed(1))
+  const applied = allocation.value[debt.id] ?? 0
+  return parseFloat(((applied / amt) * 100).toFixed(1))
 }
+
+const focusedCovered = computed(() =>
+  focusedDebt.value ? coveragePct(focusedDebt.value) >= 100 : false
+)
+
+// ── Totais (apenas o que eu devo) ─────────────────────────────────────────────
+const totalDebt = computed(() =>
+  payableDebts.value.reduce((s, d) => s + parseFloat(d.estimated_amount), 0)
+)
+const overallCoverage = computed(() =>
+  totalDebt.value > 0 ? (vaultBalance.value / totalDebt.value) * 100 : 0
+)
 
 // ── Edição inline ─────────────────────────────────────────────────────────────
 const editing      = ref(null)
@@ -380,7 +450,7 @@ function startEdit(debt) {
 async function saveEdit(debt) {
   if (editing.value !== debt.id) return
   editing.value = null
-  await store.updateDebt(debt.id, editAmount.value)
+  await store.updateDebt(debt.id, { estimated_amount: editAmount.value })
 }
 
 function cancelEdit() {
@@ -428,7 +498,7 @@ const fmt = (n) =>
 
 /* Dropdown menu */
 .dropdown-enter-active {
-  animation: dropdown-pop 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: dropdown-pop 0.14s var(--ease-out-quint) forwards;
 }
 .dropdown-leave-active {
   animation: dropdown-pop 0.1s ease-in reverse forwards;

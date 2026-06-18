@@ -5,6 +5,70 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 
 ---
 
+## 2026-06-18 — Tokens de movimento unificados + nova entrada (onda neon)
+
+**Unificação de easing (motion-consistency):** todos os `cubic-bezier(...)` crus viraram tokens CSS em `:root` (`assets/main.css`): `--ease-out-expo`, `--ease-in`, `--ease-in-out`, `--ease-out-quint`, `--ease-spring`, `--ease-spring-soft`, `--ease-sheet` + `--dur-enter/leave`. Mapeamento 1:1 (mesmas curvas → zero mudança visual). Migrados: App, BaseModal, DashboardView, AuthView, BottomNav, DebtsList, SettingsView, TemplatesView, MilestoneToast, ExpenseCard, ExpenseTable, ForecastModal. Só a curva de "shake" do PIN ficou inline (one-off). Documentado em COMPONENTS.md.
+
+**Nova entrada do AuthView:** removido o typewriter sequencial "Organize./Controle./Nexo Lite." (lento). Agora: cubo Nexo (mola) sobre uma **onda neon** animada + wordmark + hint "toque para entrar". Avança rápido — auto em ~1.7s **ou ao toque/tecla** (skip). Estágio `splash` eliminado; `intro` é o inicial.
+
+**`components/ui/NeonWave.vue` (novo):** onda neon em `<canvas>` 2D puro (sem Three.js — o prompt de referência era React/Three/TS; recriado na stack Vue/JS). Núcleo branco com fade nas pontas + cópias índigo/esmeralda deslocadas (aberração cromática) e brilho aditivo (`globalCompositeOperation='lighter'` + shadowBlur). DPR-aware, ResizeObserver, respeita `prefers-reduced-motion` (quadro estático). Decisão: não adicionar `three` (~150KB gzip) só para um splash.
+
+---
+
+## 2026-06-18 — Polimento de motion (transições de tela, modais, listas)
+
+Auditoria de UI/UX focada em transições. Rotas e modais já estavam bem feitos; correções pontuais:
+- `App.vue`: **bug de direção** do slide de rota — `routeOrder` estava `{dashboard,templates,settings,stats}` mas a ordem visual das abas é `{dashboard,stats,templates,settings}`. Corrigido para o slide seguir o sentido real da navegação.
+- `assets/main.css`: adicionado **`prefers-reduced-motion`** global (neutraliza animações/transições quase-instantaneamente) — antes só o AuthView tratava. Adicionada util reutilizável **`.stagger-in`** (cascata em filhos diretos, até 8) + keyframe `nx-rise`.
+- `StatsView.vue`: cards entram com **stagger** (classe `stagger-in`).
+- `DashboardView.vue`: lista de despesas mobile virou **`TransitionGroup`** (`exp-*`) — adicionar/excluir-com-undo/buscar agora animam (entra suave, sai deslizando, vizinhos reacomodam via `.exp-move`). Empty state movido para fora do grupo.
+
+Recomendação não aplicada (registrada no TODO): unificar tokens de easing/duração via CSS vars (motion-consistency) — hoje os cubic-beziers estão repetidos por componente.
+
+---
+
+## 2026-06-18 — DOCUMENTACAO.md reescrita (estado atual completo)
+
+Documentação oficial estava defasada (só cobria Check-in/Recorrências/Ajustes + schema antigo). Reescrita incorporando: stack tecnológica; Tela de Acesso (Auth/biometria/PIN); privacidade e busca no Check-in; Modal de Detalhes + observações (notas); Estatísticas completas (Caixinha, Dívidas com buckets pagável/recebível/quitada, Plano de Quitação, Radar, Evolução, Liquidez, Cabo de Guerra); Empréstimos/Dívidas (LoanModal); Projeção de Recorrências (ForecastModal); BottomNav + speed-dial. Schema atualizado (debts, debt_payments, vault_reconciliations, expense_notes; `is_paid`, `rent_items`, `interest_rate`; colunas rent_* legadas removidas). Endpoints completos (categories, vault, debts+payments+settle, notes, history). Migrations 001–013 tabeladas. Adicionadas seções de estado em localStorage e de Autenticação/Segurança (auth cosmética, demo user, sem token/RLS).
+
+---
+
+## 2026-06-18 — Motor de Quitação (Bola de Neve vs Avalanche)
+
+Primeira peça do motor de quitação, com foco forte em UI/UX e microcopy explicativa.
+
+**Backend:**
+- Migration `013_debt_interest_rate.sql`: coluna `interest_rate NUMERIC(6,2)` em `debts` = juros ao MÊS em pontos percentuais (5.00 = 5% a.m.; 0 = sem juros). Model/schemas (Create/Update/Response)/router atualizados.
+
+**Frontend:**
+- `composables/usePayoffPlan.js`: `simulatePayoff(debts, monthlyBudget, strategy)` — função pura, simula mês a mês com juros compostos. Modelo: juros incidem sobre todo saldo; aporte aplicado em ordem de prioridade (alvo primeiro, transbordo) — espelha como a Caixinha é jogada inteira na dívida da vez. Detecta inviabilidade (aporte < juros mensais → não quita, retorna `feasible:false`). `usePayoffPlan()` expõe `plan` + `comparison` (roda as 2 estratégias). Validado: avalanche é sempre ≤ juros da snowball.
+- `components/stats/PayoffPlan.vue`: seletor de estratégia (Bola de Neve `Snowflake` / Avalanche `MountainSnow`) com badge dinâmico de economia; aporte mensal (CurrencyInput + slider `accent-brand-primary` + chips ±), persistido em `localStorage` (`nexo_payoff_budget`/`nexo_payoff_strategy`); hero "Você fica livre em <mês/ano>" com juros totais; estado inviável em âmbar com sugestão de aporte mínimo (~24 meses); strip de comparação de estratégias; timeline "ordem de ataque" com nº, badge de juros, "Próxima" e data de quitação por dívida. Sugestão de aporte = média de aportes da Caixinha → free cash → 300.
+- `LoanModal.vue`: campo "Juros ao mês (% a.m.)" só para `eu_devo`; badge âmbar no detalhe; incluído em create/edit/save.
+- `StatsView.vue`: card "Plano de Quitação" (md:col-span-2) após "Dívidas Ativas".
+
+**Decisão:** juros em % ao mês (padrão BR p/ cartão/cheque especial), não APR anual. `me_deve` nunca tem juros no payload.
+
+---
+
+## 2026-06-18 — Auditoria geral + correção de bugs no módulo de dívidas
+
+Análise completa do sistema (API, front, back, banco) com foco no objetivo de quitar dívidas. 4 bugs concretos corrigidos no módulo de dívidas; demais achados (segurança/motor de quitação) registrados no TODO.
+
+**Bugs corrigidos:**
+- `DebtsList.vue` (`saveEdit`): edição inline passava número cru a `store.updateDebt`, que repassa ao `PATCH /debts/{id}` (espera objeto `DebtUpdate`) → 422 revertido em silêncio. Agora envia `{ estimated_amount }`.
+- `useGamification.js`: `vaultProgressPct`/`payoffEstimate` liam `nextTargetDebt.amount` (campo real é `estimated_amount`) → progresso travado em 100% e payoff NaN. Corrigido + `nextTargetDebt` agora filtra `eu_devo` e `status != quitado`. Idem consumidor em `BalanceSummary.vue`.
+- `DebtsList.vue` double-count: cobertura media a mesma caixinha contra cada dívida. Agora `allocation` snowball — caixinha aplicada no foco primeiro, transbordo para as próximas (ordem crescente). `coveragePct` usa o valor alocado.
+- `DebtsList.vue` poluição de cálculo: quitadas (saldo 0) viravam "foco" e `me_deve` entrava em `totalDebt`/cobertura. Board separado em **pagáveis** (eu_devo, ativas → foco/totais/cobertura), **recebíveis** (me_deve → seção "Te devem", sem cobertura) e **quitadas** (seção recolhível, acessível para reabrir).
+
+**Achados não corrigidos (registrados no TODO):**
+- Segurança: PIN `0610` hardcoded no bundle; WebAuthn sem verificação server-side; Axios não envia token → backend 100% aberto (DEMO_USER fixo). IDOR latente (rotas de debts/expenses/periods filtram por id, não por user_id). Sem RLS. OK para localhost, crítico se hospedar.
+- `schema.sql` desatualizado vs migrações (mostra colunas rent_* dropadas na 009; sem debts/vault/categories).
+- Zero testes automatizados (turnover/carryover/parcelas são candidatos ideais).
+- Estados de casal (nomes, meta, foco, milestones, tema) só no localStorage → divergem entre os 2 dispositivos.
+- Motor de quitação incompleto: sem juros/APR (impede avalanche), DebtPayment desconectado da caixinha, sem burn-down nem simulador de payoff, "Auditor IA" é mock.
+
+---
+
 ## 2026-06-08 — Auditoria e correção sistemática: backend, frontend, integração e regras de negócio
 
 Análise em 4 partes via subagentes. Nenhuma RN principal estava quebrada, mas vários bugs silenciosos foram corrigidos.

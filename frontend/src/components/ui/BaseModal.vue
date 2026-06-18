@@ -96,26 +96,26 @@ onUnmounted(() => {
 <style scoped>
 /* ── Backdrop ─────────────────────────────────────────────────
    Ease-out-expo in, ease-in out — backdrop breathes with the modal */
-.modal-backdrop-enter-active { transition: opacity 300ms cubic-bezier(0.22, 1, 0.36, 1); }
-.modal-backdrop-leave-active { transition: opacity 220ms cubic-bezier(0.4, 0, 1, 1); }
+.modal-backdrop-enter-active { transition: opacity 300ms var(--ease-out-expo); }
+.modal-backdrop-leave-active { transition: opacity 220ms var(--ease-in); }
 .modal-backdrop-enter-from,
 .modal-backdrop-leave-to    { opacity: 0; }
 
 /* ── Bottom sheet (mobile) — iOS-style spring, untouched ─────── */
-.modal-sheet-enter-active { transition: transform 420ms cubic-bezier(0.32, 0.72, 0, 1); }
-.modal-sheet-leave-active { transition: transform 280ms cubic-bezier(0.4, 0, 1, 1); }
+.modal-sheet-enter-active { transition: transform 420ms var(--ease-sheet); }
+.modal-sheet-leave-active { transition: transform 280ms var(--ease-in); }
 .modal-sheet-enter-from,
 .modal-sheet-leave-to     { transform: translateY(100%); }
 
 /* ── Desktop: gentle spring scale-up (barely overshoots) ────── */
 @media (min-width: 768px) {
   .modal-sheet-enter-active {
-    transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
-                transform 300ms cubic-bezier(0.34, 1.06, 0.64, 1);
+    transition: opacity 260ms var(--ease-out-expo),
+                transform 300ms var(--ease-spring-soft);
   }
   .modal-sheet-leave-active {
-    transition: opacity 180ms cubic-bezier(0.4, 0, 1, 1),
-                transform 180ms cubic-bezier(0.4, 0, 1, 1);
+    transition: opacity 180ms var(--ease-in),
+                transform 180ms var(--ease-in);
   }
   .modal-sheet-enter-from,
   .modal-sheet-leave-to { opacity: 0; transform: scale(0.93) translateY(10px); }
@@ -123,12 +123,12 @@ onUnmounted(() => {
 
 /* ── Centered modal (non-sheet) — same spring feel ───────────── */
 .modal-center-enter-active {
-  transition: opacity 260ms cubic-bezier(0.22, 1, 0.36, 1),
-              transform 300ms cubic-bezier(0.34, 1.06, 0.64, 1);
+  transition: opacity 260ms var(--ease-out-expo),
+              transform 300ms var(--ease-spring-soft);
 }
 .modal-center-leave-active {
-  transition: opacity 180ms cubic-bezier(0.4, 0, 1, 1),
-              transform 180ms cubic-bezier(0.4, 0, 1, 1);
+  transition: opacity 180ms var(--ease-in),
+              transform 180ms var(--ease-in);
 }
 .modal-center-enter-from,
 .modal-center-leave-to { opacity: 0; transform: scale(0.93) translateY(10px); }

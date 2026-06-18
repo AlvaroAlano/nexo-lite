@@ -232,7 +232,7 @@ function cancelEdit() {
 </script>
 
 <style scoped>
-.dropdown-enter-active { animation: dropdown-pop 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.dropdown-enter-active { animation: dropdown-pop 0.14s var(--ease-out-quint) forwards; }
 .dropdown-leave-active { animation: dropdown-pop 0.1s ease-in reverse forwards; }
 @keyframes dropdown-pop {
   from { opacity: 0; transform: scale(0.88) translateY(-6px); }

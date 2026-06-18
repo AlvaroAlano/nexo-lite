@@ -103,6 +103,33 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 
 ---
 
+## ✨ Polimento de UI/UX (motion)
+
+- [x] Corrigir direção do slide de transição de rota (ordem das abas) — (2026-06-18)
+- [x] `prefers-reduced-motion` global no main.css — (2026-06-18)
+- [x] Stagger de entrada nos cards de Estatísticas (`.stagger-in`) — (2026-06-18)
+- [x] Lista de despesas mobile com TransitionGroup (add/excluir/buscar animados) — (2026-06-18)
+- [x] Unificar tokens de easing/duração via CSS vars (`:root` em main.css; todos os componentes migrados) — (2026-06-18)
+- [x] Refazer entrada do AuthView: onda neon (`NeonWave.vue` canvas) + cubo, rápida e pulável (toque/auto ~1.7s) — (2026-06-18)
+- [ ] Aplicar TransitionGroup também na ExpenseTable (desktop) para paridade
+
+## 🐞 Bugs corrigidos
+
+- [x] Edição inline de valor de dívida não salvava (passava número cru ao PATCH que espera objeto) — (2026-06-18)
+- [x] "Poder de Quitação" sempre 100% / payoff NaN — gamificação lia `.amount` em vez de `.estimated_amount` — (2026-06-18)
+- [x] Caixinha contada várias vezes (double-count) na cobertura por dívida — agora alocação snowball (foco primeiro, transbordo) — (2026-06-18)
+- [x] Dívidas quitadas viravam "foco" (saldo 0) e `me_deve` poluía total/cobertura — board agora separa pagáveis / recebíveis / quitadas — (2026-06-18)
+
+## 🔮 Motor de quitação
+
+- [x] Campo `interest_rate` (% a.m.) por dívida — migration 013 + model/schema/router + LoanModal — (2026-06-18)
+- [x] `PayoffPlan.vue` — estratégia Bola de Neve vs Avalanche, aporte ajustável, data-livre projetada, comparação de economia e timeline de ataque — (2026-06-18)
+- [x] `usePayoffPlan.js` — simulação mês a mês com juros compostos + comparação de estratégias — (2026-06-18)
+- [ ] Ação "Quitar com a caixinha" (vincula vault ↔ debt_payment atomicamente)
+- [ ] Burn-down chart por dívida (usa DebtPayment + original_amount)
+- [ ] Plugar API Claude real no "Auditor IA" (hoje mock em useGamification)
+- [ ] Rodar migration 013 no Supabase
+
 ## 💡 Backlog / Ideias futuras
 
 - [ ] Histórico de meses anteriores (view de retrospectiva)

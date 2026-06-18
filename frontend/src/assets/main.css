@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Tokens de movimento (fonte única de verdade) ────────────────────────────
+   Curvas e durações compartilhadas por todas as transições do app. */
+:root {
+  --ease-out-expo:    cubic-bezier(0.22, 1, 0.36, 1);   /* entradas — desaceleração ágil */
+  --ease-in:          cubic-bezier(0.4, 0, 1, 1);       /* saídas — partida limpa */
+  --ease-in-out:      cubic-bezier(0.4, 0, 0.6, 1);     /* loops/pulsos */
+  --ease-out-quint:   cubic-bezier(0.16, 1, 0.3, 1);    /* menus/dropdowns */
+  --ease-spring:      cubic-bezier(0.34, 1.56, 0.64, 1); /* mola com overshoot */
+  --ease-spring-soft: cubic-bezier(0.34, 1.06, 0.64, 1); /* mola sutil (modal desktop) */
+  --ease-sheet:       cubic-bezier(0.32, 0.72, 0, 1);   /* bottom sheet iOS */
+  --dur-enter: 280ms;
+  --dur-leave: 180ms;
+}
+
 @layer base {
   * {
     -webkit-tap-highlight-color: transparent;
@@ -37,5 +51,33 @@
   .tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
+  }
+
+  /* Stagger de entrada reutilizável — aplica em filhos diretos do container.
+     Use: <div class="stagger-in"> ... </div> (até 8 filhos animados em cascata). */
+  .stagger-in > * { animation: nx-rise 0.5s var(--ease-out-expo) both; }
+  .stagger-in > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-in > *:nth-child(2) { animation-delay: 55ms; }
+  .stagger-in > *:nth-child(3) { animation-delay: 110ms; }
+  .stagger-in > *:nth-child(4) { animation-delay: 165ms; }
+  .stagger-in > *:nth-child(5) { animation-delay: 220ms; }
+  .stagger-in > *:nth-child(6) { animation-delay: 275ms; }
+  .stagger-in > *:nth-child(7) { animation-delay: 330ms; }
+  .stagger-in > *:nth-child(8) { animation-delay: 385ms; }
+}
+
+@keyframes nx-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Acessibilidade: respeita "reduzir movimento" do sistema ─────────────────
+   Neutraliza animações/transições globalmente sem quebrar layout (quase-instantâneo). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

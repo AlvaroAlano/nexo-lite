@@ -8,38 +8,33 @@
 
     <Transition name="stage" mode="out-in">
 
-      <!-- ─── Stage 1: Splash ─────────────────────────────── -->
+      <!-- ─── Stage 1: Entrada (onda neon + cubo Nexo) ─────── -->
       <div
-        v-if="stage === 'splash'"
-        key="splash"
-        class="absolute inset-0 flex flex-col items-center justify-center select-none"
+        v-if="stage === 'intro'"
+        key="intro"
+        @click="skipIntro"
+        class="absolute inset-0 flex flex-col items-center justify-center select-none cursor-pointer overflow-hidden"
       >
-        <div class="logo-appear">
+        <!-- Onda neon de fundo -->
+        <div class="intro-wave absolute inset-x-0 top-1/2 -translate-y-1/2 h-48 md:h-64">
+          <NeonWave />
+        </div>
+
+        <!-- Cubo Nexo -->
+        <div class="intro-logo relative z-10">
           <div class="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-2xl">
             <span class="text-[#09090b] text-4xl font-bold tracking-tight">N</span>
           </div>
         </div>
-        <p class="logo-appear-delayed mt-5 text-white/30 text-[11px] tracking-[0.28em] uppercase font-medium">
+
+        <!-- Wordmark -->
+        <p class="intro-word relative z-10 mt-6 text-white/90 text-base font-semibold tracking-[0.34em] uppercase">
           Nexo Lite
         </p>
-      </div>
 
-      <!-- ─── Stage 1.5: Typewriter Intro ──────────────── -->
-      <div
-        v-else-if="stage === 'intro'"
-        key="intro"
-        class="absolute inset-0 flex flex-col items-center justify-center select-none px-10"
-      >
-        <p class="text-3xl md:text-4xl font-light text-white tracking-tight text-center leading-snug">
-          <TypewriterText
-            :text="introPhrases"
-            :speed="55"
-            :delete-speed="25"
-            :delay="700"
-            :loop="false"
-            cursor="|"
-            @done="onIntroDone"
-          />
+        <!-- Hint -->
+        <p class="intro-hint absolute bottom-10 text-white/25 text-[10px] tracking-[0.25em] uppercase">
+          toque para entrar
         </p>
       </div>
 
@@ -285,10 +280,11 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCategoriesStore } from '../stores/categories.js'
 import TypewriterText from '../components/ui/TypewriterText.vue'
+import NeonWave from '../components/ui/NeonWave.vue'
 
 const router = useRouter()
 
-const stage              = ref('splash')
+const stage              = ref('intro')
 const owner              = ref(null)
 const pin                = ref([])
 const pinState           = ref('idle')   // 'idle' | 'success' | 'error'
@@ -325,16 +321,19 @@ const pinAriaLabel = computed(() => {
   return `${pin.value.length} de 4 dígitos inseridos`
 })
 
-// Intro typewriter phrases (loop: false — plays once and holds last phrase)
-const introPhrases = ["Organize.", "Controle.", "Nexo Lite."]
+// ─── Entrada: avança rápido (auto após ~1.7s ou ao toque) ─────────
+let introTimer = null
 
-function onIntroDone() {
-  // Hold "Nexo Lite." for 1s before advancing
-  setTimeout(() => {
-    const saved = localStorage.getItem('nexo_owner')
-    if (saved) { owner.value = saved; stage.value = 'vault' }
-    else        { stage.value = 'bind' }
-  }, 1000)
+function advanceFromIntro() {
+  if (introTimer) { clearTimeout(introTimer); introTimer = null }
+  if (stage.value !== 'intro') return
+  const saved = localStorage.getItem('nexo_owner')
+  if (saved) { owner.value = saved; stage.value = 'vault' }
+  else       { stage.value = 'bind' }
+}
+
+function skipIntro() {
+  advanceFromIntro()
 }
 
 // Typewriter phrases — personalized greeting by time of day
@@ -460,15 +459,12 @@ watch(stage, async (newStage) => {
 
 onMounted(() => {
   checkBiometricAvailability()
-
-  setTimeout(() => {
-    stage.value = 'intro'
-  }, 1200)
-
+  introTimer = setTimeout(advanceFromIntro, 1700)
   window.addEventListener('keydown', handleKeyboard)
 })
 
 onUnmounted(() => {
+  if (introTimer) clearTimeout(introTimer)
   window.removeEventListener('keydown', handleKeyboard)
 })
 
@@ -568,7 +564,7 @@ function switchProfile() {
 <style scoped>
 /* ─── Stage transitions ─────────────────────────────────────── */
 .stage-enter-active {
-  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.35s ease, transform 0.35s var(--ease-out-expo);
 }
 .stage-leave-active {
   transition: opacity 0.22s ease, transform 0.22s ease-in;
@@ -580,8 +576,8 @@ function switchProfile() {
 
 /* Bio → PIN: bio exits up, PIN slides in from below */
 .vault-pin-in-enter-active {
-  transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.36s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: opacity 0.32s var(--ease-out-expo),
+              transform 0.36s var(--ease-sheet);
 }
 .vault-pin-in-leave-active {
   position: absolute; inset: 0;
@@ -592,7 +588,7 @@ function switchProfile() {
 
 /* PIN → Bio: PIN exits down, bio fades in */
 .vault-bio-in-enter-active {
-  transition: opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.3s var(--ease-out-expo);
 }
 .vault-bio-in-leave-active {
   position: absolute; inset: 0;
@@ -601,13 +597,23 @@ function switchProfile() {
 .vault-bio-in-enter-from { opacity: 0; }
 .vault-bio-in-leave-to   { opacity: 0; transform: translateY(18px); }
 
-/* ─── Logo: cresce de ponto minúsculo (mola) ─────────────────── */
-.logo-appear         { animation: logo-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-.logo-appear-delayed { animation: logo-in 0.5s 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+/* ─── Entrada: cubo (mola), onda (fade), wordmark + hint ─────── */
+.intro-logo { animation: intro-pop 0.7s var(--ease-spring) both; }
+.intro-wave { animation: intro-fade 0.9s var(--ease-out-expo) both; }
+.intro-word { animation: intro-up 0.6s 0.28s var(--ease-out-expo) both; }
+.intro-hint { animation: intro-fade 0.6s 1s var(--ease-out-expo) both; }
 
-@keyframes logo-in {
-  from { opacity: 0; transform: scale(0.08); }
-  to   { opacity: 1; transform: scale(1);    }
+@keyframes intro-pop {
+  from { opacity: 0; transform: scale(0.4); }
+  to   { opacity: 1; transform: scale(1);   }
+}
+@keyframes intro-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes intro-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ─── Biometric button pulse rings ──────────────────────────── */
@@ -615,8 +621,8 @@ function switchProfile() {
   0%   { transform: scale(1);    opacity: 0.45; }
   100% { transform: scale(2.0);  opacity: 0; }
 }
-.bio-ring-1 { animation: bio-ring-pulse 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-.bio-ring-2 { animation: bio-ring-pulse 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite; animation-delay: -1.3s; }
+.bio-ring-1 { animation: bio-ring-pulse 2.6s var(--ease-in-out) infinite; }
+.bio-ring-2 { animation: bio-ring-pulse 2.6s var(--ease-in-out) infinite; animation-delay: -1.3s; }
 
 /* ─── PIN shake ──────────────────────────────────────────────── */
 .shake { animation: pin-shake 0.48s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
@@ -630,7 +636,7 @@ function switchProfile() {
 
 /* ─── Reduced motion ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .logo-appear, .logo-appear-delayed { animation: none; opacity: 1; transform: none; }
+  .intro-logo, .intro-wave, .intro-word, .intro-hint { animation: none; opacity: 1; transform: none; }
   .stage-enter-active, .stage-leave-active { transition: opacity 0.15s ease; }
   .stage-enter-from, .stage-leave-to { transform: none; }
   .shake { animation: none; }

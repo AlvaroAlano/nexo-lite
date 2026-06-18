@@ -55,6 +55,28 @@
         />
       </div>
 
+      <!-- Juros (só faz sentido em dívidas que eu devo) -->
+      <div v-if="form.direction === 'eu_devo'">
+        <label class="text-[10px] font-semibold uppercase tracking-wider text-brand-ink-mute-light dark:text-brand-ink-mute-dark block mb-1.5">
+          Juros ao mês
+        </label>
+        <div class="relative">
+          <input
+            v-model.number="form.interest_rate"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.1"
+            placeholder="0"
+            class="w-full bg-brand-canvas-soft-light dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-xl pl-4 pr-12 py-3 text-sm text-brand-ink-light dark:text-white placeholder:text-brand-ink-mute-light dark:placeholder:text-brand-ink-mute-dark focus:outline-none focus:ring-2 focus:ring-brand-primary/30 transition-all font-tabular"
+          />
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-brand-ink-mute-light dark:text-brand-ink-mute-dark pointer-events-none">% a.m.</span>
+        </div>
+        <p class="text-[10px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark mt-1.5">
+          Deixe 0 se não houver juros. Isso alimenta o Plano de Quitação (Avalanche).
+        </p>
+      </div>
+
       <!-- Dates -->
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -106,6 +128,9 @@
         </p>
         <p v-if="hasPartialPayment" class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mt-1">
           Original: <span class="font-tabular">{{ fmt(editingLoan.original_amount) }}</span>
+        </p>
+        <p v-if="editingLoan.direction === 'eu_devo' && parseFloat(editingLoan.interest_rate) > 0" class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+          Juros de <span class="font-tabular font-semibold">{{ fmtRate(editingLoan.interest_rate) }}% a.m.</span>
         </p>
 
         <!-- Status badge -->
@@ -350,6 +375,7 @@ const form = ref({
   direction: 'me_deve',
   name: '',
   amount: 0,
+  interest_rate: 0,
   loan_date: todayStr(),
   due_date: '',
 })
@@ -359,6 +385,7 @@ function resetForm() {
     direction: 'me_deve',
     name: '',
     amount: 0,
+    interest_rate: 0,
     loan_date: todayStr(),
     due_date: '',
   }
@@ -370,6 +397,7 @@ function startEdit() {
       direction: editingLoan.value.direction,
       name: editingLoan.value.name,
       amount: parseFloat(editingLoan.value.estimated_amount),
+      interest_rate: parseFloat(editingLoan.value.interest_rate) || 0,
       loan_date: editingLoan.value.loan_date || todayStr(),
       due_date: editingLoan.value.due_date || '',
     }
@@ -391,6 +419,7 @@ async function save() {
     name: form.value.name.trim(),
     direction: form.value.direction,
     estimated_amount: form.value.amount,
+    interest_rate: form.value.direction === 'eu_devo' ? (parseFloat(form.value.interest_rate) || 0) : 0,
     loan_date: form.value.loan_date || null,
     due_date: form.value.due_date || null,
   }
@@ -493,6 +522,9 @@ function todayStr() {
 
 const fmt = (n) =>
   (parseFloat(n) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+const fmtRate = (r) =>
+  (parseFloat(r) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
 
 function fmtDate(d) {
   if (!d) return ''

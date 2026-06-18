@@ -136,7 +136,11 @@
           </div>
 
           <!-- Mobile: compact rows -->
-          <div class="divide-y divide-brand-hairline-light/60 dark:divide-brand-hairline-dark/50 md:hidden">
+          <TransitionGroup
+            tag="div"
+            name="exp"
+            class="relative divide-y divide-brand-hairline-light/60 dark:divide-brand-hairline-dark/50 md:hidden"
+          >
             <ExpenseCard
               v-for="expense in visibleExpenses"
               :key="expense.id"
@@ -146,10 +150,10 @@
               @edit="openEditModal"
               @click-detail="openDetailModal"
             />
-            <p v-if="!visibleExpenses.length" class="text-center py-10 text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm">
-              {{ searchQuery ? 'Nenhuma despesa encontrada.' : 'Nenhuma despesa neste mês ainda.' }}
-            </p>
-          </div>
+          </TransitionGroup>
+          <p v-if="!visibleExpenses.length" class="md:hidden text-center py-10 text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm">
+            {{ searchQuery ? 'Nenhuma despesa encontrada.' : 'Nenhuma despesa neste mês ainda.' }}
+          </p>
 
           <!-- Desktop: table with category column -->
           <ExpenseTable
@@ -571,7 +575,7 @@ async function quickAdd() {
   animation: btn-shrink 0.18s ease-in forwards;
 }
 .btn-bounce-enter-active {
-  animation: btn-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: btn-pop 0.42s var(--ease-spring) forwards;
 }
 
 @keyframes btn-shrink {
@@ -588,10 +592,10 @@ async function quickAdd() {
 
 /* Form: slides down softly — ease-out-expo entry, quick exit */
 .form-slide-enter-active {
-  animation: form-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: form-in 0.28s var(--ease-out-expo) forwards;
 }
 .form-slide-leave-active {
-  animation: form-in 0.15s cubic-bezier(0.4, 0, 1, 1) reverse forwards;
+  animation: form-in 0.15s var(--ease-in) reverse forwards;
 }
 
 @keyframes form-in {
@@ -600,7 +604,7 @@ async function quickAdd() {
 }
 
 /* Undo toast */
-.toast-slide-enter-active { animation: toast-in  0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.toast-slide-enter-active { animation: toast-in  0.3s var(--ease-spring) forwards; }
 .toast-slide-leave-active { animation: toast-out 0.2s ease-in forwards; }
 
 @keyframes toast-in  { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -613,4 +617,11 @@ async function quickAdd() {
   from { width: 100%; }
   to   { width: 0%; }
 }
+
+/* Lista de despesas (mobile): entra suave, sai deslizando, vizinhos reacomodam */
+.exp-enter-active { transition: opacity 0.25s ease, transform 0.25s var(--ease-out-expo); }
+.exp-leave-active { transition: opacity 0.18s ease, transform 0.18s ease; position: absolute; width: 100%; }
+.exp-enter-from   { opacity: 0; transform: translateY(8px); }
+.exp-leave-to     { opacity: 0; transform: translateX(-16px); }
+.exp-move         { transition: transform 0.28s var(--ease-out-expo); }
 </style>
