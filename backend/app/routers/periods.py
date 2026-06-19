@@ -10,6 +10,7 @@ from app.models.expense import MonthlyExpense
 from app.schemas.period import PeriodResponse, PeriodUpdate, PeriodWithExpenses
 from app.schemas.expense import ExpenseResponse
 from app.services.turnover import run_turnover
+from app.services.scheduled import materialize_scheduled
 from app.config import settings
 
 router = APIRouter(prefix="/periods", tags=["periods"])
@@ -56,6 +57,8 @@ async def get_current_period(db: AsyncSession = Depends(get_db)):
         )
         db.add(period)
         await db.flush()
+        # Mês recém-criado → traz agendadas que tinham este mês como alvo
+        await materialize_scheduled(db, user_id, period)
 
     return await _fetch_period_with_expenses(db, period)
 

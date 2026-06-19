@@ -20,10 +20,17 @@
           <NeonWave />
         </div>
 
-        <!-- Cubo Nexo -->
-        <div class="intro-logo relative z-10">
-          <div class="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-2xl">
-            <span class="text-[#09090b] text-4xl font-bold tracking-tight">N</span>
+        <!-- Cubo Nexo + aura -->
+        <div class="relative z-10 flex items-center justify-center">
+          <!-- Aura radial que floresce uma vez -->
+          <div class="intro-aura absolute w-44 h-44 rounded-full pointer-events-none" />
+          <!-- Cubo -->
+          <div class="intro-logo relative">
+            <div class="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-2xl relative overflow-hidden">
+              <span class="text-[#09090b] text-4xl font-bold tracking-tight">N</span>
+              <!-- Sweep de luz que cruza o logo uma vez -->
+              <span class="intro-shine absolute inset-0 pointer-events-none" />
+            </div>
           </div>
         </div>
 
@@ -459,7 +466,7 @@ watch(stage, async (newStage) => {
 
 onMounted(() => {
   checkBiometricAvailability()
-  introTimer = setTimeout(advanceFromIntro, 1700)
+  introTimer = setTimeout(advanceFromIntro, 3200)   // segura para apreciar a entrada (pulável ao toque)
   window.addEventListener('keydown', handleKeyboard)
 })
 
@@ -597,19 +604,38 @@ function switchProfile() {
 .vault-bio-in-enter-from { opacity: 0; }
 .vault-bio-in-leave-to   { opacity: 0; transform: translateY(18px); }
 
-/* ─── Entrada: cubo (mola), onda (fade), wordmark + hint ─────── */
-.intro-logo { animation: intro-pop 0.7s var(--ease-spring) both; }
-.intro-wave { animation: intro-fade 0.9s var(--ease-out-expo) both; }
-.intro-word { animation: intro-up 0.6s 0.28s var(--ease-out-expo) both; }
-.intro-hint { animation: intro-fade 0.6s 1s var(--ease-out-expo) both; }
+/* ─── Entrada cinematográfica: aura, cubo (mola+blur), sweep, wordmark, hint ─── */
+.intro-wave  { animation: intro-fade 1.1s var(--ease-out-expo) both; }
+.intro-aura  {
+  animation: intro-aura-bloom 1.8s 0.1s var(--ease-out-expo) both;
+  background: radial-gradient(circle, rgba(99,102,241,0.38), rgba(16,185,129,0.12) 45%, transparent 70%);
+  filter: blur(14px);
+}
+.intro-logo  { animation: intro-pop 0.8s 0.12s var(--ease-spring) both; }
+.intro-shine {
+  animation: intro-shine-sweep 1.1s 0.78s var(--ease-out-expo) both;
+  background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,0.95) 50%, transparent 62%);
+  transform: translateX(-160%);
+}
+.intro-word  { animation: intro-word-in 0.9s 0.5s var(--ease-out-expo) both; }
+.intro-hint  { animation: intro-fade 0.6s 1.6s var(--ease-out-expo) both; }
 
 @keyframes intro-pop {
-  from { opacity: 0; transform: scale(0.4); }
-  to   { opacity: 1; transform: scale(1);   }
+  from { opacity: 0; transform: scale(0.5); filter: blur(6px); }
+  to   { opacity: 1; transform: scale(1);   filter: blur(0);   }
 }
-@keyframes intro-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0);    }
+@keyframes intro-aura-bloom {
+  0%   { opacity: 0;    transform: scale(0.5);  }
+  45%  { opacity: 0.9;  transform: scale(1.05); }
+  100% { opacity: 0.55; transform: scale(1);    }
+}
+@keyframes intro-shine-sweep {
+  from { transform: translateX(-160%); }
+  to   { transform: translateX(160%);  }
+}
+@keyframes intro-word-in {
+  from { opacity: 0; letter-spacing: 0.12em; transform: translateY(8px); }
+  to   { opacity: 1; letter-spacing: 0.34em; transform: translateY(0);   }
 }
 @keyframes intro-fade {
   from { opacity: 0; }
@@ -636,7 +662,9 @@ function switchProfile() {
 
 /* ─── Reduced motion ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .intro-logo, .intro-wave, .intro-word, .intro-hint { animation: none; opacity: 1; transform: none; }
+  .intro-logo, .intro-wave, .intro-word, .intro-hint { animation: none; opacity: 1; transform: none; filter: none; }
+  .intro-aura  { animation: none; opacity: 0.5; transform: none; }
+  .intro-shine { animation: none; opacity: 0; }
   .stage-enter-active, .stage-leave-active { transition: opacity 0.15s ease; }
   .stage-enter-from, .stage-leave-to { transform: none; }
   .shake { animation: none; }

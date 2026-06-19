@@ -13,6 +13,9 @@ let raf = null
 let ro = null
 let w = 0, h = 0, dpr = 1
 let phase = 0
+let mountTs = 0            // marca de entrada — a onda "cresce" de 0 ao surgir
+let reduceMotion = false
+const RAMP_MS = 900
 
 const INDIGO = '#6366f1'
 const EMERALD = '#10b981'
@@ -55,7 +58,10 @@ function draw() {
   ctx.clearRect(0, 0, w, h)
   ctx.globalCompositeOperation = 'lighter'
 
-  const amp = h * 0.18 * (0.85 + 0.15 * Math.sin(phase * 0.6))
+  // Ramp de entrada: amplitude sobe de 0→1 (easeOutCubic) nos primeiros RAMP_MS
+  const t = reduceMotion ? 1 : Math.min(1, (performance.now() - mountTs) / RAMP_MS)
+  const ramp = 1 - Math.pow(1 - t, 3)
+  const amp = h * 0.18 * (0.85 + 0.15 * Math.sin(phase * 0.6)) * ramp
   const freq = 6.5
 
   // Cópias deslocadas (aberração cromática)
@@ -98,7 +104,9 @@ onMounted(() => {
   ctx = c.getContext('2d')
   resize()
 
+  mountTs = performance.now()
   const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  reduceMotion = reduce
   if (reduce) {
     draw() // quadro estático
   } else {

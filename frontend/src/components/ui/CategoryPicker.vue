@@ -16,7 +16,7 @@
         </span>
         <span class="flex-1 truncate text-brand-ink-light dark:text-white">{{ selected.name }}</span>
       </template>
-      <span v-else class="text-brand-ink-mute-light dark:text-brand-ink-mute-dark flex-1">Categoria (opcional)</span>
+      <span v-else class="text-brand-ink-mute-light dark:text-brand-ink-mute-dark flex-1 truncate">Selecionar</span>
       <svg class="w-3.5 h-3.5 text-brand-ink-mute-light dark:text-brand-ink-mute-dark flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="6 9 12 15 18 9"/>
       </svg>

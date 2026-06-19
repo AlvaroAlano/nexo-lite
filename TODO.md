@@ -43,7 +43,9 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Router `/summary` com saldos por pessoa (saldo_alvaro, saldo_alexandra) — (2026-06-03)
 - [x] Auditoria completa de backend, frontend, integração e regras de negócio — (2026-06-08)
 - [x] Corrigir bugs críticos/médios/baixos identificados na auditoria — (2026-06-08)
+- [x] Despesas agendadas: migration 014 + model/schema/router `/scheduled` + `services/scheduled.py` (materialize na virada e na auto-criação do período) — (2026-06-19)
 - [ ] Integrar Supabase Auth (trocar `get_user_id()` por JWT real)
+- [ ] Rodar migration 014 (scheduled_expenses) no Supabase
 - [ ] Testes unitários do serviço de turnover (edge cases: sem period aberto, mês 12→1)
 - [ ] Endpoint `GET /periods` para listar histórico de todos os meses
 - [ ] Remover `summaryApi` de `api.js` e o endpoint `/summary` do backend (dead code)
@@ -86,6 +88,7 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Corrigir suporte a safe areas (notch/câmera e barra de status superior) no iOS no cabeçalho e modais em tela cheia — (2026-06-08)
 - [x] Adicionar gesto Pull-to-refresh no mobile para recarregar o mês atual de forma rápida sem precisar fechar e reabrir o app — (2026-06-08)
 - [x] Botão de modo privacidade (ícone olho) no AppHeader para mascarar todos os valores monetários — (2026-06-08)
+- [x] Despesas agendadas para mês futuro: store `scheduled.js` + seletor "Lançar em" no modal + seção sanfona "Agendadas" no dashboard — (2026-06-19)
 
 ## 🔐 Auth
 
@@ -111,6 +114,8 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Lista de despesas mobile com TransitionGroup (add/excluir/buscar animados) — (2026-06-18)
 - [x] Unificar tokens de easing/duração via CSS vars (`:root` em main.css; todos os componentes migrados) — (2026-06-18)
 - [x] Refazer entrada do AuthView: onda neon (`NeonWave.vue` canvas) + cubo, rápida e pulável (toque/auto ~1.7s) — (2026-06-18)
+- [x] Entrada cinematográfica: hold 3.2s, cubo com scale+blur+aura+sweep de luz, wordmark com letter-spacing, onda com ramp de amplitude — (2026-06-19)
+- [x] Sanfonas (Empréstimos + Agendadas) sempre iniciam fechadas no dashboard — (2026-06-19)
 - [ ] Aplicar TransitionGroup também na ExpenseTable (desktop) para paridade
 
 ## 🐞 Bugs corrigidos
@@ -119,6 +124,8 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] "Poder de Quitação" sempre 100% / payoff NaN — gamificação lia `.amount` em vez de `.estimated_amount` — (2026-06-18)
 - [x] Caixinha contada várias vezes (double-count) na cobertura por dívida — agora alocação snowball (foco primeiro, transbordo) — (2026-06-18)
 - [x] Dívidas quitadas viravam "foco" (saldo 0) e `me_deve` poluía total/cobertura — board agora separa pagáveis / recebíveis / quitadas — (2026-06-18)
+- [x] Ícones de categoria não apareciam no dashboard ao entrar (só após Configurações) — dedupe de fetch + await no mount + skeleton — (2026-06-19)
+- [x] Campo "Categoria (opcional)" quebrava em 2 linhas e desalinhava — campos empilhados com micro-rótulos — (2026-06-19)
 
 ## 🔮 Motor de quitação
 

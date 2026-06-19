@@ -20,6 +20,7 @@ from sqlalchemy import select
 
 from app.models.period import MonthlyPeriod
 from app.models.expense import ExpenseTemplate, MonthlyExpense
+from app.services.scheduled import materialize_scheduled
 
 
 def _next_month(year: int, month: int) -> tuple[int, int]:
@@ -191,4 +192,8 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
         ))
 
     await db.flush()
+
+    # ── 6. Materializar despesas agendadas para o novo mês ────────────────────
+    await materialize_scheduled(db, user_id, new_period)
+
     return new_period

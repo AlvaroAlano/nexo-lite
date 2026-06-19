@@ -15,6 +15,8 @@
         :stroke-width="2"
         :style="{ color: catColor.text }"
       />
+      <!-- tem categoria mas ainda não carregou → skeleton (não 'quebrado') -->
+      <div v-else-if="expense.category_id" class="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
       <div v-else class="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" />
     </div>
 

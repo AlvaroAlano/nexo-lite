@@ -5,6 +5,20 @@ Entradas em ordem cronológica inversa (mais recente no topo).
 
 ---
 
+## 2026-06-19 — Despesas agendadas, entrada cinematográfica, fix ícones, campo categoria
+
+**Despesas agendadas (mês futuro):** nova fila `scheduled_expenses` (migration 014) para "comprar agora, pagar mês que vem". Não toca em nenhuma agregação do mês atual (caixa/saldos/carryover) — por construção. Materializa em `monthly_expenses` quando o período do mês alvo nasce, em 2 pontos: `run_turnover` (após clonar templates) e `get_current_period` (auto-criação). Service único `services/scheduled.py::materialize_scheduled`. No front: store `scheduled.js`, `scheduledApi`, seletor "Lançar em" no modal de Nova Despesa (Este mês + próximos 6, via `monthLabel`) e seção sanfona "Agendadas" no dashboard (agrupada por mês, com excluir). UX: ao agendar, esconde "Já paguei" e o botão vira "Agendar despesa".
+
+**Sanfonas sempre fechadas:** Empréstimos e Agendadas agora iniciam **sempre colapsadas** ao carregar o dashboard (Empréstimos não lê mais `localStorage` para o estado inicial).
+
+**Entrada cinematográfica (AuthView):** hold da splash 1.7s → **3.2s** (ainda pulável ao toque). Cubo entra com `scale+blur` (mola) + **aura radial** que floresce + **sweep de luz** diagonal cruzando o "N"; wordmark expande o `letter-spacing`. `NeonWave` ganhou *ramp* de amplitude (0→1, easeOutCubic ~900ms) no mount — a onda "cresce" ao surgir. Tudo respeita `prefers-reduced-motion`.
+
+**Fix: ícones de categoria não apareciam no dashboard ao entrar** (só após passar por Configurações). Causa: `categories.fetch()` era fire-and-forget sem dedupe/retry; numa 1ª request lenta/falha o dashboard ficava no fallback cinza. Correção: **dedupe de request em voo** no store (promise compartilhada, limpa em sucesso/falha), `await catStore.fetch()` no `onMounted` do DashboardView (em paralelo com `fetchCurrent`), e skeleton `animate-pulse` no ExpenseCard quando a despesa tem `category_id` mas a categoria ainda não carregou.
+
+**Campo Categoria empilhado:** "Categoria (opcional)" quebrava em 2 linhas e desalinhava do campo de responsável. Agora os campos do modal/form são **empilhados com micro-rótulos** (`CATEGORIA · opcional` / `QUEM PAGOU?`); placeholder do CategoryPicker virou "Selecionar" + `truncate`.
+
+---
+
 ## 2026-06-18 — Tokens de movimento unificados + nova entrada (onda neon)
 
 **Unificação de easing (motion-consistency):** todos os `cubic-bezier(...)` crus viraram tokens CSS em `:root` (`assets/main.css`): `--ease-out-expo`, `--ease-in`, `--ease-in-out`, `--ease-out-quint`, `--ease-spring`, `--ease-spring-soft`, `--ease-sheet` + `--dur-enter/leave`. Mapeamento 1:1 (mesmas curvas → zero mudança visual). Migrados: App, BaseModal, DashboardView, AuthView, BottomNav, DebtsList, SettingsView, TemplatesView, MilestoneToast, ExpenseCard, ExpenseTable, ForecastModal. Só a curva de "shake" do PIN ficou inline (one-off). Documentado em COMPONENTS.md.

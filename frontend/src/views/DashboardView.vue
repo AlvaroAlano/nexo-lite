@@ -92,8 +92,16 @@
                 required
                 class="w-full px-3 py-2 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
               />
-              <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] font-semibold uppercase tracking-wide text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1 block">
+                  Categoria <span class="font-normal normal-case opacity-70">· opcional</span>
+                </label>
                 <CategoryPicker v-model="addForm.category_id" />
+              </div>
+              <div>
+                <label class="text-[11px] font-semibold uppercase tracking-wide text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1 block">
+                  Quem pagou?
+                </label>
                 <AppSelect v-model="addForm.responsavel" :options="responsavelOpts" />
               </div>
               <CurrencyInput
@@ -102,10 +110,10 @@
               />
               <button
                 type="submit"
-                :disabled="!addForm.name.trim() || store.saving"
+                :disabled="!addForm.name.trim() || submitting || store.saving"
                 class="w-full py-2 rounded-full bg-brand-primary text-white text-sm font-medium hover:bg-brand-primary-hover disabled:opacity-40 active:scale-[.98] transition-all"
               >
-                {{ store.saving ? 'Adicionando…' : 'Adicionar' }}
+                {{ (submitting || store.saving) ? 'Adicionando…' : 'Adicionar' }}
               </button>
             </form>
             </Transition>
@@ -165,6 +173,61 @@
             @click-detail="openDetailModal"
           />
 
+
+          <!-- ── Agendadas (despesas para meses futuros) ─────────────────── -->
+          <div v-if="scheduledStore.count" class="mt-5 md:mt-6">
+            <button
+              @click="scheduledCollapsed = !scheduledCollapsed"
+              class="flex items-center justify-between w-full mb-2 group"
+            >
+              <h3 class="text-[11px] font-bold uppercase tracking-wider text-brand-ink-mute-light dark:text-brand-ink-mute-dark flex items-center gap-1.5">
+                Agendadas
+                <span class="bg-brand-canvas-soft-light dark:bg-brand-canvas-soft-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-full px-1.5 py-0.5 text-[9px] font-bold text-brand-ink-mute-light dark:text-brand-ink-mute-dark">
+                  {{ scheduledStore.count }}
+                </span>
+              </h3>
+              <svg
+                class="w-3.5 h-3.5 text-brand-ink-mute-light dark:text-brand-ink-mute-dark transition-transform duration-300"
+                :class="scheduledCollapsed ? '' : 'rotate-180'"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            <div
+              class="overflow-hidden transition-all duration-300 ease-in-out"
+              :style="scheduledCollapsed ? 'max-height: 0; opacity: 0;' : 'max-height: 1000px; opacity: 1;'"
+            >
+              <div class="rounded-xl overflow-hidden border border-brand-hairline-light dark:border-brand-hairline-dark/60 bg-white dark:bg-brand-canvas-soft-dark/40">
+                <template v-for="group in scheduledStore.byMonth" :key="`${group.year}-${group.month}`">
+                  <div class="px-4 py-1.5 bg-brand-canvas-soft-light/70 dark:bg-brand-canvas-soft-dark/50 text-[10px] font-bold uppercase tracking-wider text-brand-ink-mute-light dark:text-brand-ink-mute-dark">
+                    {{ monthLabel(group.year, group.month) }}
+                  </div>
+                  <template v-for="(s, idx) in group.items" :key="s.id">
+                    <div class="w-full flex items-center gap-3 px-4 py-3">
+                      <span class="flex-1 min-w-0 text-sm font-medium text-brand-ink-light dark:text-white truncate">
+                        {{ s.name }}
+                      </span>
+                      <span class="flex-shrink-0 text-sm font-semibold font-tabular text-brand-ink-light dark:text-white">
+                        {{ fmtLoanAmt(s.amount) }}
+                      </span>
+                      <button
+                        @click="scheduledStore.remove(s.id)"
+                        class="w-7 h-7 flex items-center justify-center rounded-lg text-brand-ink-mute-light dark:text-brand-ink-mute-dark hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 active:opacity-60 transition-all flex-shrink-0"
+                        title="Remover agendada"
+                      >
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                        </svg>
+                      </button>
+                    </div>
+                    <div v-if="idx < group.items.length - 1" class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/30 mx-4" />
+                  </template>
+                </template>
+              </div>
+            </div>
+          </div>
 
           <!-- ── Empréstimos Ativos ──────────────────────────────────────── -->
           <div v-if="activeLoans.length" class="mt-5 md:mt-6">
@@ -310,8 +373,16 @@
           placeholder="Nome da despesa"
           class="w-full px-4 py-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         />
-        <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-[11px] font-semibold uppercase tracking-wide text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1 block">
+            Categoria <span class="font-normal normal-case opacity-70">· opcional</span>
+          </label>
           <CategoryPicker v-model="addForm.category_id" />
+        </div>
+        <div>
+          <label class="text-[11px] font-semibold uppercase tracking-wide text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1 block">
+            Quem pagou?
+          </label>
           <AppSelect v-model="addForm.responsavel" :options="responsavelOpts" />
         </div>
         <CurrencyInput
@@ -319,6 +390,15 @@
           v-model="addForm.amount"
           input-class="w-full pr-4 py-3 border border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark text-brand-ink-light dark:text-white rounded-stripe-input font-tabular text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
         />
+        <div v-if="!editTarget">
+          <label class="text-[11px] font-semibold uppercase tracking-wide text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1 block">
+            Lançar em
+          </label>
+          <AppSelect v-model="addForm.target" :options="scheduleOpts" />
+          <p v-if="isScheduling" class="mt-1.5 text-[11px] text-brand-ink-mute-light dark:text-brand-ink-mute-dark leading-snug">
+            Aparece sozinha quando esse mês abrir — não entra no caixa de agora.
+          </p>
+        </div>
         <div v-if="editTarget?.expense_type === 'installment'" class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-xs text-brand-ink-mute-light dark:text-brand-ink-mute-dark mb-1 block">Parcela atual</label>
@@ -339,7 +419,7 @@
             />
           </div>
         </div>
-        <label v-if="!editTarget" @click="addForm.is_paid = !addForm.is_paid" class="flex items-center gap-3 py-1 cursor-pointer select-none">
+        <label v-if="!editTarget && !isScheduling" @click="addForm.is_paid = !addForm.is_paid" class="flex items-center gap-3 py-1 cursor-pointer select-none">
           <div
             class="w-5 h-5 rounded border flex items-center justify-center transition-colors flex-shrink-0 pointer-events-none"
             :class="addForm.is_paid ? 'bg-brand-primary border-brand-primary' : 'border-brand-hairline-light dark:border-brand-hairline-dark bg-white dark:bg-brand-canvas-dark'"
@@ -354,10 +434,10 @@
       <template #footer>
         <button
           @click="editTarget ? saveExpenseEdit() : quickAdd()"
-          :disabled="!addForm.name.trim() || store.saving"
+          :disabled="!addForm.name.trim() || submitting || store.saving"
           class="w-full py-3 rounded-full bg-brand-primary text-white text-sm font-medium hover:bg-brand-primary-hover disabled:opacity-40 active:scale-[.98] transition-all"
         >
-          {{ store.saving ? 'Salvando…' : (editTarget ? 'Salvar alterações' : 'Adicionar despesa') }}
+          {{ (submitting || store.saving) ? 'Salvando…' : (editTarget ? 'Salvar alterações' : (isScheduling ? 'Agendar despesa' : 'Adicionar despesa')) }}
         </button>
       </template>
     </BaseModal>
@@ -368,6 +448,9 @@
 import { ref, watch, onMounted, onUnmounted, reactive, computed } from 'vue'
 import { useDashboardStore } from '../stores/dashboard.js'
 import { useDebtsStore } from '../stores/debts.js'
+import { useCategoriesStore } from '../stores/categories.js'
+import { useScheduledStore } from '../stores/scheduled.js'
+import { monthLabel } from '../utils/date.js'
 import { usePullToRefresh } from '../composables/usePullToRefresh.js'
 import PullRefreshIndicator from '../components/ui/PullRefreshIndicator.vue'
 import BalanceSummary from '../components/dashboard/BalanceSummary.vue'
@@ -383,6 +466,8 @@ import ExpenseDetailModal from '../components/modals/ExpenseDetailModal.vue'
 
 const store = useDashboardStore()
 const debtsStore = useDebtsStore()
+const catStore = useCategoriesStore()
+const scheduledStore = useScheduledStore()
 
 // ── Search ─────────────────────────────────────────────────────────────────────
 const searchQuery = ref('')
@@ -402,11 +487,11 @@ const activeLoans = computed(() =>
   debtsStore.debts.filter((d) => d.status === 'ativo')
 )
 
-const loansCollapsed = ref(localStorage.getItem('nexo_loans_collapsed') === 'true')
+const loansCollapsed = ref(true)        // sanfonas sempre iniciam fechadas
+const scheduledCollapsed = ref(true)
 
 function toggleLoans() {
   loansCollapsed.value = !loansCollapsed.value
-  localStorage.setItem('nexo_loans_collapsed', String(loansCollapsed.value))
 }
 
 function isLoanOverdue(loan) {
@@ -440,7 +525,8 @@ function openDetailModal(expense) {
 const { pullDistance, refreshing, handleTouchStart, handleTouchMove, handleTouchEnd } =
   usePullToRefresh(() => store.fetchCurrent())
 
-const addForm = reactive({ name: '', category_id: null, responsavel: 'conjunto', amount: 0, is_paid: false, installment_current: null, installment_total: null })
+const addForm = reactive({ name: '', category_id: null, responsavel: 'conjunto', amount: 0, is_paid: false, installment_current: null, installment_total: null, target: 'current' })
+const submitting = ref(false)
 
 const undoState = ref(null)  // { expense, timerId }
 const undoKey = ref(0)
@@ -473,6 +559,21 @@ const responsavelOpts = computed(() => [
   { value: 'alexandra', label: store.nameAlexandra },
 ])
 
+// "Lançar em": este mês (default) + próximos 6 meses, a partir do período aberto
+const scheduleOpts = computed(() => {
+  const opts = [{ value: 'current', label: 'Este mês' }]
+  const y = store.period?.year, m = store.period?.month
+  if (!y || !m) return opts
+  for (let i = 1; i <= 6; i++) {
+    let ny = y, nm = m + i
+    while (nm > 12) { nm -= 12; ny += 1 }
+    opts.push({ value: `${ny}-${nm}`, label: monthLabel(ny, nm) })
+  }
+  return opts
+})
+
+const isScheduling = computed(() => addForm.target && addForm.target !== 'current')
+
 function resetAddForm() {
   addForm.name = ''
   addForm.category_id = null
@@ -481,6 +582,7 @@ function resetAddForm() {
   addForm.installment_current = null
   addForm.installment_total = null
   addForm.is_paid = false
+  addForm.target = 'current'
 }
 
 // FAB / header "+" → opens modal
@@ -502,8 +604,10 @@ watch(showExpenseModal, (val) => {
 })
 
 onMounted(async () => {
-  await store.fetchCurrent()
+  // categorias em paralelo (dedupe garante 1 request) → ícones preenchem ao resolver
+  await Promise.all([store.fetchCurrent(), catStore.fetch()])
   if (!debtsStore.debts.length) debtsStore.fetchDebts()
+  scheduledStore.fetch()
   if (store.quickAddOpen && !store.isReadOnly && store.period) {
     showExpenseModal.value = true
     store.quickAddOpen = false
@@ -556,16 +660,34 @@ async function saveExpenseEdit() {
 }
 
 async function quickAdd() {
-  await store.addExpense({
-    name: addForm.name.trim(),
-    category_id: addForm.category_id,
-    expense_type: 'variable',
-    responsavel: addForm.responsavel,
-    amount: addForm.amount,
-    is_paid: addForm.is_paid,
-  })
-  showAddForm.value = false
-  showExpenseModal.value = false
+  submitting.value = true
+  try {
+    if (isScheduling.value) {
+      const [ty, tm] = addForm.target.split('-').map(Number)
+      await scheduledStore.create({
+        target_year: ty,
+        target_month: tm,
+        name: addForm.name.trim(),
+        category_id: addForm.category_id,
+        expense_type: 'variable',
+        responsavel: addForm.responsavel,
+        amount: addForm.amount,
+      })
+    } else {
+      await store.addExpense({
+        name: addForm.name.trim(),
+        category_id: addForm.category_id,
+        expense_type: 'variable',
+        responsavel: addForm.responsavel,
+        amount: addForm.amount,
+        is_paid: addForm.is_paid,
+      })
+    }
+    showAddForm.value = false
+    showExpenseModal.value = false
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 

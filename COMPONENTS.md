@@ -89,7 +89,7 @@ Select estilizado no padrão do sistema (rounded-xl, seta ChevronDown Lucide, `a
 ---
 
 ### `NeonWave.vue`
-Onda neon animada em `<canvas>` 2D (sem dependências). Núcleo branco com fade nas pontas + cópias índigo/esmeralda deslocadas (aberração cromática) e brilho aditivo. Preenche o container pai (`w-full h-full`). Respeita `prefers-reduced-motion` (renderiza quadro estático). Usado na entrada do `AuthView`.
+Onda neon animada em `<canvas>` 2D (sem dependências). Núcleo branco com fade nas pontas + cópias índigo/esmeralda deslocadas (aberração cromática) e brilho aditivo. Preenche o container pai (`w-full h-full`). No mount faz um *ramp* de amplitude `0→1` (easeOutCubic, ~900ms) — a onda "cresce" ao surgir. Respeita `prefers-reduced-motion` (quadro estático, sem ramp). Usado na entrada cinematográfica do `AuthView` (cubo com scale+blur+aura+sweep de luz; hold ~3.2s pulável ao toque).
 ```vue
 <div class="relative h-48"><NeonWave /></div>
 ```
@@ -100,6 +100,7 @@ Onda neon animada em `<canvas>` 2D (sem dependências). Núcleo branco com fade 
 Dropdown de seleção de categoria com ícone Lucide + cor da paleta.
 - `v-model` recebe e emite o `id` (UUID string) da categoria
 - Fecha ao clicar fora
+- Placeholder é "Selecionar" (`truncate`). Em formulários, use **empilhado** com micro-rótulo acima — padrão `text-[11px] font-semibold uppercase tracking-wide text-brand-ink-mute-...` (ex.: `CATEGORIA · opcional`, `QUEM PAGOU?`) para alinhar altura com os demais campos.
 ```vue
 <CategoryPicker v-model="form.category_id" />
 ```
@@ -215,6 +216,14 @@ Barra horizontal empilhada com 3 segmentos: Álvaro / Alexandra / Conjunto.
 ```
 
 ---
+
+## Padrões de dashboard
+
+### Sanfona de listas (Empréstimos / Agendadas)
+Padrão reutilizado em `DashboardView.vue` para listas secundárias colapsáveis: header com título uppercase + badge de contagem + chevron que gira (`rotate-180`), e corpo com `max-height`/`opacity` transicionados. **Sempre iniciam fechadas** ao carregar (estado inicial `true`, sem persistir em `localStorage`).
+
+### Despesas agendadas (`stores/scheduled.js`)
+Store Pinia da fila de despesas para meses futuros (back: tabela `scheduled_expenses`, migration 014). `fetch / create / remove`, getter `byMonth` (agrupado por mês alvo) e `count`. O modal de Nova Despesa usa um `AppSelect` "Lançar em" (Este mês + próximos 6, via `monthLabel`); ao escolher um mês futuro, `quickAdd` chama `scheduledStore.create` em vez de `store.addExpense`. Não afeta o caixa do mês atual; materializa sozinha quando o mês alvo abre.
 
 ## Adicionando novos componentes
 

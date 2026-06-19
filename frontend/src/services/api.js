@@ -40,6 +40,13 @@ export const categoriesApi = {
   delete: (id) => http.delete(`/categories/${id}`),
 }
 
+// ─── Scheduled (Despesas agendadas p/ mês futuro) ────────────────────────────
+export const scheduledApi = {
+  list:   () => http.get('/scheduled/'),
+  create: (data) => http.post('/scheduled/', data),
+  delete: (id) => http.delete(`/scheduled/${id}`),
+}
+
 // ─── Summary ────────────────────────────────────────────────────────────────
 export const summaryApi = {
   get: (periodId) => http.get(`/summary/${periodId}`),

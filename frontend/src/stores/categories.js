@@ -9,15 +9,23 @@ export const useCategoriesStore = defineStore('categories', () => {
 
   const byId = computed(() => Object.fromEntries(categories.value.map(c => [c.id, c])))
 
+  // Dedupe de requisição em voo: guard + AuthView + components compartilham UMA request.
+  let inflight = null
+
   async function fetch(force = false) {
     if (!force && categories.value.length) return
+    if (inflight) return inflight
     loading.value = true
-    try {
-      const { data } = await categoriesApi.list()
-      categories.value = data
-    } finally {
-      loading.value = false
-    }
+    inflight = (async () => {
+      try {
+        const { data } = await categoriesApi.list()
+        categories.value = data
+      } finally {
+        loading.value = false
+        inflight = null   // limpa em sucesso ou falha → permite retry
+      }
+    })()
+    return inflight
   }
 
   function getColor(categoryId) {
