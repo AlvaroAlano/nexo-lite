@@ -98,11 +98,8 @@
                 <div class="space-y-2 mb-3">
                   <IncomeRow :label="store.nameAlvaro" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" :hidden="!incomesRevealed" />
                   <IncomeRow :label="store.nameAlexandra" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" :hidden="!incomesRevealed" />
-                </div>
-
-                <div v-if="store.carryover > 0" class="flex justify-between mb-2">
-                  <span class="text-brand-ink-mute-dark text-sm">Saldo anterior</span>
-                  <span class="font-tabular font-medium text-emerald-400 text-sm">+ {{ fmt(store.carryover) }}</span>
+                  <IncomeRow label="Saldo anterior" :value="store.carryover" field="carryover_balance" :readonly="store.isReadOnly" :hidden="!incomesRevealed" prefix="+" value-class="text-emerald-400" />
+                  <IncomeRow label="Valor adicional (Freelancer, 13º...)" :value="store.additionalIncome" field="additional_income" :readonly="store.isReadOnly" :hidden="!incomesRevealed" prefix="+" value-class="text-emerald-400" />
                 </div>
 
                 <div class="border-t border-brand-hairline-dark/20 my-3" />

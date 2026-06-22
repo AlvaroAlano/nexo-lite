@@ -65,7 +65,7 @@ Regras para o Claude Code neste projeto. Leia antes de qualquer tarefa.
 
 ## 6. Regras de negócio — nunca quebrar
 
-**Carryover:** `max(0, income_alvaro + income_alexandra + carryover_anterior - Σ expenses.amount)`
+**Carryover:** Inicializado como `0.00` por padrão na criação de períodos. Editável pelo usuário no mês aberto.
 
 **Aluguel (rent):** `amount` = soma automática dos componentes. Nunca editar `amount` direto — sempre via `PATCH /expenses/{id}/rent`.
 

@@ -62,15 +62,27 @@
         >
           {{ maskCurrency(expense.amount) }}
         </span>
-        <CurrencyInput
-          v-else
-          v-model="editValue"
-          @confirm="saveEdit"
-          @cancel="cancelEdit"
-          @blur="saveEdit"
-          hide-prefix
-          input-class="font-tabular font-medium text-sm text-right text-brand-ink-light dark:text-white bg-transparent border-b border-brand-primary outline-none w-24"
-        />
+        <div v-else class="flex items-center gap-1.5" @click.stop>
+          <CurrencyInput
+            v-model="editValue"
+            @confirm="saveEdit"
+            @cancel="cancelEdit"
+            @blur="handleBlur"
+            hide-prefix
+            input-class="font-tabular font-medium text-sm text-right text-brand-ink-light dark:text-white bg-transparent border-b border-brand-primary outline-none w-20"
+          />
+          <button
+            @mousedown.prevent
+            @click="saveEdit"
+            class="w-6 h-6 flex items-center justify-center rounded-full bg-emerald-500 hover:bg-emerald-600 text-white transition-all active:scale-95 duration-200 flex-shrink-0"
+            :class="{ 'animate-check-pop': animating }"
+            title="Confirmar"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+        </div>
         <button
           v-if="isRent"
           @click="$emit('open-rent', expense)"
@@ -216,16 +228,37 @@ function onDelete() {
   emit('delete', props.expense)
 }
 
+const animating = ref(false)
+
 function startEdit() {
   editValue.value = parseFloat(props.expense.amount) || 0
   editing.value = true
 }
 
+function handleBlur() {
+  setTimeout(() => {
+    if (editing.value && !animating.value) {
+      cancelEdit()
+    }
+  }, 180)
+}
+
 async function saveEdit() {
-  editing.value = false
-  if (editValue.value !== (parseFloat(props.expense.amount) || 0)) {
-    await store.updateExpenseAmount(props.expense.id, editValue.value)
+  if (animating.value) return
+  if (editValue.value === (parseFloat(props.expense.amount) || 0)) {
+    editing.value = false
+    return
   }
+  animating.value = true
+  
+  setTimeout(async () => {
+    try {
+      await store.updateExpenseAmount(props.expense.id, editValue.value)
+    } finally {
+      editing.value = false
+      animating.value = false
+    }
+  }, 300)
 }
 
 function cancelEdit() {
@@ -239,5 +272,23 @@ function cancelEdit() {
 @keyframes dropdown-pop {
   from { opacity: 0; transform: scale(0.88) translateY(-6px); }
   to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+@keyframes check-pop-out {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.animate-check-pop {
+  animation: check-pop-out 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>

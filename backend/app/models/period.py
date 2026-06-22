@@ -17,6 +17,7 @@ class MonthlyPeriod(Base):
     income = Column(Numeric(12, 2), nullable=False, default=0)           # legacy total — kept for compatibility
     income_alvaro = Column(Numeric(12, 2), nullable=False, default=0)
     income_alexandra = Column(Numeric(12, 2), nullable=False, default=0)
+    additional_income = Column(Numeric(12, 2), nullable=False, default=0)
     carryover_balance = Column(Numeric(12, 2), nullable=False, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

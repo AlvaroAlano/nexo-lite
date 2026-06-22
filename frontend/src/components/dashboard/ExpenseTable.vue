@@ -90,16 +90,28 @@
               >
                 {{ maskCurrency(expense.amount) }}
               </span>
-              <CurrencyInput
-                v-else
-                ref="editInputRef"
-                v-model="editValue"
-                @confirm="saveEdit"
-                @cancel="cancelEdit"
-                @blur="saveEdit"
-                hide-prefix
-                input-class="font-tabular font-medium text-brand-ink-light dark:text-white text-right bg-white dark:bg-brand-canvas-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-stripe-input px-2 py-0.5 outline-none w-28 focus:ring-2 focus:ring-brand-primary/20"
-              />
+              <div v-else class="inline-flex items-center gap-1.5" @click.stop>
+                <CurrencyInput
+                  ref="editInputRef"
+                  v-model="editValue"
+                  @confirm="saveEdit"
+                  @cancel="cancelEdit"
+                  @blur="handleBlur"
+                  hide-prefix
+                  input-class="font-tabular font-medium text-brand-ink-light dark:text-white text-right bg-white dark:bg-brand-canvas-dark border border-brand-hairline-light dark:border-brand-hairline-dark rounded-stripe-input px-2 py-0.5 outline-none w-24 focus:ring-2 focus:ring-brand-primary/20"
+                />
+                <button
+                  @mousedown.prevent
+                  @click="saveEdit"
+                  class="w-6 h-6 flex items-center justify-center rounded-full bg-emerald-500 hover:bg-emerald-600 text-white transition-all active:scale-95 duration-200 flex-shrink-0"
+                  :class="{ 'animate-check-pop': animating }"
+                  title="Confirmar"
+                >
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+              </div>
             </template>
           </td>
 
@@ -187,7 +199,7 @@ import { colorByKey, getIconComponent } from '../../utils/categories.js'
 import CurrencyInput from '../ui/CurrencyInput.vue'
 import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../../utils/menuBus.js'
 
-defineProps({ expenses: { type: Array, default: () => [] } })
+const props = defineProps({ expenses: { type: Array, default: () => [] } })
 const { maskCurrency } = usePrivacyMode()
 const emit = defineEmits(['open-rent', 'delete', 'edit', 'click-detail'])
 
@@ -255,17 +267,41 @@ function onDelete(expense) {
   emit('delete', expense)
 }
 
+const animating = ref(false)
+
 function startEdit(expense) {
   editingId.value = expense.id
   editValue.value = parseFloat(expense.amount) || 0
   nextTick(() => editInputRef.value?.$el?.querySelector('input')?.focus())
 }
 
+function handleBlur() {
+  setTimeout(() => {
+    if (editingId.value && !animating.value) {
+      cancelEdit()
+    }
+  }, 180)
+}
+
 async function saveEdit() {
-  if (editingId.value) {
-    await store.updateExpenseAmount(editingId.value, editValue.value)
+  if (animating.value) return
+  if (!editingId.value) return
+  
+  const currentExpense = props.expenses.find(e => e.id === editingId.value)
+  if (currentExpense && editValue.value === (parseFloat(currentExpense.amount) || 0)) {
+    editingId.value = null
+    return
   }
-  editingId.value = null
+  
+  animating.value = true
+  setTimeout(async () => {
+    try {
+      await store.updateExpenseAmount(editingId.value, editValue.value)
+    } finally {
+      editingId.value = null
+      animating.value = false
+    }
+  }, 300)
 }
 
 function cancelEdit() {
@@ -279,5 +315,23 @@ function cancelEdit() {
 @keyframes dropdown-pop {
   from { opacity: 0; transform: scale(0.88) translateY(-6px); }
   to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+@keyframes check-pop-out {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.animate-check-pop {
+  animation: check-pop-out 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 </style>

@@ -32,8 +32,10 @@ class PeriodUpdate(BaseModel):
     income: Optional[Decimal] = None          # legacy single-field update
     income_alvaro: Optional[Decimal] = None
     income_alexandra: Optional[Decimal] = None
+    carryover_balance: Optional[Decimal] = None
+    additional_income: Optional[Decimal] = None
 
-    @field_validator("income", "income_alvaro", "income_alexandra", mode="before")
+    @field_validator("income", "income_alvaro", "income_alexandra", "carryover_balance", "additional_income", mode="before")
     @classmethod
     def validate_incomes(cls, v):
         if v is None:
@@ -50,6 +52,7 @@ class PeriodResponse(BaseModel):
     income: Decimal
     income_alvaro: Decimal
     income_alexandra: Decimal
+    additional_income: Decimal
     carryover_balance: Decimal
     created_at: datetime
     updated_at: datetime

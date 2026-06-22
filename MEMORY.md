@@ -3,6 +3,16 @@
 Log resumido de mudanças, decisões arquiteturais e ajustes relevantes.
 Entradas em ordem cronológica inversa (mais recente no topo).
 
+## 2026-06-22 — Saldo anterior zerado, renda adicional e botão check animado com cancelamento no blur
+
+**Saldo anterior zerado:** O carryover do novo mês agora é inicializado como zero (`0.00`) no motor de virada (`turnover.py`) e ao auto-criar períodos. Evita erros de saldo acumulado indevidamente do mês passado. O usuário preenche opcionalmente.
+**Renda Adicional:** Adicionada coluna `additional_income` em `monthly_periods` (migration 015) para suportar freelancer, 13º salário, etc. Atualizados modelos SQLAlchemy, schemas Pydantic, cálculo de saldo livre (`free_cash` na rota `/history`) e store no frontend (`dashboard.js`).
+**Exibição no Sumário:** O `BalanceSummary.vue` agora exibe permanentemente as linhas editáveis de "Saldo anterior" e "Valor adicional (Freelancer, 13º...)" via `IncomeRow.vue`, integradas à persistência no banco.
+**Micro-animação do Botão Check:** Implementada interface de edição inline nas rendas/períodos (`IncomeRow.vue`) e nas despesas mobile/desktop (`ExpenseCard.vue` e `ExpenseTable.vue`) que:
+- Exibe um botão de check verde ao lado do input ao editar.
+- Dispara uma animação CSS premium pop-out (`scale` + fade) no check ao salvar.
+- Cancela a edição e reverte ao valor original ao clicar fora (blur) em vez de salvar automaticamente.
+
 ---
 
 ## 2026-06-19 — Despesas agendadas, entrada cinematográfica, fix ícones, campo categoria

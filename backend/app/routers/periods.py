@@ -88,7 +88,7 @@ async def get_periods_history(
             "month":             p.month,
             "carryover_balance": float(p.carryover_balance or 0),
             "total_expenses":    float(total_expenses),
-            "free_cash":         max(0.0, float(p.income_alvaro or 0) + float(p.income_alexandra or 0) + float(p.carryover_balance or 0) - float(total_expenses)),
+            "free_cash":         max(0.0, float(p.income_alvaro or 0) + float(p.income_alexandra or 0) + float(p.carryover_balance or 0) + float(p.additional_income or 0) - float(total_expenses)),
         }
         for p, total_expenses in reversed(rows)
     ]
@@ -138,6 +138,10 @@ async def update_income(
         period.income_alvaro = payload.income_alvaro
     if payload.income_alexandra is not None:
         period.income_alexandra = payload.income_alexandra
+    if payload.carryover_balance is not None:
+        period.carryover_balance = payload.carryover_balance
+    if payload.additional_income is not None:
+        period.additional_income = payload.additional_income
     # Legacy single-field update — only updates the total field, does not touch per-person fields
     if payload.income is not None and payload.income_alvaro is None and payload.income_alexandra is None:
         period.income = payload.income

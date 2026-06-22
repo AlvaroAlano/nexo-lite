@@ -48,9 +48,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const incomeAlexandra = computed(() => parseFloat(period.value?.income_alexandra) || 0)
   const incomeTotal = computed(() => incomeAlvaro.value + incomeAlexandra.value)
   const carryover = computed(() => parseFloat(period.value?.carryover_balance) || 0)
+  const additionalIncome = computed(() => parseFloat(period.value?.additional_income) || 0)
 
   // RN-03 — saldo formulas
-  const freeCash = computed(() => incomeTotal.value + carryover.value - totalCommitted.value)
+  const freeCash = computed(() => incomeTotal.value + carryover.value + additionalIncome.value - totalCommitted.value)
 
   const saldoAlvaro = computed(() => {
     const alvaroExpenses = expenses.value
@@ -265,7 +266,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     quickAddOpen, quickAddTemplateOpen, quickAddCategoryOpen, fabMenuOpen, balanceSummaryCollapsed, isReadOnly,
     filteredExpenses,
     totalCommitted, totalPaid, freeCash,
-    incomeAlvaro, incomeAlexandra, incomeTotal, carryover,
+    incomeAlvaro, incomeAlexandra, incomeTotal, carryover, additionalIncome,
     saldoAlvaro, saldoAlexandra, paidCount,
     vaultExpense, vaultMonthAmount, vaultMonthPaid,
     fetchCurrent, fetchByMonth, updateIncome, updateExpenseAmount,

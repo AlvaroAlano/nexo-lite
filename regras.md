@@ -47,13 +47,10 @@ Saldo Total     = (income_alvaro + income_alexandra) + carryover − Σ(todas as
 
 ## RN-04 — Carryover (Saldo Rolado)
 
-```
-carryover_novo = max(0, income_total + carryover_anterior − Σ(todas as expenses do mês fechado))
-```
-
-- Nunca propagar saldo negativo entre meses.
-- O cálculo usa o total de despesas **comprometidas** (não apenas as pagas).
+- O carryover_balance é inicializado como **zero** (`0.00`) na criação de novos períodos (virada ou navegação).
+- O usuário preenche manualmente o saldo anterior caso queira rolar sobras ou compensações.
 - O carryover é atribuído ao período, sem divisão por pessoa.
+- Nunca propagar saldo negativo entre meses.
 
 ---
 

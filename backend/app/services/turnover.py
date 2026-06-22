@@ -89,7 +89,7 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
         month=next_month,
         status="open",
         income=Decimal("0.00"),
-        carryover_balance=carryover,
+        carryover_balance=Decimal("0.00"),
     )
     db.add(new_period)
     await db.flush()
