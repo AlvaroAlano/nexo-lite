@@ -7,18 +7,16 @@ from app.database import get_db
 from app.models.expense import ExpenseTemplate
 from app.models.category import Category
 from app.schemas.expense import TemplateCreate, TemplateUpdate, TemplateResponse
-from app.config import settings
+from app.dependencies.auth import get_current_user_id
 
 router = APIRouter(prefix="/templates", tags=["templates"])
 
 
-def get_user_id() -> UUID:
-    return settings.DEMO_USER_ID
-
-
 @router.get("/", response_model=list[TemplateResponse])
-async def list_templates(db: AsyncSession = Depends(get_db)):
-    user_id = get_user_id()
+async def list_templates(
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     result = await db.execute(
         select(ExpenseTemplate)
         .where(ExpenseTemplate.user_id == user_id)
@@ -28,11 +26,19 @@ async def list_templates(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/", response_model=TemplateResponse, status_code=201)
-async def create_template(payload: TemplateCreate, db: AsyncSession = Depends(get_db)):
-    user_id = get_user_id()
+async def create_template(
+    payload: TemplateCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     category_name = payload.category
     if payload.category_id:
-        cat = (await db.execute(select(Category).where(Category.id == payload.category_id))).scalars().first()
+        cat = (await db.execute(
+            select(Category).where(
+                Category.id == payload.category_id,
+                Category.user_id == user_id
+            )
+        )).scalars().first()
         if cat:
             category_name = cat.name
     tmpl = ExpenseTemplate(
@@ -57,8 +63,14 @@ async def update_template(
     template_id: UUID,
     payload: TemplateUpdate,
     db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
 ):
-    result = await db.execute(select(ExpenseTemplate).where(ExpenseTemplate.id == template_id))
+    result = await db.execute(
+        select(ExpenseTemplate).where(
+            ExpenseTemplate.id == template_id,
+            ExpenseTemplate.user_id == user_id
+        )
+    )
     tmpl = result.scalars().first()
     if tmpl is None:
         raise HTTPException(status_code=404, detail="Template not found")
@@ -69,7 +81,12 @@ async def update_template(
         if update_data["installment_paid"] > total:
             raise HTTPException(status_code=400, detail="installment_paid cannot exceed installment_total")
     if "category_id" in update_data and update_data["category_id"] is not None:
-        cat = (await db.execute(select(Category).where(Category.id == update_data["category_id"]))).scalars().first()
+        cat = (await db.execute(
+            select(Category).where(
+                Category.id == update_data["category_id"],
+                Category.user_id == user_id
+            )
+        )).scalars().first()
         if cat:
             update_data["category"] = cat.name
     for field, value in update_data.items():
@@ -79,8 +96,17 @@ async def update_template(
 
 
 @router.delete("/{template_id}", status_code=204)
-async def delete_template(template_id: UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(ExpenseTemplate).where(ExpenseTemplate.id == template_id))
+async def delete_template(
+    template_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
+    result = await db.execute(
+        select(ExpenseTemplate).where(
+            ExpenseTemplate.id == template_id,
+            ExpenseTemplate.user_id == user_id
+        )
+    )
     tmpl = result.scalars().first()
     if tmpl is None:
         raise HTTPException(status_code=404, detail="Template not found")

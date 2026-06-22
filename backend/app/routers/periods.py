@@ -11,14 +11,9 @@ from app.schemas.period import PeriodResponse, PeriodUpdate, PeriodWithExpenses
 from app.schemas.expense import ExpenseResponse
 from app.services.turnover import run_turnover
 from app.services.scheduled import materialize_scheduled
-from app.config import settings
+from app.dependencies.auth import get_current_user_id
 
 router = APIRouter(prefix="/periods", tags=["periods"])
-
-
-def get_user_id() -> UUID:
-    """Placeholder — swap for Supabase JWT extraction when auth is wired up."""
-    return settings.DEMO_USER_ID
 
 
 async def _fetch_period_with_expenses(db: AsyncSession, period: MonthlyPeriod) -> dict:
@@ -35,10 +30,11 @@ async def _fetch_period_with_expenses(db: AsyncSession, period: MonthlyPeriod) -
 
 
 @router.get("/current", response_model=PeriodWithExpenses)
-async def get_current_period(db: AsyncSession = Depends(get_db)):
+async def get_current_period(
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     """Return the open period plus all its expenses. Creates one if none exists."""
-    user_id = get_user_id()
-
     result = await db.execute(
         select(MonthlyPeriod).where(
             MonthlyPeriod.user_id == user_id,
@@ -67,9 +63,9 @@ async def get_current_period(db: AsyncSession = Depends(get_db)):
 async def get_periods_history(
     limit: int = 12,
     db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
 ):
     """Últimos N meses com free_cash e carryover calculados — alimenta gráficos de stats."""
-    user_id = get_user_id()
     result = await db.execute(
         select(
             MonthlyPeriod,
@@ -111,6 +107,7 @@ async def get_period_by_month(
     year: int,
     month: int,
     db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
 ):
     """
     Return a specific month's period. Used for month navigation.
@@ -118,7 +115,6 @@ async def get_period_by_month(
     """
     if not (1 <= month <= 12):
         raise HTTPException(status_code=422, detail="month must be between 1 and 12")
-    user_id = get_user_id()
     result = await db.execute(
         select(MonthlyPeriod).where(
             MonthlyPeriod.user_id == user_id,
@@ -138,8 +134,14 @@ async def update_income(
     period_id: UUID,
     payload: PeriodUpdate,
     db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
 ):
-    result = await db.execute(select(MonthlyPeriod).where(MonthlyPeriod.id == period_id))
+    result = await db.execute(
+        select(MonthlyPeriod).where(
+            MonthlyPeriod.id == period_id,
+            MonthlyPeriod.user_id == user_id
+        )
+    )
     period = result.scalars().first()
     if period is None:
         raise HTTPException(status_code=404, detail="Period not found")
@@ -154,7 +156,6 @@ async def update_income(
         period.carryover_balance = payload.carryover_balance
     if payload.additional_income_items is not None:
         period.additional_income_items = payload.additional_income_items
-    # Legacy single-field update — only updates the total field, does not touch per-person fields
     if payload.income is not None and payload.income_alvaro is None and payload.income_alexandra is None:
         period.income = payload.income
 
@@ -162,12 +163,14 @@ async def update_income(
 
 
 @router.post("/turnover", response_model=PeriodResponse, status_code=status.HTTP_201_CREATED)
-async def month_turnover(db: AsyncSession = Depends(get_db)):
+async def month_turnover(
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     """
     Close current open period, roll carryover, open next month.
     Only callable when a period is open (RN-06).
     """
-    user_id = get_user_id()
     open_check = await db.execute(
         select(MonthlyPeriod).where(
             MonthlyPeriod.user_id == user_id,

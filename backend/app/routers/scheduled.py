@@ -6,19 +6,16 @@ from uuid import UUID
 from app.database import get_db
 from app.models.scheduled_expense import ScheduledExpense
 from app.schemas.scheduled import ScheduledCreate, ScheduledResponse
-from app.config import settings
+from app.dependencies.auth import get_current_user_id
 
 router = APIRouter(prefix="/scheduled", tags=["scheduled"])
 
 
-def get_user_id() -> UUID:
-    """Placeholder — swap for Supabase JWT extraction when auth is wired up."""
-    return settings.DEMO_USER_ID
-
-
 @router.get("/", response_model=list[ScheduledResponse])
-async def list_scheduled(db: AsyncSession = Depends(get_db)):
-    user_id = get_user_id()
+async def list_scheduled(
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     result = await db.execute(
         select(ScheduledExpense)
         .where(ScheduledExpense.user_id == user_id)
@@ -32,8 +29,11 @@ async def list_scheduled(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/", response_model=ScheduledResponse, status_code=201)
-async def create_scheduled(payload: ScheduledCreate, db: AsyncSession = Depends(get_db)):
-    user_id = get_user_id()
+async def create_scheduled(
+    payload: ScheduledCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     scheduled = ScheduledExpense(user_id=user_id, **payload.model_dump())
     db.add(scheduled)
     await db.flush()
@@ -41,8 +41,11 @@ async def create_scheduled(payload: ScheduledCreate, db: AsyncSession = Depends(
 
 
 @router.delete("/{scheduled_id}", status_code=204)
-async def delete_scheduled(scheduled_id: UUID, db: AsyncSession = Depends(get_db)):
-    user_id = get_user_id()
+async def delete_scheduled(
+    scheduled_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     result = await db.execute(
         select(ScheduledExpense).where(
             ScheduledExpense.id == scheduled_id,

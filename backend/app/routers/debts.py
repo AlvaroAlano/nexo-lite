@@ -9,30 +9,33 @@ from typing import List
 from app.database import get_db
 from app.models.debt import Debt, DebtPayment
 from app.schemas.debt import DebtCreate, DebtUpdate, DebtResponse, DebtPaymentCreate, DebtPaymentResponse
-from app.config import settings
+from app.dependencies.auth import get_current_user_id
 
 router = APIRouter(prefix="/debts", tags=["debts"])
 
 
-def get_user_id() -> UUID:
-    return settings.DEMO_USER_ID
-
-
 @router.get("/", response_model=List[DebtResponse])
-async def list_debts(db: AsyncSession = Depends(get_db)):
+async def list_debts(
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     result = await db.execute(
         select(Debt)
-        .where(Debt.user_id == get_user_id())
+        .where(Debt.user_id == user_id)
         .order_by(Debt.display_order, Debt.created_at)
     )
     return [DebtResponse.model_validate(d) for d in result.scalars().all()]
 
 
 @router.post("/", response_model=DebtResponse, status_code=201)
-async def create_debt(payload: DebtCreate, db: AsyncSession = Depends(get_db)):
+async def create_debt(
+    payload: DebtCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     original = payload.original_amount if payload.original_amount is not None else payload.estimated_amount
     debt = Debt(
-        user_id=get_user_id(),
+        user_id=user_id,
         name=payload.name,
         direction=payload.direction,
         estimated_amount=payload.estimated_amount,
@@ -52,8 +55,14 @@ async def update_debt(
     debt_id: UUID,
     payload: DebtUpdate,
     db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
 ):
-    result = await db.execute(select(Debt).where(Debt.id == debt_id))
+    result = await db.execute(
+        select(Debt).where(
+            Debt.id == debt_id,
+            Debt.user_id == user_id
+        )
+    )
     debt = result.scalars().first()
     if debt is None:
         raise HTTPException(status_code=404, detail="Debt not found")
@@ -81,8 +90,17 @@ async def update_debt(
 
 
 @router.patch("/{debt_id}/settle", response_model=DebtResponse)
-async def settle_debt(debt_id: UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Debt).where(Debt.id == debt_id))
+async def settle_debt(
+    debt_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
+    result = await db.execute(
+        select(Debt).where(
+            Debt.id == debt_id,
+            Debt.user_id == user_id
+        )
+    )
     debt = result.scalars().first()
     if debt is None:
         raise HTTPException(status_code=404, detail="Debt not found")
@@ -95,8 +113,14 @@ async def add_payment(
     debt_id: UUID,
     payload: DebtPaymentCreate,
     db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
 ):
-    result = await db.execute(select(Debt).where(Debt.id == debt_id))
+    result = await db.execute(
+        select(Debt).where(
+            Debt.id == debt_id,
+            Debt.user_id == user_id
+        )
+    )
     debt = result.scalars().first()
     if debt is None:
         raise HTTPException(status_code=404, detail="Debt not found")
@@ -119,18 +143,41 @@ async def add_payment(
 
 
 @router.get("/{debt_id}/payments", response_model=List[DebtPaymentResponse])
-async def list_payments(debt_id: UUID, db: AsyncSession = Depends(get_db)):
+async def list_payments(
+    debt_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     result = await db.execute(
+        select(Debt).where(
+            Debt.id == debt_id,
+            Debt.user_id == user_id
+        )
+    )
+    debt = result.scalars().first()
+    if debt is None:
+        raise HTTPException(status_code=404, detail="Debt not found")
+
+    payments_result = await db.execute(
         select(DebtPayment)
         .where(DebtPayment.debt_id == debt_id)
         .order_by(DebtPayment.paid_at.desc())
     )
-    return [DebtPaymentResponse.model_validate(p) for p in result.scalars().all()]
+    return [DebtPaymentResponse.model_validate(p) for p in payments_result.scalars().all()]
 
 
 @router.delete("/{debt_id}", status_code=204)
-async def delete_debt(debt_id: UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Debt).where(Debt.id == debt_id))
+async def delete_debt(
+    debt_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
+    result = await db.execute(
+        select(Debt).where(
+            Debt.id == debt_id,
+            Debt.user_id == user_id
+        )
+    )
     debt = result.scalars().first()
     if debt is None:
         raise HTTPException(status_code=404, detail="Debt not found")

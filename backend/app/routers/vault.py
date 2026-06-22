@@ -3,21 +3,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from decimal import Decimal
 from collections import defaultdict
+from uuid import UUID
 
 from app.database import get_db
 from app.models.expense import MonthlyExpense
 from app.models.period import MonthlyPeriod
 from app.models.vault import VaultReconciliation
 from app.schemas.vault import VaultSummary, VaultMonthDeposit, VaultReconcileIn, VaultReconcileOut
-from app.config import settings
+from app.dependencies.auth import get_current_user_id
 
 router = APIRouter(prefix="/vault", tags=["vault"])
 
 VAULT_CATEGORY = "Caixinha"
-
-
-def get_user_id():
-    return settings.DEMO_USER_ID
 
 
 def _safe(v) -> Decimal:
@@ -28,9 +25,10 @@ def _safe(v) -> Decimal:
 
 
 @router.get("/summary", response_model=VaultSummary)
-async def get_vault_summary(db: AsyncSession = Depends(get_db)):
-    user_id = get_user_id()
-
+async def get_vault_summary(
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     # All paid Caixinha expenses for this user across all periods
     result = await db.execute(
         select(MonthlyExpense, MonthlyPeriod)
@@ -81,9 +79,10 @@ async def get_vault_summary(db: AsyncSession = Depends(get_db)):
 async def reconcile_vault(
     payload: VaultReconcileIn,
     db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
 ):
     rec = VaultReconciliation(
-        user_id=get_user_id(),
+        user_id=user_id,
         real_balance=payload.real_balance,
     )
     db.add(rec)

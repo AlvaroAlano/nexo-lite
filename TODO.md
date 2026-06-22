@@ -44,9 +44,9 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Auditoria completa de backend, frontend, integração e regras de negócio — (2026-06-08)
 - [x] Corrigir bugs críticos/médios/baixos identificados na auditoria — (2026-06-08)
 - [x] Despesas agendadas: migration 014 + model/schema/router `/scheduled` + `services/scheduled.py` (materialize na virada e na auto-criação do período) — (2026-06-19)
-- [ ] Integrar Supabase Auth (trocar `get_user_id()` por JWT real)
+- [x] Integrar Supabase Auth (JWT e injeção de dependência no backend) — (2026-06-22)
 - [ ] Rodar migration 014 (scheduled_expenses) no Supabase
-- [ ] Testes unitários do serviço de turnover (edge cases: sem period aberto, mês 12→1)
+- [x] Testes unitários do serviço de turnover (integridade, rollback e virada) — (2026-06-22)
 - [ ] Endpoint `GET /periods` para listar histórico de todos os meses
 - [ ] Remover `summaryApi` de `api.js` e o endpoint `/summary` do backend (dead code)
 - [x] Saldo anterior de novos períodos vem zerado por padrão no turnover/auto-criação — (2026-06-22)

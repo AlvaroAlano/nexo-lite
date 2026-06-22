@@ -107,6 +107,45 @@
           </svg>
         </button>
 
+        <!-- Cloud Sync Status -->
+        <button
+          v-if="totalPendingActions > 0 || isSyncingData || isOffline"
+          @click="triggerAllSync"
+          class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark transition-colors relative active:scale-95"
+          :title="syncTooltip"
+          :aria-label="syncTooltip"
+        >
+          <!-- Offline: Nuvem com risco -->
+          <svg
+            v-if="isOffline"
+            class="w-4 h-4 text-amber-500"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          >
+            <path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42-1.04-1.29-1.92-2.38-2.38-2.5-.96-5.46.42-6.22 3.12A4 4 0 0 0 3 15.5 3.5 3.5 0 0 0 6.5 19H17.5z" />
+            <line x1="2" y1="2" x2="22" y2="22" />
+          </svg>
+          <!-- Syncing: Nuvem pulsando -->
+          <svg
+            v-else-if="isSyncingData"
+            class="w-4 h-4 text-emerald-400 animate-pulse"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          >
+            <path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42-1.04-1.29-1.92-2.38-2.38-2.5-.96-5.46.42-6.22 3.12A4 4 0 0 0 3 15.5 3.5 3.5 0 0 0 6.5 19H17.5z" />
+          </svg>
+          <!-- Pending in queue (online mas com fila) -->
+          <div v-else class="relative">
+            <svg
+              class="w-4 h-4 text-brand-primary dark:text-brand-primary-soft"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            >
+              <path d="M17.5 19A3.5 3.5 0 0 0 21 15.5c0-2.79-2.54-4.5-5-4.5-.42-1.04-1.29-1.92-2.38-2.38-2.5-.96-5.46.42-6.22 3.12A4 4 0 0 0 3 15.5 3.5 3.5 0 0 0 6.5 19H17.5z" />
+            </svg>
+            <span class="absolute -top-1.5 -right-1.5 bg-brand-primary text-white text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none scale-90">
+              {{ totalPendingActions }}
+            </span>
+          </div>
+        </button>
+
         <!-- Privacy mode toggle -->
         <button
           @click="togglePrivacy"
@@ -166,11 +205,39 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
+import { useDebtsStore } from '../../stores/debts.js'
 import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import { monthLabel } from '../../utils/date.js'
 
 const store = useDashboardStore()
+const debtsStore = useDebtsStore()
 const { isPrivate, toggle: togglePrivacy } = usePrivacyMode()
+
+const totalPendingActions = computed(() => {
+  return (store.outbox?.length || 0) + (debtsStore.outbox?.length || 0)
+})
+
+const isOffline = computed(() => {
+  return store.isOfflineMode || debtsStore.isOfflineMode
+})
+
+const isSyncingData = computed(() => {
+  return store.isSyncing || debtsStore.isSyncing
+})
+
+async function triggerAllSync() {
+  await Promise.all([
+    store.triggerSync(),
+    debtsStore.triggerSync()
+  ])
+}
+
+const syncTooltip = computed(() => {
+  if (isOffline.value) return 'Dispositivo desconectado. Alterações salvas localmente.'
+  if (isSyncingData.value) return 'Sincronizando dados com a nuvem...'
+  if (totalPendingActions.value > 0) return `${totalPendingActions.value} alterações pendentes. Clique para forçar sincronização.`
+  return 'Dados sincronizados.'
+})
 
 // Local nav state — tracks what month we're displaying
 const navYear = ref(null)

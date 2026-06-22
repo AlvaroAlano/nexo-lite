@@ -6,28 +6,31 @@ from uuid import UUID
 from app.database import get_db
 from app.models.category import Category
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
-from app.config import settings
+from app.dependencies.auth import get_current_user_id
 
 router = APIRouter(prefix="/categories", tags=["categories"])
 
 
-def get_user_id() -> UUID:
-    return settings.DEMO_USER_ID
-
-
 @router.get("/", response_model=list[CategoryResponse])
-async def list_categories(db: AsyncSession = Depends(get_db)):
+async def list_categories(
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
     result = await db.execute(
         select(Category)
-        .where(Category.user_id == get_user_id())
+        .where(Category.user_id == user_id)
         .order_by(Category.display_order, Category.name)
     )
     return [CategoryResponse.model_validate(c) for c in result.scalars().all()]
 
 
 @router.post("/", response_model=CategoryResponse, status_code=201)
-async def create_category(payload: CategoryCreate, db: AsyncSession = Depends(get_db)):
-    cat = Category(user_id=get_user_id(), **payload.model_dump())
+async def create_category(
+    payload: CategoryCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
+    cat = Category(user_id=user_id, **payload.model_dump())
     db.add(cat)
     await db.flush()
     return CategoryResponse.model_validate(cat)
@@ -38,8 +41,14 @@ async def update_category(
     category_id: UUID,
     payload: CategoryUpdate,
     db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
 ):
-    result = await db.execute(select(Category).where(Category.id == category_id))
+    result = await db.execute(
+        select(Category).where(
+            Category.id == category_id,
+            Category.user_id == user_id
+        )
+    )
     cat = result.scalars().first()
     if cat is None:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -49,8 +58,17 @@ async def update_category(
 
 
 @router.delete("/{category_id}", status_code=204)
-async def delete_category(category_id: UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Category).where(Category.id == category_id))
+async def delete_category(
+    category_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    user_id: UUID = Depends(get_current_user_id),
+):
+    result = await db.execute(
+        select(Category).where(
+            Category.id == category_id,
+            Category.user_id == user_id
+        )
+    )
     cat = result.scalars().first()
     if cat is None:
         raise HTTPException(status_code=404, detail="Category not found")
