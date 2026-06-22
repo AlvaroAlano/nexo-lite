@@ -110,7 +110,7 @@
                   </div>
                   
                   <!-- Saldo anterior fixo -->
-                  <IncomeRow label="Saldo anterior" :value="store.carryover" field="carryover_balance" :readonly="store.isReadOnly" :hidden="!incomesRevealed" prefix="+" value-class="text-emerald-400" />
+                  <IncomeRow label="Saldo anterior" :value="store.carryover" field="carryover_balance" :readonly="store.isReadOnly" :hidden="!incomesRevealed" prefix="+" value-class="text-emerald-400 font-semibold" label-class="text-brand-ink-mute-dark text-sm" />
                 </div>
 
                 <div class="border-t border-brand-hairline-dark/20 my-3" />
@@ -206,7 +206,7 @@
               </div>
 
               <div v-else-if="store.currentView === 'alvaro'">
-                <IncomeRow :label="`Renda de ${store.nameAlvaro}`" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" :hidden="!incomesRevealed" />
+                <IncomeRow :label="`Renda de ${store.nameAlvaro}`" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" :hidden="!incomesRevealed" value-class="text-white" label-class="text-brand-ink-mute-dark text-sm" />
                 <div class="border-t border-brand-hairline-dark/20 my-3" />
                 <div class="flex justify-between mb-1">
                   <span class="text-brand-ink-mute-dark text-sm">Contas de {{ store.nameAlvaro }}</span>
@@ -216,7 +216,7 @@
               </div>
 
               <div v-else-if="store.currentView === 'alexandra'">
-                <IncomeRow :label="`Renda de ${store.nameAlexandra}`" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" :hidden="!incomesRevealed" />
+                <IncomeRow :label="`Renda de ${store.nameAlexandra}`" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" :hidden="!incomesRevealed" value-class="text-white" label-class="text-brand-ink-mute-dark text-sm" />
                 <div class="border-t border-brand-hairline-dark/20 my-3" />
                 <div class="flex justify-between mb-1">
                   <span class="text-brand-ink-mute-dark text-sm">Contas de {{ store.nameAlexandra }}</span>
@@ -261,8 +261,8 @@
           Salários Fixos
         </h3>
         <div class="space-y-2 bg-brand-canvas-soft-light/20 dark:bg-brand-canvas-dark/20 border border-brand-hairline-light dark:border-brand-hairline-dark rounded-xl p-3">
-          <IncomeRow :label="store.nameAlvaro" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" />
-          <IncomeRow :label="store.nameAlexandra" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" />
+          <IncomeRow :label="store.nameAlvaro" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" label-class="text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm" value-class="text-brand-ink-light dark:text-white" input-class="text-brand-ink-light dark:text-white" />
+          <IncomeRow :label="store.nameAlexandra" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" label-class="text-brand-ink-mute-light dark:text-brand-ink-mute-dark text-sm" value-class="text-brand-ink-light dark:text-white" input-class="text-brand-ink-light dark:text-white" />
         </div>
       </div>
 

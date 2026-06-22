@@ -1,7 +1,7 @@
 <!-- Editable income row used inside BalanceSummary -->
 <template>
   <div class="flex items-center justify-between py-0.5">
-    <span class="text-brand-ink-mute-dark text-sm">{{ label }}</span>
+    <span :class="labelClass || 'text-brand-ink-mute-dark text-sm'">{{ label }}</span>
     <span
       v-if="!editing"
       @click="!readonly && !hidden && startEdit()"
@@ -24,7 +24,10 @@
         @cancel="cancel"
         @blur="handleBlur"
         hide-prefix
-        input-class="bg-transparent border-b border-brand-primary focus:border-brand-primary-soft outline-none w-24 text-right font-tabular font-medium text-white text-sm"
+        :input-class="[
+          'bg-transparent border-b border-brand-primary focus:border-brand-primary-soft outline-none w-24 text-right font-tabular font-medium text-sm',
+          inputClass || 'text-white'
+        ]"
       />
       <button
         @mousedown.prevent
@@ -57,6 +60,8 @@ const props = defineProps({
   hidden: { type: Boolean, default: false },
   prefix: { type: String, default: '' },
   valueClass: { type: String, default: '' },
+  labelClass: { type: String, default: '' },
+  inputClass: { type: String, default: '' },
 })
 
 const store = useDashboardStore()
