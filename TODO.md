@@ -92,7 +92,8 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Botão de modo privacidade (ícone olho) no AppHeader para mascarar todos os valores monetários — (2026-06-08)
 - [x] Despesas agendadas para mês futuro: store `scheduled.js` + seletor "Lançar em" no modal + seção sanfona "Agendadas" no dashboard — (2026-06-19)
 - [x] Exibir Saldo anterior editável e sumarizar Rendimentos do Mês em linha única no BalanceSummary — (2026-06-22)
-- [x] Detalhamento e edição de salários e adicionais múltiplos (freelancer, dividendos, etc.) via modal interativo com botão check animado e cancelamento no blur — (2026-06-22)
+- [x] Detalhamento e edição de salários e adicionais múltiplos via modal interativo com check animado e cancelamento no blur — (2026-06-22)
+- [x] Refinamento estético do modal de rendimentos (`full-screen-on-mobile`, lápis `✎` indicador de edição, e limpeza de labels/placeholders) — (2026-06-22)
 - [x] Correção de consistência: carryover anterior não é mais herdado automaticamente para evitar valores incorretos — (2026-06-22)
 
 ## 🔐 Auth

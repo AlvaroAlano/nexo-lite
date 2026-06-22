@@ -5,7 +5,7 @@
     <span
       v-if="!editing"
       @click="!readonly && !hidden && startEdit()"
-      class="font-tabular font-medium text-sm transition-colors select-none"
+      class="font-tabular font-medium text-sm transition-colors select-none flex items-center gap-1"
       :class="[
         !readonly && !hidden ? 'cursor-pointer hover:text-brand-primary-soft' : '',
         valueClass || 'text-white'
@@ -13,6 +13,7 @@
     >
       <span v-if="hidden" class="tracking-widest opacity-50">••••••</span>
       <span v-else>{{ prefix }}{{ maskCurrency(value) }}</span>
+      <span v-if="!readonly && !hidden" class="text-[10px] opacity-35 hover:opacity-75 transition-opacity" title="Editar">✎</span>
     </span>
     <div v-else class="flex items-center gap-1.5" @click.stop>
       <CurrencyInput

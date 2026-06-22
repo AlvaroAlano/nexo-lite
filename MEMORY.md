@@ -3,11 +3,14 @@
 Log resumido de mudanças, decisões arquiteturais e ajustes relevantes.
 Entradas em ordem cronológica inversa (mais recente no topo).
 
-## 2026-06-22 — Saldo anterior zerado, múltiplas rendas adicionais (JSONB) e modal interativo no sumário
+## 2026-06-22 — Saldo anterior zerado, múltiplas rendas adicionais (JSONB) e refinamentos estéticos no modal
 
 **Saldo anterior zerado:** O carryover do novo mês agora é inicializado como zero (`0.00`) no motor de virada (`turnover.py`) e ao auto-criar períodos. Evita erros de saldo acumulado indevidamente do mês passado.
 **Múltiplas Rendas Adicionais:** Adicionada coluna `additional_income_items` JSONB em `monthly_periods` (migration 016, substituindo a anterior) para suportar múltiplas fontes de receitas adicionais (freelancer, dividendos, etc.) com descrição e valor personalizados.
-**Interface e Modal de Rendimentos:** No `BalanceSummary.vue`, salários e receitas extras foram condensados em uma única linha "Rendimentos do Mês" clicável. Ao clicar, abre o modal "Rendimentos do Mês" permitindo gerenciar (adicionar com `+ Adicionar`, editar valores e nomes, e excluir com lixeira) salários e extras. O "Saldo anterior" fixo e editável foi preservado.
+**Refinamentos de UI/UX no Modal:**
+- Adicionada a propriedade `full-screen-on-mobile` ao `BaseModal` de rendimentos no `BalanceSummary.vue` para compatibilidade estética com os outros modais.
+- Adicionado um ícone sutil de lápis `✎` ao lado do valor nas linhas de salários e adicionais no modal (via `IncomeRow.vue`), indicando visualmente que o campo é editável.
+- Limpeza visual com a mudança do título da seção para apenas "Rendas Adicionais" e o placeholder de novas receitas adicionais para "Descrição".
 **Edição Premium com Botão Check:** Implementada interface de edição inline nas rendas/períodos e despesas mobile/desktop (`ExpenseCard.vue` e `ExpenseTable.vue`):
 - Exibe um botão de check verde ao lado do input ao editar.
 - Dispara uma animação CSS premium pop-out (`scale` + fade) de 300ms no check ao salvar.

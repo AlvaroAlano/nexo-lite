@@ -253,7 +253,7 @@
   </BaseModal>
 
   <!-- Modal de Detalhe de Rendimentos -->
-  <BaseModal v-model="showRendimentosModal" title="Rendimentos do Mês">
+  <BaseModal v-model="showRendimentosModal" title="Rendimentos do Mês" full-screen-on-mobile>
     <div class="space-y-5">
       <!-- 1. Salários Fixos -->
       <div>
@@ -270,7 +270,7 @@
       <div>
         <div class="flex items-center justify-between mb-2.5">
           <h3 class="text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wider">
-            Rendas Adicionais (Freelancer, 13º...)
+            Rendas Adicionais
           </h3>
           <button
             v-if="!store.isReadOnly"
@@ -293,7 +293,7 @@
                 v-if="editingIdx === idx"
                 v-model="item.name"
                 class="bg-transparent border-b border-brand-primary outline-none text-sm font-medium w-full text-brand-ink-light dark:text-white"
-                placeholder="Ex.: Freelancer"
+                placeholder="Descrição"
               />
               <span v-else class="text-sm font-medium text-brand-ink-light dark:text-white truncate block">
                 {{ item.name || 'Sem nome' }}
@@ -305,9 +305,10 @@
               <template v-if="editingIdx !== idx">
                 <span
                   @click="!store.isReadOnly && startEditExtra(idx)"
-                  class="font-tabular font-medium text-sm text-brand-ink-light dark:text-white cursor-pointer hover:text-brand-primary-soft"
+                  class="font-tabular font-medium text-sm text-brand-ink-light dark:text-white cursor-pointer hover:text-brand-primary-soft flex items-center gap-1"
                 >
                   {{ fmt(parseFloat(item.amount) || 0) }}
+                  <span class="text-[10px] opacity-35 hover:opacity-75 transition-opacity" title="Editar">✎</span>
                 </span>
                 <button
                   v-if="!store.isReadOnly"
