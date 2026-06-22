@@ -82,13 +82,25 @@ async def get_periods_history(
         .limit(limit)
     )
     rows = result.all()
+    
+    def get_additional_total(items_json) -> float:
+        if not items_json:
+            return 0.0
+        total = 0.0
+        for item in items_json:
+            try:
+                total += float(item.get("amount", 0))
+            except Exception:
+                pass
+        return total
+
     return [
         {
             "year":              p.year,
             "month":             p.month,
             "carryover_balance": float(p.carryover_balance or 0),
             "total_expenses":    float(total_expenses),
-            "free_cash":         max(0.0, float(p.income_alvaro or 0) + float(p.income_alexandra or 0) + float(p.carryover_balance or 0) + float(p.additional_income or 0) - float(total_expenses)),
+            "free_cash":         max(0.0, float(p.income_alvaro or 0) + float(p.income_alexandra or 0) + float(p.carryover_balance or 0) + get_additional_total(p.additional_income_items) - float(total_expenses)),
         }
         for p, total_expenses in reversed(rows)
     ]
@@ -140,8 +152,8 @@ async def update_income(
         period.income_alexandra = payload.income_alexandra
     if payload.carryover_balance is not None:
         period.carryover_balance = payload.carryover_balance
-    if payload.additional_income is not None:
-        period.additional_income = payload.additional_income
+    if payload.additional_income_items is not None:
+        period.additional_income_items = payload.additional_income_items
     # Legacy single-field update — only updates the total field, does not touch per-person fields
     if payload.income is not None and payload.income_alvaro is None and payload.income_alexandra is None:
         period.income = payload.income

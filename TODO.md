@@ -50,7 +50,7 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [ ] Endpoint `GET /periods` para listar histórico de todos os meses
 - [ ] Remover `summaryApi` de `api.js` e o endpoint `/summary` do backend (dead code)
 - [x] Saldo anterior de novos períodos vem zerado por padrão no turnover/auto-criação — (2026-06-22)
-- [x] Suporte para salvar carryover_balance e additional_income no PATCH `/periods/{id}/income` — (2026-06-22)
+- [x] Suporte para salvar carryover_balance e additional_income_items JSONB no PATCH `/periods/{id}/income` — (2026-06-22)
 
 ## 🎨 Frontend
 
@@ -91,8 +91,8 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [x] Adicionar gesto Pull-to-refresh no mobile para recarregar o mês atual de forma rápida sem precisar fechar e reabrir o app — (2026-06-08)
 - [x] Botão de modo privacidade (ícone olho) no AppHeader para mascarar todos os valores monetários — (2026-06-08)
 - [x] Despesas agendadas para mês futuro: store `scheduled.js` + seletor "Lançar em" no modal + seção sanfona "Agendadas" no dashboard — (2026-06-19)
-- [x] Exibir Saldo anterior e Valor adicional editáveis no BalanceSummary — (2026-06-22)
-- [x] Edição inline de rendas, carryover, adicionais e despesas com botão check animado e cancelamento no blur — (2026-06-22)
+- [x] Exibir Saldo anterior editável e sumarizar Rendimentos do Mês em linha única no BalanceSummary — (2026-06-22)
+- [x] Detalhamento e edição de salários e adicionais múltiplos (freelancer, dividendos, etc.) via modal interativo com botão check animado e cancelamento no blur — (2026-06-22)
 - [x] Correção de consistência: carryover anterior não é mais herdado automaticamente para evitar valores incorretos — (2026-06-22)
 
 ## 🔐 Auth

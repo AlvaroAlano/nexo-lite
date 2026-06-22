@@ -33,9 +33,9 @@ class PeriodUpdate(BaseModel):
     income_alvaro: Optional[Decimal] = None
     income_alexandra: Optional[Decimal] = None
     carryover_balance: Optional[Decimal] = None
-    additional_income: Optional[Decimal] = None
+    additional_income_items: Optional[list[dict]] = None
 
-    @field_validator("income", "income_alvaro", "income_alexandra", "carryover_balance", "additional_income", mode="before")
+    @field_validator("income", "income_alvaro", "income_alexandra", "carryover_balance", mode="before")
     @classmethod
     def validate_incomes(cls, v):
         if v is None:
@@ -52,15 +52,27 @@ class PeriodResponse(BaseModel):
     income: Decimal
     income_alvaro: Decimal
     income_alexandra: Decimal
-    additional_income: Decimal
+    additional_income_items: list[dict] = []
     carryover_balance: Decimal
     created_at: datetime
     updated_at: datetime
 
     @computed_field
     @property
+    def additional_income_total(self) -> Decimal:
+        items = self.additional_income_items or []
+        total = Decimal("0.00")
+        for item in items:
+            try:
+                total += Decimal(str(item.get("amount", 0)))
+            except Exception:
+                pass
+        return total
+
+    @computed_field
+    @property
     def income_total(self) -> Decimal:
-        return self.income_alvaro + self.income_alexandra
+        return self.income_alvaro + self.income_alexandra + self.additional_income_total
 
     model_config = {"from_attributes": True}
 

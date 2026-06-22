@@ -96,10 +96,21 @@
                 </div>
 
                 <div class="space-y-2 mb-3">
-                  <IncomeRow :label="store.nameAlvaro" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" :hidden="!incomesRevealed" />
-                  <IncomeRow :label="store.nameAlexandra" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" :hidden="!incomesRevealed" />
+                  <!-- Linha única clicável de Rendimentos -->
+                  <div class="flex items-center justify-between py-1 border-b border-brand-hairline-dark/10">
+                    <span class="text-brand-ink-mute-dark text-sm">Rendimentos do Mês</span>
+                    <button
+                      @click="showRendimentosModal = true"
+                      class="font-tabular font-medium text-sm hover:text-brand-primary-soft transition-colors select-none flex items-center gap-1 cursor-pointer text-white"
+                    >
+                      <span v-if="!incomesRevealed" class="tracking-widest opacity-50">••••••</span>
+                      <span v-else>{{ fmt(store.rendimentosTotal) }}</span>
+                      <span class="text-[10px] opacity-40">✎</span>
+                    </button>
+                  </div>
+                  
+                  <!-- Saldo anterior fixo -->
                   <IncomeRow label="Saldo anterior" :value="store.carryover" field="carryover_balance" :readonly="store.isReadOnly" :hidden="!incomesRevealed" prefix="+" value-class="text-emerald-400" />
-                  <IncomeRow label="Valor adicional (Freelancer, 13º...)" :value="store.additionalIncome" field="additional_income" :readonly="store.isReadOnly" :hidden="!incomesRevealed" prefix="+" value-class="text-emerald-400" />
                 </div>
 
                 <div class="border-t border-brand-hairline-dark/20 my-3" />
@@ -240,6 +251,113 @@
       </button>
     </template>
   </BaseModal>
+
+  <!-- Modal de Detalhe de Rendimentos -->
+  <BaseModal v-model="showRendimentosModal" title="Rendimentos do Mês">
+    <div class="space-y-5">
+      <!-- 1. Salários Fixos -->
+      <div>
+        <h3 class="text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wider mb-2.5">
+          Salários Fixos
+        </h3>
+        <div class="space-y-2 bg-brand-canvas-soft-light/20 dark:bg-brand-canvas-dark/20 border border-brand-hairline-light dark:border-brand-hairline-dark rounded-xl p-3">
+          <IncomeRow :label="store.nameAlvaro" :value="store.incomeAlvaro" field="income_alvaro" :readonly="store.isReadOnly" />
+          <IncomeRow :label="store.nameAlexandra" :value="store.incomeAlexandra" field="income_alexandra" :readonly="store.isReadOnly" />
+        </div>
+      </div>
+
+      <!-- 2. Rendas Extras / Adicionais -->
+      <div>
+        <div class="flex items-center justify-between mb-2.5">
+          <h3 class="text-xs font-semibold text-brand-ink-mute-light dark:text-brand-ink-mute-dark uppercase tracking-wider">
+            Rendas Adicionais (Freelancer, 13º...)
+          </h3>
+          <button
+            v-if="!store.isReadOnly"
+            @click="addExtraIncomeRow"
+            class="text-xs font-medium text-brand-primary dark:text-brand-primary-soft hover:underline"
+          >
+            + Adicionar
+          </button>
+        </div>
+
+        <div v-if="localAdditions.length" class="space-y-3">
+          <div
+            v-for="(item, idx) in localAdditions"
+            :key="item.id || idx"
+            class="flex items-center justify-between bg-brand-canvas-soft-light/20 dark:bg-brand-canvas-dark/20 border border-brand-hairline-light dark:border-brand-hairline-dark rounded-xl p-3"
+          >
+            <!-- Nome da Renda Extra -->
+            <div class="flex-1 min-w-0 pr-2">
+              <input
+                v-if="editingIdx === idx"
+                v-model="item.name"
+                class="bg-transparent border-b border-brand-primary outline-none text-sm font-medium w-full text-brand-ink-light dark:text-white"
+                placeholder="Ex.: Freelancer"
+              />
+              <span v-else class="text-sm font-medium text-brand-ink-light dark:text-white truncate block">
+                {{ item.name || 'Sem nome' }}
+              </span>
+            </div>
+
+            <!-- Valor + Ações -->
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <template v-if="editingIdx !== idx">
+                <span
+                  @click="!store.isReadOnly && startEditExtra(idx)"
+                  class="font-tabular font-medium text-sm text-brand-ink-light dark:text-white cursor-pointer hover:text-brand-primary-soft"
+                >
+                  {{ fmt(parseFloat(item.amount) || 0) }}
+                </span>
+                <button
+                  v-if="!store.isReadOnly"
+                  @click="removeExtraIncome(idx)"
+                  class="text-red-500 hover:text-red-600 transition-colors p-1"
+                  title="Excluir"
+                >
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                  </svg>
+                </button>
+              </template>
+              <template v-else>
+                <CurrencyInput
+                  v-model="item.amount"
+                  @confirm="saveExtra(idx)"
+                  @cancel="cancelEditExtra"
+                  @blur="handleExtraBlur(idx)"
+                  hide-prefix
+                  input-class="bg-transparent border-b border-brand-primary focus:border-brand-primary-soft outline-none w-20 text-right font-tabular font-medium text-brand-ink-light dark:text-white text-sm"
+                />
+                <button
+                  @mousedown.prevent
+                  @click="saveExtra(idx)"
+                  class="w-6 h-6 flex items-center justify-center rounded-full bg-emerald-500 hover:bg-emerald-600 text-white transition-all active:scale-95 duration-200"
+                  :class="{ 'animate-check-pop': extraAnimating && editingIdx === idx }"
+                  title="Confirmar"
+                >
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+              </template>
+            </div>
+          </div>
+        </div>
+        <p v-else class="text-xs text-center text-brand-ink-mute-light dark:text-brand-ink-mute-dark py-4 bg-brand-canvas-soft-light/10 dark:bg-brand-canvas-dark/10 rounded-xl border border-dashed border-brand-hairline-light dark:border-brand-hairline-dark">
+          Nenhuma renda adicional cadastrada.
+        </p>
+      </div>
+    </div>
+    <template #footer>
+      <button
+        @click="showRendimentosModal = false"
+        class="w-full py-3 rounded-full border border-brand-hairline-light dark:border-brand-hairline-dark text-sm font-medium text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/40 transition-colors"
+      >
+        Fechar
+      </button>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
@@ -267,6 +385,61 @@ const {
 const incomesRevealed = ref(false)
 const editingGoal  = ref(false)
 const goalEditVal  = ref(0)
+
+// Lógica para controle das rendas adicionais
+const showRendimentosModal = ref(false)
+const localAdditions = ref([])
+const editingIdx = ref(-1)
+const extraAnimating = ref(false)
+
+watch(
+  () => store.additionalIncomeItems,
+  (newItems) => {
+    localAdditions.value = JSON.parse(JSON.stringify(newItems || []))
+  },
+  { immediate: true, deep: true }
+)
+
+function addExtraIncomeRow() {
+  localAdditions.value.push({ id: crypto.randomUUID(), name: '', amount: 0 })
+  editingIdx.value = localAdditions.value.length - 1
+}
+
+function startEditExtra(idx) {
+  editingIdx.value = idx
+}
+
+function handleExtraBlur(idx) {
+  setTimeout(() => {
+    if (editingIdx.value === idx && !extraAnimating.value) {
+      cancelEditExtra()
+    }
+  }, 180)
+}
+
+function cancelEditExtra() {
+  editingIdx.value = -1
+  localAdditions.value = JSON.parse(JSON.stringify(store.additionalIncomeItems || []))
+}
+
+async function saveExtra(idx) {
+  if (extraAnimating.value) return
+  extraAnimating.value = true
+  
+  setTimeout(async () => {
+    try {
+      await store.updateIncome('additional_income_items', localAdditions.value)
+    } finally {
+      editingIdx.value = -1
+      extraAnimating.value = false
+    }
+  }, 300)
+}
+
+async function removeExtraIncome(idx) {
+  localAdditions.value.splice(idx, 1)
+  await store.updateIncome('additional_income_items', localAdditions.value)
+}
 
 function startGoalEdit() {
   goalEditVal.value = monthlyGoal.value

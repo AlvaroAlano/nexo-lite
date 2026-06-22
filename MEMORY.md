@@ -3,14 +3,14 @@
 Log resumido de mudanças, decisões arquiteturais e ajustes relevantes.
 Entradas em ordem cronológica inversa (mais recente no topo).
 
-## 2026-06-22 — Saldo anterior zerado, renda adicional e botão check animado com cancelamento no blur
+## 2026-06-22 — Saldo anterior zerado, múltiplas rendas adicionais (JSONB) e modal interativo no sumário
 
-**Saldo anterior zerado:** O carryover do novo mês agora é inicializado como zero (`0.00`) no motor de virada (`turnover.py`) e ao auto-criar períodos. Evita erros de saldo acumulado indevidamente do mês passado. O usuário preenche opcionalmente.
-**Renda Adicional:** Adicionada coluna `additional_income` em `monthly_periods` (migration 015) para suportar freelancer, 13º salário, etc. Atualizados modelos SQLAlchemy, schemas Pydantic, cálculo de saldo livre (`free_cash` na rota `/history`) e store no frontend (`dashboard.js`).
-**Exibição no Sumário:** O `BalanceSummary.vue` agora exibe permanentemente as linhas editáveis de "Saldo anterior" e "Valor adicional (Freelancer, 13º...)" via `IncomeRow.vue`, integradas à persistência no banco.
-**Micro-animação do Botão Check:** Implementada interface de edição inline nas rendas/períodos (`IncomeRow.vue`) e nas despesas mobile/desktop (`ExpenseCard.vue` e `ExpenseTable.vue`) que:
+**Saldo anterior zerado:** O carryover do novo mês agora é inicializado como zero (`0.00`) no motor de virada (`turnover.py`) e ao auto-criar períodos. Evita erros de saldo acumulado indevidamente do mês passado.
+**Múltiplas Rendas Adicionais:** Adicionada coluna `additional_income_items` JSONB em `monthly_periods` (migration 016, substituindo a anterior) para suportar múltiplas fontes de receitas adicionais (freelancer, dividendos, etc.) com descrição e valor personalizados.
+**Interface e Modal de Rendimentos:** No `BalanceSummary.vue`, salários e receitas extras foram condensados em uma única linha "Rendimentos do Mês" clicável. Ao clicar, abre o modal "Rendimentos do Mês" permitindo gerenciar (adicionar com `+ Adicionar`, editar valores e nomes, e excluir com lixeira) salários e extras. O "Saldo anterior" fixo e editável foi preservado.
+**Edição Premium com Botão Check:** Implementada interface de edição inline nas rendas/períodos e despesas mobile/desktop (`ExpenseCard.vue` e `ExpenseTable.vue`):
 - Exibe um botão de check verde ao lado do input ao editar.
-- Dispara uma animação CSS premium pop-out (`scale` + fade) no check ao salvar.
+- Dispara uma animação CSS premium pop-out (`scale` + fade) de 300ms no check ao salvar.
 - Cancela a edição e reverte ao valor original ao clicar fora (blur) em vez de salvar automaticamente.
 
 ---
