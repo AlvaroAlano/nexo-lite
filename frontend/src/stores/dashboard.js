@@ -58,11 +58,15 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   // ── Computed — balance totals ─────────────────────────────────────────────
   const totalCommitted = computed(() =>
-    expenses.value.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
+    expenses.value
+      .filter((e) => !e.is_excluded)
+      .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
   )
 
   const totalPaid = computed(() =>
-    expenses.value.filter((e) => e.is_paid).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
+    expenses.value
+      .filter((e) => e.is_paid && !e.is_excluded)
+      .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
   )
 
   const incomeAlvaro = computed(() => parseFloat(period.value?.income_alvaro) || 0)
@@ -82,19 +86,19 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   const saldoAlvaro = computed(() => {
     const alvaroExpenses = expenses.value
-      .filter((e) => e.responsavel === 'alvaro')
+      .filter((e) => e.responsavel === 'alvaro' && !e.is_excluded)
       .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
     return incomeAlvaro.value - alvaroExpenses
   })
 
   const saldoAlexandra = computed(() => {
     const alexandraExpenses = expenses.value
-      .filter((e) => e.responsavel === 'alexandra')
+      .filter((e) => e.responsavel === 'alexandra' && !e.is_excluded)
       .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
     return incomeAlexandra.value - alexandraExpenses
   })
 
-  const paidCount = computed(() => expenses.value.filter((e) => e.is_paid).length)
+  const paidCount = computed(() => expenses.value.filter((e) => e.is_paid && !e.is_excluded).length)
 
   // ── Caixinha (Vault) ──────────────────────────────────────────────────────
   const vaultExpense = computed(() => expenses.value.find((e) => e.category === 'Caixinha') ?? null)
@@ -245,6 +249,28 @@ export const useDashboardStore = defineStore('dashboard', () => {
         return
       }
       _enqueue('toggle_paid', { expenseId })
+    }
+  }
+
+  async function toggleExpenseExclusion(expenseId) {
+    if (isReadOnly.value) return
+    const idx = expenses.value.findIndex((e) => e.id === expenseId)
+    if (idx === -1) return
+    
+    expenses.value[idx].is_excluded = !expenses.value[idx].is_excluded // Otimista
+
+    try {
+      if (isOfflineMode.value || _isTempId(expenseId)) {
+        throw new Error('Offline or Temp ID')
+      }
+      const { data } = await expensesApi.toggleExcluded(expenseId)
+      _replaceExpense(data)
+    } catch (e) {
+      if (!_isNetworkError(e) && !_isTempId(expenseId)) {
+        expenses.value[idx].is_excluded = !expenses.value[idx].is_excluded // Reverte
+        return
+      }
+      _enqueue('toggle_excluded', { expenseId })
     }
   }
 
@@ -461,6 +487,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
         const { data } = await expensesApi.togglePaid(expenseId)
         _replaceExpense(data)
       }
+      else if (type === 'toggle_excluded') {
+        const { expenseId } = payload
+        const { data } = await expensesApi.toggleExcluded(expenseId)
+        _replaceExpense(data)
+      }
       else if (type === 'update_rent') {
         const { expenseId, components } = payload
         const { data } = await expensesApi.updateRent(expenseId, components)
@@ -537,7 +568,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     vaultExpense, vaultMonthAmount, vaultMonthPaid,
     outbox, isSyncing, isOfflineMode, triggerSync,
     fetchCurrent, fetchByMonth, updateIncome, updateExpenseAmount,
-    togglePaid, updateRent, addExpense, deleteExpense,
+    togglePaid, toggleExpenseExclusion, updateRent, addExpense, deleteExpense,
     removeExpenseLocally, restoreExpense, hardDeleteExpense, updateExpenseFull,
     runTurnover, setView, updateNames,
   }

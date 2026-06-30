@@ -21,6 +21,7 @@ export const expensesApi = {
   update: (expenseId, data) => http.patch(`/expenses/${expenseId}`, data),
   updateRent: (expenseId, components) => http.patch(`/expenses/${expenseId}/rent`, components),
   togglePaid: (expenseId) => http.patch(`/expenses/${expenseId}/toggle-paid`),
+  toggleExcluded: (expenseId) => http.patch(`/expenses/${expenseId}/toggle-excluded`),
   delete: (expenseId) => http.delete(`/expenses/${expenseId}`),
 }
 

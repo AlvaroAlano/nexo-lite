@@ -2,6 +2,7 @@
   <div
     @click="$emit('click-detail', expense)"
     class="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-brand-canvas-soft-light/10 dark:hover:bg-brand-canvas-soft-dark/10 transition-colors rounded-xl px-2 -mx-2"
+    :class="{ 'opacity-50': expense.is_excluded }"
   >
     <!-- Category icon -->
     <div
@@ -31,6 +32,10 @@
         >
           {{ expense.name }}
         </span>
+        <EyeOff
+          v-if="expense.is_excluded"
+          class="w-3 h-3 flex-shrink-0 text-brand-ink-mute-light dark:text-brand-ink-mute-dark"
+        />
         <span
           v-if="isInstallment"
           class="text-[10px] font-tabular text-brand-ink-mute-light dark:text-brand-ink-mute-dark flex-shrink-0"
@@ -123,6 +128,13 @@
               </svg>
               Editar
             </button>
+            <button
+              @click.stop="onToggleExclusion"
+              class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+            >
+              <component :is="expense.is_excluded ? Eye : EyeOff" class="w-3.5 h-3.5 flex-shrink-0" />
+              {{ expense.is_excluded ? 'Incluir no cálculo' : 'Excluir do cálculo' }}
+            </button>
             <div class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/40" />
             <button
               @click.stop="onDelete"
@@ -162,6 +174,7 @@ import { colorByKey, getIconComponent } from '../../utils/categories.js'
 const { maskCurrency } = usePrivacyMode()
 import CurrencyInput from '../ui/CurrencyInput.vue'
 import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../../utils/menuBus.js'
+import { Eye, EyeOff } from 'lucide-vue-next'
 
 const props = defineProps({
   expense: { type: Object, required: true },
@@ -226,6 +239,11 @@ function onEdit() {
 function onDelete() {
   closeMenu()
   emit('delete', props.expense)
+}
+
+function onToggleExclusion() {
+  closeMenu()
+  store.toggleExpenseExclusion(props.expense.id)
 }
 
 const animating = ref(false)

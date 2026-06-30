@@ -24,7 +24,7 @@
           :key="expense.id"
           @click="$emit('click-detail', expense)"
           class="group hover:bg-brand-canvas-soft-light/45 dark:hover:bg-brand-canvas-soft-dark/30 transition-colors cursor-pointer"
-          :class="expense.is_paid ? 'opacity-60' : ''"
+          :class="[expense.is_paid ? 'opacity-60' : '', expense.is_excluded ? 'opacity-50' : '']"
         >
           <!-- Name + badges -->
           <td class="px-4 py-3.5">
@@ -35,6 +35,10 @@
               >
                 {{ expense.name }}
               </span>
+              <EyeOff
+                v-if="expense.is_excluded"
+                class="w-3 h-3 flex-shrink-0 text-brand-ink-mute-light dark:text-brand-ink-mute-dark"
+              />
               <span
                 v-if="expense.expense_type === 'installment'"
                 class="text-[10px] font-tabular bg-brand-canvas-soft-light dark:bg-brand-canvas-dark text-brand-ink-mute-light dark:text-brand-ink-mute-dark px-1.5 py-0.5 rounded"
@@ -163,6 +167,13 @@
                     </svg>
                     Editar
                   </button>
+                  <button
+                    @click.stop="onToggleExclusion(expense)"
+                    class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-dark transition-colors"
+                  >
+                    <component :is="expense.is_excluded ? Eye : EyeOff" class="w-3.5 h-3.5 flex-shrink-0" />
+                    {{ expense.is_excluded ? 'Incluir no cálculo' : 'Excluir do cálculo' }}
+                  </button>
                   <div class="h-px bg-brand-hairline-light dark:bg-brand-hairline-dark/40" />
                   <button
                     @click.stop="onDelete(expense)"
@@ -198,6 +209,7 @@ import { usePrivacyMode } from '../../composables/usePrivacyMode.js'
 import { colorByKey, getIconComponent } from '../../utils/categories.js'
 import CurrencyInput from '../ui/CurrencyInput.vue'
 import { CLOSE_MENUS_EVENT, broadcastMenuOpen } from '../../utils/menuBus.js'
+import { Eye, EyeOff } from 'lucide-vue-next'
 
 const props = defineProps({ expenses: { type: Array, default: () => [] } })
 const { maskCurrency } = usePrivacyMode()
@@ -265,6 +277,11 @@ function onEdit(expense) {
 function onDelete(expense) {
   closeMenu()
   emit('delete', expense)
+}
+
+function onToggleExclusion(expense) {
+  closeMenu()
+  store.toggleExpenseExclusion(expense.id)
 }
 
 const animating = ref(false)

@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS public.monthly_expenses (
     display_order       INTEGER NOT NULL DEFAULT 0,
     responsavel         VARCHAR(20) NOT NULL DEFAULT 'conjunto',
     rent_items          JSONB,
+    is_excluded         BOOLEAN NOT NULL DEFAULT FALSE,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

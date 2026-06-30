@@ -117,6 +117,22 @@ async def toggle_paid(
     return ExpenseResponse.model_validate(expense)
 
 
+@router.patch("/{expense_id}/toggle-excluded", response_model=ExpenseResponse)
+async def toggle_excluded(
+    expense_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    """Convenience endpoint to toggle is_excluded."""
+    result = await db.execute(select(MonthlyExpense).where(MonthlyExpense.id == expense_id))
+    expense = result.scalars().first()
+    if expense is None:
+        raise HTTPException(status_code=404, detail="Expense not found")
+
+    expense.is_excluded = not expense.is_excluded
+
+    return ExpenseResponse.model_validate(expense)
+
+
 @router.delete("/{expense_id}", status_code=204)
 async def delete_expense(
     expense_id: UUID,

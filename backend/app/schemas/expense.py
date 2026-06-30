@@ -112,6 +112,7 @@ class ExpenseCreate(BaseModel):
     installment_total: Optional[int] = None
     display_order: int = 0
     rent_items: list[RentItem] = []
+    is_excluded: bool = False
 
     @field_validator("amount", mode="before")
     @classmethod
@@ -128,6 +129,7 @@ class ExpenseUpdate(BaseModel):
     is_paid: Optional[bool] = None
     installment_current: Optional[int] = None
     installment_total: Optional[int] = None
+    is_excluded: Optional[bool] = None
 
     @field_validator("amount", mode="before")
     @classmethod
@@ -157,6 +159,7 @@ class ExpenseResponse(BaseModel):
     installment_total: Optional[int]
     rent_items: list[dict] = []
     display_order: int
+    is_excluded: bool
     created_at: datetime
     updated_at: datetime
 

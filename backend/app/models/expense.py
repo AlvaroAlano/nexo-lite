@@ -47,6 +47,7 @@ class MonthlyExpense(Base):
     rent_items = Column(JSONB, nullable=False, server_default='[]')
     category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
     display_order = Column(Integer, nullable=False, default=0)
+    is_excluded = Column(Boolean, nullable=False, default=False, server_default="false")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

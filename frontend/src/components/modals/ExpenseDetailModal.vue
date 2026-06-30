@@ -3,12 +3,13 @@
     <div v-if="expense" class="space-y-6 font-ss01">
       
       <!-- Top Header Area: Title & Amount -->
-      <div class="text-center pb-4 border-b border-brand-hairline-light dark:border-brand-hairline-dark/40">
-        <h3 class="text-xl font-semibold text-brand-ink-light dark:text-white mb-2 leading-tight">
+      <div class="text-center pb-4 border-b border-brand-hairline-light dark:border-brand-hairline-dark/40 relative">
+        <h3 class="text-xl font-semibold text-brand-ink-light dark:text-white mb-2 leading-tight flex items-center justify-center gap-2">
           {{ expense.name }}
+          <EyeOff v-if="expense.is_excluded" class="w-4 h-4 text-brand-ink-mute-light dark:text-brand-ink-mute-dark" />
         </h3>
         
-        <p class="text-3xl font-bold font-tabular text-brand-ink-light dark:text-white tracking-tight">
+        <p class="text-3xl font-bold font-tabular text-brand-ink-light dark:text-white tracking-tight" :class="{'opacity-50 line-through decoration-brand-ink-mute-light/30': expense.is_excluded}">
           {{ maskCurrency(expense.amount) }}
         </p>
 
@@ -212,6 +213,17 @@
         </div>
 
         <div class="flex gap-2">
+          <button
+            v-if="!store.isReadOnly && expense.category !== 'Caixinha'"
+            @click="toggleExcluded"
+            class="flex-1 py-3 px-4 rounded-full border border-brand-hairline-light dark:border-brand-hairline-dark text-sm font-semibold text-brand-ink-light dark:text-white hover:bg-brand-canvas-soft-light dark:hover:bg-brand-canvas-soft-dark/30 active:scale-[.98] transition-all flex items-center justify-center gap-2"
+          >
+            <component :is="expense.is_excluded ? Eye : EyeOff" class="w-4 h-4" />
+            {{ expense.is_excluded ? 'Incluir no Cálculo' : 'Excluir do Cálculo' }}
+          </button>
+        </div>
+
+        <div class="flex gap-2">
           <!-- Rent subitems details manager -->
           <button
             v-if="!store.isReadOnly && expense.expense_type === 'rent'"
@@ -238,7 +250,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { MessageSquare, ChevronDown, Trash2 } from 'lucide-vue-next'
+import { MessageSquare, ChevronDown, Trash2, Eye, EyeOff } from 'lucide-vue-next'
 import BaseModal from '../ui/BaseModal.vue'
 import { useDashboardStore } from '../../stores/dashboard.js'
 import { useCategoriesStore } from '../../stores/categories.js'
@@ -311,6 +323,11 @@ const itemTypeBadge = (t) => {
 function togglePaid() {
   if (!props.expense) return
   store.togglePaid(props.expense.id)
+}
+
+function toggleExcluded() {
+  if (!props.expense) return
+  store.toggleExpenseExclusion(props.expense.id)
 }
 
 function editExpense() {
