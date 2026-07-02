@@ -9,9 +9,12 @@ def safe_decimal(v) -> Decimal:
     if v is None:
         return Decimal("0.00")
     try:
-        return Decimal(str(v))
+        d = Decimal(str(v))
     except Exception:
         return Decimal("0.00")
+    if d < 0:
+        raise ValueError("Amount cannot be negative")
+    return d
 
 
 ExpenseType = Literal["fixed", "variable", "installment", "rent"]

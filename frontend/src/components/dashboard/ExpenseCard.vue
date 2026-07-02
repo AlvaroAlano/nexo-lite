@@ -151,7 +151,7 @@
 
       <!-- Toggle pago -->
       <button
-        @click.stop="store.togglePaid(expense.id)"
+        @click.stop="store.togglePaid(expense.id).catch(() => {})"
         class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 active:scale-90 flex-shrink-0"
         :class="expense.is_paid
           ? 'bg-emerald-500 border-emerald-500'
@@ -243,7 +243,7 @@ function onDelete() {
 
 function onToggleExclusion() {
   closeMenu()
-  store.toggleExpenseExclusion(props.expense.id)
+  store.toggleExpenseExclusion(props.expense.id).catch(() => {})
 }
 
 const animating = ref(false)
@@ -272,6 +272,8 @@ async function saveEdit() {
   setTimeout(async () => {
     try {
       await store.updateExpenseAmount(props.expense.id, editValue.value)
+    } catch {
+      // otimista já reverteu o valor na store
     } finally {
       editing.value = false
       animating.value = false

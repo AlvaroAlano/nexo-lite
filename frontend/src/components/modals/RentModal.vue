@@ -114,6 +114,7 @@
     </div>
 
     <template #footer>
+      <p v-if="saveError" class="text-red-500 dark:text-red-400 text-xs mb-2">{{ saveError }}</p>
       <button
         @click="save"
         :disabled="store.saving || !items.length"
@@ -193,15 +194,22 @@ function removeItem(idx) {
   items.value.splice(idx, 1)
 }
 
+const saveError = ref('')
+
 async function save() {
   if (!props.expense) return
-  await store.updateRent(props.expense.id, {
-    rent_items: items.value.map(i => ({
-      ...i,
-      amount: parseFloat(i.amount) || 0,
-    })),
-  })
-  open.value = false
+  saveError.value = ''
+  try {
+    await store.updateRent(props.expense.id, {
+      rent_items: items.value.map(i => ({
+        ...i,
+        amount: parseFloat(i.amount) || 0,
+      })),
+    })
+    open.value = false
+  } catch {
+    saveError.value = 'Não foi possível salvar o boleto. Tente novamente.'
+  }
 }
 
 watch(showAddForm, (v) => {

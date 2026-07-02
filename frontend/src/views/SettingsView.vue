@@ -107,6 +107,8 @@
       title="Excluir categoria"
       :message="`Excluir '${deleteTarget?.name}'? As despesas vinculadas vão perder a categoria.`"
       confirm-label="Excluir"
+      :loading="deletingCategory"
+      :error-message="deleteCategoryError"
       @confirm="doRemove"
     />
 
@@ -194,6 +196,7 @@
               Cancelar
             </button>
           </div>
+          <p v-if="categoryError" class="text-red-500 dark:text-red-400 text-xs mt-2">{{ categoryError }}</p>
         </div>
       </div>
 
@@ -335,6 +338,7 @@
           <component :is="getIconComponent(form.icon)" :size="22" :stroke-width="1.5" :style="{ color: colorByKey(form.color).text }" />
           <span class="font-semibold text-sm" :style="{ color: colorByKey(form.color).text }">{{ form.name || 'Pré-visualização' }}</span>
         </div>
+        <p v-if="categoryError" class="text-red-500 dark:text-red-400 text-xs">{{ categoryError }}</p>
       </div>
       <template #footer>
         <button
@@ -475,9 +479,12 @@ function cancelEdit() {
   form.color = 'slate'
 }
 
+const categoryError = ref('')
+
 async function save() {
   if (!form.name.trim()) return
   saving.value = true
+  categoryError.value = ''
   try {
     if (editing.value) {
       await store.update(editing.value.id, { name: form.name, icon: form.icon, color: form.color })
@@ -488,6 +495,8 @@ async function save() {
       form.icon = 'Package'
       form.color = 'slate'
     }
+  } catch {
+    categoryError.value = 'Não foi possível salvar a categoria. Tente novamente.'
   } finally {
     saving.value = false
   }
@@ -495,22 +504,33 @@ async function save() {
 
 async function saveModal() {
   await save()
-  dashboardStore.quickAddCategoryOpen = false
+  if (!categoryError.value) dashboardStore.quickAddCategoryOpen = false
 }
 
 const showConfirmDelete = ref(false)
 const deleteTarget = ref(null)
+const deletingCategory = ref(false)
+const deleteCategoryError = ref('')
 
 function remove(cat) {
   deleteTarget.value = cat
+  deleteCategoryError.value = ''
   showConfirmDelete.value = true
 }
 
 async function doRemove() {
   if (!deleteTarget.value) return
-  await store.remove(deleteTarget.value.id)
-  deleteTarget.value = null
-  showConfirmDelete.value = false
+  deletingCategory.value = true
+  deleteCategoryError.value = ''
+  try {
+    await store.remove(deleteTarget.value.id)
+    deleteTarget.value = null
+    showConfirmDelete.value = false
+  } catch {
+    deleteCategoryError.value = 'Não foi possível excluir. Tente novamente.'
+  } finally {
+    deletingCategory.value = false
+  }
 }
 </script>
 

@@ -39,8 +39,9 @@ async def create_template(
                 Category.user_id == user_id
             )
         )).scalars().first()
-        if cat:
-            category_name = cat.name
+        if cat is None:
+            raise HTTPException(status_code=404, detail="Category not found")
+        category_name = cat.name
     tmpl = ExpenseTemplate(
         user_id=user_id,
         name=payload.name,
@@ -87,8 +88,9 @@ async def update_template(
                 Category.user_id == user_id
             )
         )).scalars().first()
-        if cat:
-            update_data["category"] = cat.name
+        if cat is None:
+            raise HTTPException(status_code=404, detail="Category not found")
+        update_data["category"] = cat.name
     for field, value in update_data.items():
         setattr(tmpl, field, value)
 

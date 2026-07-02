@@ -69,7 +69,7 @@ async def run_turnover(db: AsyncSession, user_id: UUID) -> MonthlyPeriod:
         )
         current_expenses = exp_result.scalars().all()
 
-        total_expenses = sum(_safe_decimal(e.amount) for e in current_expenses)
+        total_expenses = sum(_safe_decimal(e.amount) for e in current_expenses if not e.is_excluded)
         income = _safe_decimal(current.income_alvaro) + _safe_decimal(current.income_alexandra)
         prev_carryover = _safe_decimal(current.carryover_balance)
 

@@ -254,6 +254,7 @@
 
     <!-- ── FOOTER ──────────────────────────────────────────────────────────── -->
     <template #footer>
+      <p v-if="actionError" class="text-red-500 dark:text-red-400 text-xs mb-2">{{ actionError }}</p>
       <!-- Create/edit footer -->
       <div v-if="isEditing" class="flex gap-2">
         <button
@@ -319,6 +320,8 @@
     title="Quitar empréstimo"
     :message="`Marcar '${editingLoan?.name}' como quitado?`"
     confirm-label="Quitar"
+    :loading="settling"
+    :error-message="settleError"
     @confirm="doSettle"
   />
   <ConfirmModal
@@ -327,6 +330,8 @@
     :message="`Excluir '${editingLoan?.name}'? Isso não pode ser desfeito.`"
     confirm-label="Excluir"
     variant="danger"
+    :loading="deletingLoan"
+    :error-message="deleteLoanError"
     @confirm="doDelete"
   />
 </template>
@@ -413,8 +418,11 @@ function cancelEdit() {
   }
 }
 
+const actionError = ref('')
+
 async function save() {
   if (!form.value.name.trim() || !form.value.amount) return
+  actionError.value = ''
   const payload = {
     name: form.value.name.trim(),
     direction: form.value.direction,
@@ -423,15 +431,19 @@ async function save() {
     loan_date: form.value.loan_date || null,
     due_date: form.value.due_date || null,
   }
-  if (editingLoan.value) {
-    await store.updateDebt(editingLoan.value.id, payload)
-    // refresh the editingLoan ref in the store
-    const updated = store.debts.find((d) => d.id === editingLoan.value.id)
-    if (updated) store.editingLoan = updated
-    isEditing.value = false
-  } else {
-    await store.createDebt(payload)
-    store.closeLoanModal()
+  try {
+    if (editingLoan.value) {
+      await store.updateDebt(editingLoan.value.id, payload)
+      // refresh the editingLoan ref in the store
+      const updated = store.debts.find((d) => d.id === editingLoan.value.id)
+      if (updated) store.editingLoan = updated
+      isEditing.value = false
+    } else {
+      await store.createDebt(payload)
+      store.closeLoanModal()
+    }
+  } catch {
+    actionError.value = 'Não foi possível salvar. Tente novamente.'
   }
 }
 
@@ -453,43 +465,75 @@ async function loadPayments() {
 
 async function submitPayment() {
   if (!paymentForm.value.amount || !editingLoan.value) return
-  const pmt = await store.addPayment(editingLoan.value.id, {
-    amount: paymentForm.value.amount,
-    notes: paymentForm.value.notes || null,
-  })
-  payments.value.unshift(pmt)
-  paymentForm.value = { amount: 0, notes: '' }
-  showPaymentForm.value = false
-  // update the local editingLoan reference
-  const updated = store.debts.find((d) => d.id === editingLoan.value.id)
-  if (updated) store.editingLoan = updated
+  actionError.value = ''
+  try {
+    const pmt = await store.addPayment(editingLoan.value.id, {
+      amount: paymentForm.value.amount,
+      notes: paymentForm.value.notes || null,
+    })
+    payments.value.unshift(pmt)
+    paymentForm.value = { amount: 0, notes: '' }
+    showPaymentForm.value = false
+    // update the local editingLoan reference
+    const updated = store.debts.find((d) => d.id === editingLoan.value.id)
+    if (updated) store.editingLoan = updated
+  } catch {
+    actionError.value = 'Não foi possível registrar o pagamento. Tente novamente.'
+  }
 }
 
 // ── Settle / Delete ────────────────────────────────────────────────────────────
 const showSettleConfirm = ref(false)
 const showDeleteConfirm = ref(false)
+const settling = ref(false)
+const deletingLoan = ref(false)
+const settleError = ref('')
+const deleteLoanError = ref('')
 
-function confirmSettle() { showSettleConfirm.value = true }
-function confirmDelete() { showDeleteConfirm.value = true }
+function confirmSettle() { settleError.value = ''; showSettleConfirm.value = true }
+function confirmDelete() { deleteLoanError.value = ''; showDeleteConfirm.value = true }
 
 async function doSettle() {
   if (!editingLoan.value) return
-  await store.settleDebt(editingLoan.value.id)
-  const updated = store.debts.find((d) => d.id === editingLoan.value.id)
-  if (updated) store.editingLoan = updated
+  settling.value = true
+  settleError.value = ''
+  try {
+    await store.settleDebt(editingLoan.value.id)
+    const updated = store.debts.find((d) => d.id === editingLoan.value.id)
+    if (updated) store.editingLoan = updated
+    showSettleConfirm.value = false
+  } catch {
+    settleError.value = 'Não foi possível quitar. Tente novamente.'
+  } finally {
+    settling.value = false
+  }
 }
 
 async function confirmReopen() {
   if (!editingLoan.value) return
-  await store.updateDebt(editingLoan.value.id, { status: 'ativo' })
-  const updated = store.debts.find((d) => d.id === editingLoan.value.id)
-  if (updated) store.editingLoan = updated
+  actionError.value = ''
+  try {
+    await store.updateDebt(editingLoan.value.id, { status: 'ativo' })
+    const updated = store.debts.find((d) => d.id === editingLoan.value.id)
+    if (updated) store.editingLoan = updated
+  } catch {
+    actionError.value = 'Não foi possível reabrir. Tente novamente.'
+  }
 }
 
 async function doDelete() {
   if (!editingLoan.value) return
-  await store.deleteDebt(editingLoan.value.id)
-  store.closeLoanModal()
+  deletingLoan.value = true
+  deleteLoanError.value = ''
+  try {
+    await store.deleteDebt(editingLoan.value.id)
+    showDeleteConfirm.value = false
+    store.closeLoanModal()
+  } catch {
+    deleteLoanError.value = 'Não foi possível excluir. Tente novamente.'
+  } finally {
+    deletingLoan.value = false
+  }
 }
 
 // ── Computed helpers ───────────────────────────────────────────────────────────

@@ -48,7 +48,7 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [ ] Rodar migration 014 (scheduled_expenses) no Supabase
 - [x] Testes unitários do serviço de turnover (integridade, rollback e virada) — (2026-06-22)
 - [ ] Endpoint `GET /periods` para listar histórico de todos os meses
-- [ ] Remover `summaryApi` de `api.js` e o endpoint `/summary` do backend (dead code)
+- [x] Remover `summaryApi` de `api.js` e o endpoint `/summary` do backend (dead code) — (2026-07-01)
 - [x] Saldo anterior de novos períodos vem zerado por padrão no turnover/auto-criação — (2026-06-22)
 - [x] Suporte para salvar carryover_balance e additional_income_items JSONB no PATCH `/periods/{id}/income` — (2026-06-22)
 
@@ -101,7 +101,9 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [ ] Configurar Supabase Auth (email/senha ou magic link)
 - [ ] Página de login
 - [ ] Proteger rotas do frontend (router guards)
-- [ ] Row Level Security (RLS) no Supabase para isolar dados por usuário
+- [ ] Row Level Security (RLS) no Supabase para isolar dados por usuário — nota (2026-07-01): hoje `DATABASE_URL` conecta como `postgres` (superuser) e o frontend não usa `supabase-js`/anon key em nenhum lugar, então RLS não teria efeito real na proteção atual (superuser ignora RLS) — só passa a valer se algum dia houver acesso direto via anon key. Isolamento real hoje depende 100% do filtro `user_id` no FastAPI (reforçado em `expenses.py` nesta sessão)
+- [ ] `dependencies/auth.py`: fallback de JWT decodifica com `verify_signature=False` — sem `SUPABASE_JWT_SECRET` setado, qualquer token forjado com `sub` arbitrário é aceito (impersonação). Bloquear esse fallback fora de ambiente dev — (achado 2026-07-01)
+- [x] `routers/expenses.py` era o único router sem `get_current_user_id` — create/update/rent/toggle-paid/toggle-excluded/delete/notes agora verificam propriedade via join com `MonthlyPeriod.user_id` (`_get_owned_expense`). `routers/summary.py` foi removido (dead code) — (2026-07-01)
 
 ## 🚀 Deploy
 
@@ -126,6 +128,9 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 
 ## 🐞 Bugs corrigidos
 
+- [x] Recorrência criada com "Adicionar ao mês atual" podia sumir: `TemplatesView`/`DashboardView` (quickAdd) usavam `dashboardStore.period` do cache local sem revalidar, anexando a despesa a um período obsoleto/fechado (ex: parceiro rodou a virada de mês em outro device) sem nenhum erro visível — (2026-07-01)
+- [x] Backend `create_expense` agora rejeita (400) criação de despesa em período fechado/inexistente, mesmo com `period_id` obsoleto vindo do front — (2026-07-01)
+- [x] `turnover.py`: carryover somava despesas com `is_excluded=true` (frontend já ignorava, backend não) — (2026-07-01)
 - [x] Edição inline de valor de dívida não salvava (passava número cru ao PATCH que espera objeto) — (2026-06-18)
 - [x] "Poder de Quitação" sempre 100% / payoff NaN — gamificação lia `.amount` em vez de `.estimated_amount` — (2026-06-18)
 - [x] Caixinha contada várias vezes (double-count) na cobertura por dívida — agora alocação snowball (foco primeiro, transbordo) — (2026-06-18)
@@ -142,6 +147,37 @@ Lista de tarefas do projeto. Atualize sempre que uma tarefa for concluída ou no
 - [ ] Burn-down chart por dívida (usa DebtPayment + original_amount)
 - [ ] Plugar API Claude real no "Auditor IA" (hoje mock em useGamification)
 - [ ] Rodar migration 013 no Supabase
+
+## 🔎 Auditoria completa (2026-07-01)
+
+Achados da análise geral (backend, frontend, banco, UI/UX). Não corrigidos ainda — priorizar antes do deploy.
+
+**Backend:**
+- [x] `expenses.py`: todas as rotas (update, update-rent, toggle-paid, toggle-excluded, delete, notes) agora validam `period.status == 'open'` via `_ensure_period_open` (RN-10) — (2026-07-01)
+- [x] `expenses.py` `update_expense`: valida `installment_current <= installment_total`; `category_id` agora precisa pertencer ao usuário (`_get_owned_category`, 404 se não) — mesmo fix aplicado em `create_expense` e em `templates.py` (create/update) — (2026-07-01)
+- [x] `safe_decimal` (schemas/expense.py) agora rejeita valores negativos — cobre `RentItem.amount`, `ExpenseCreate/Update.amount`, `TemplateCreate/Update.base_amount` e `ScheduledExpense` (reusa a mesma função) — (2026-07-01)
+- [ ] `periods.py` `/history`: `limit` sem teto máximo (pode trazer volume não controlado)
+- [x] `/summary` era dead code confirmado — endpoint + `summaryApi` removidos — (2026-07-01)
+- [x] IDOR em `expenses.py`: todas as rotas agora exigem `get_current_user_id` e verificam propriedade via `MonthlyPeriod.user_id` — (2026-07-01)
+
+**Banco de dados:**
+- [ ] `backend/app/models/__init__.py` não exporta `Debt`, `DebtPayment`, `VaultReconciliation`, `ExpenseNote`, `ScheduledExpense` — risco se algo depender de import central (ex: `create_all`/Alembic)
+- [ ] Índice `idx_monthly_expenses_is_excluded` (migration 018) ausente no `schema.sql` consolidado
+- [ ] Coluna legada `category` (texto) convive com `category_id` (FK) em 3 tabelas, nunca migrada/limpa — risco de nome dessincronizado
+- [ ] `monthly_periods.income` (legado) permanece no model mas não existe em banco criado via `schema.sql` puro — inconsistência entre "banco migrado incrementalmente" vs "banco criado do zero"
+- [ ] Faltam índices em `monthly_expenses.template_id`, `category_id` (expenses/templates/scheduled)
+- [ ] Revisar se as migrations 001–018 realmente já rodaram no Supabase real — `schema.sql` sugere que sim, mas os itens `[ ]` no topo deste arquivo dizem o contrário (checar direto no Supabase)
+
+**Frontend:**
+- [ ] `DashboardView.vue` `quickAdd` e `TemplatesView.vue` `addTemplate` corrigidos (ver Bugs corrigidos); mesmo padrão de falha silenciosa ainda existe em: `TemplatesView.toggleActive/doDelete`, `SettingsView.doRemove/save` (`categories.js` não tem tratamento de erro nenhum), `RentModal.save`, `LoanModal` (save/submitPayment/doSettle/confirmReopen/doDelete) — nenhum tem try/catch nem feedback ao usuário
+- [ ] `ConfirmModal.vue`: fecha e emite `@confirm` antes do handler assíncrono do chamador resolver — se a ação falhar, o modal já sumiu como se tivesse dado certo (mesma classe do bug relatado)
+- [ ] `stores/scheduled.js` é a única store financeira sem outbox/cache offline (diferente de `dashboard.js`/`debts.js`)
+- [ ] Lógica de outbox (`_enqueue`, `triggerSync`, `_processAction`, `_isNetworkError`) duplicada quase byte-a-byte entre `dashboard.js` e `debts.js` — candidato a composable `useOutboxSync()`
+- [ ] `StatsView.vue`: não lê `dashboard.error`/`statsStore.error` — falha no fetch mostra tela vazia sem indicação
+
+**UI/UX:**
+- [ ] `ExpenseCard.vue`: botão de menu (28px) e toggle de pago (20px) abaixo do mínimo de 40px para toque mobile; faltam `aria-label` (só têm `title`)
+- [ ] Sistema de toast (já pendente acima) resolveria boa parte dos achados de "falha silenciosa" desta auditoria
 
 ## 💡 Backlog / Ideias futuras
 

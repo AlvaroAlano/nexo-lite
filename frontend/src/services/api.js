@@ -48,11 +48,6 @@ export const scheduledApi = {
   delete: (id) => http.delete(`/scheduled/${id}`),
 }
 
-// ─── Summary ────────────────────────────────────────────────────────────────
-export const summaryApi = {
-  get: (periodId) => http.get(`/summary/${periodId}`),
-}
-
 // ─── Debts (Dívidas / Empréstimos) ───────────────────────────────────────────
 export const debtsApi = {
   list:         ()           => http.get('/debts/'),

@@ -122,7 +122,7 @@
           <!-- Paid toggle -->
           <td class="px-3 py-3.5 text-center w-[90px]" @click.stop>
             <button
-              @click.stop="store.togglePaid(expense.id)"
+              @click.stop="store.togglePaid(expense.id).catch(() => {})"
               class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all active:scale-95"
               :class="expense.is_paid
                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
@@ -281,7 +281,7 @@ function onDelete(expense) {
 
 function onToggleExclusion(expense) {
   closeMenu()
-  store.toggleExpenseExclusion(expense.id)
+  store.toggleExpenseExclusion(expense.id).catch(() => {})
 }
 
 const animating = ref(false)
@@ -314,6 +314,8 @@ async function saveEdit() {
   setTimeout(async () => {
     try {
       await store.updateExpenseAmount(editingId.value, editValue.value)
+    } catch {
+      // otimista já reverteu o valor na store
     } finally {
       editingId.value = null
       animating.value = false

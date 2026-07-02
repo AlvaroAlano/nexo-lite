@@ -3,6 +3,54 @@
 Log resumido de mudanças, decisões arquiteturais e ajustes relevantes.
 Entradas em ordem cronológica inversa (mais recente no topo).
 
+## 2026-07-01 (3) — Backend: fecha regras de negócio faltantes em expenses.py/templates.py
+
+Continuação da blindagem de `expenses.py`. Adicionado ao mesmo módulo:
+- `_ensure_period_open(expense)`: todas as rotas de escrita (update, update-rent, toggle-paid, toggle-excluded, delete, add/delete note) agora rejeitam (400) mudanças em despesa de período `closed` — RN-10 ("meses fechados são somente leitura") só era aplicada no frontend (inputs desabilitados), não no backend; qualquer chamada direta à API furava a regra. `list_notes` (GET) continua liberado, só escrita é bloqueada.
+- `_get_owned_category(db, category_id, user_id)`: `update_expense`/`create_expense` aceitavam qualquer `category_id` sem checar se pertencia ao usuário (diferente de `templates.py`, que já checava mas nem assim rejeitava — só ignorava o nome se não achasse, e mesmo assim **gravava** o `category_id` estranho). Corrigido nos dois routers: agora rejeita com 404 se a categoria não pertence ao usuário.
+- `update_expense`: passou a validar `installment_current <= installment_total` (mesma regra que já existia em `templates.py` para `installment_paid`).
+- `safe_decimal` (`schemas/expense.py`) agora rejeita valor negativo (`ValueError` → 422 do Pydantic) — cobre `RentItem.amount`, `ExpenseCreate/Update.amount`, `TemplateCreate/Update.base_amount`, e `ScheduledExpense.amount` (que reusa a mesma função importada). Não mexi em `schemas/period.py` (income/carryover têm sua própria cópia da função, fora do escopo desta rodada).
+
+**RLS reavaliado:** `DATABASE_URL` conecta ao Supabase como `postgres` (superuser) e o frontend não usa `supabase-js`/anon key em lugar nenhum — logo RLS não protegeria nada hoje (superuser bypassa RLS por padrão). Rebaixado de prioridade no TODO.md com essa nota; isolamento real continua sendo o filtro `user_id` no FastAPI.
+
+`_get_owned_expense` passou a usar `joinedload(MonthlyExpense.period)` para permitir checar `.period.status` sem uma segunda query lazy (que quebraria em contexto async).
+
+---
+
+## 2026-07-01 (2) — Fecha IDOR em expenses.py + remove /summary (dead code)
+
+**IDOR em `routers/expenses.py`:** era o único router sem `get_current_user_id` (todos os demais já tinham sido blindados em 2026-06-22). `MonthlyExpense` não tem `user_id` próprio — só `period_id`. Criada `_get_owned_expense(db, expense_id, user_id)` que faz join com `MonthlyPeriod` e retorna 404 (não 403, para não revelar existência) se a despesa não pertencer ao usuário do token. Aplicada em todas as rotas: create (via período), update, update-rent, toggle-paid, toggle-excluded, delete, e as 3 sub-rotas de notas (list/add/delete). Sem impacto no modo demo local — `get_current_user_id` cai em `DEMO_USER_ID` quando não há token, igual aos outros routers.
+
+**Removido `routers/summary.py` + `schemas/summary.py` + `summaryApi` (frontend):** confirmado dead code (nenhuma chamada no frontend, endpoint `/summary/{period_id}` duplicava lógica de `/periods/current`). Desregistrado de `main.py` e `schemas/__init__.py`. Não confundir com `/vault/summary` (endpoint ativo, feature da Caixinha) — mantido.
+
+Build do frontend (`npm run build`) e sintaxe do backend (`ast.parse`) validados após as mudanças.
+
+---
+
+## 2026-07-01 — Bug real: despesa "some" ao adicionar via recorrência/quick-add + auditoria completa (4 agentes)
+
+**Bug reportado:** usuário cadastrou uma recorrência parcelada com 1 parcela já paga e marcou "Adicionar ao mês atual" — a despesa não aparecia no Check-in.
+
+**Causa raiz:** `TemplatesView.vue` e o `quickAdd` do `DashboardView.vue` usavam `dashboardStore.period` direto do cache do `localStorage`, sem nunca chamar `fetchCurrent()`. Como o app é usado a dois, se a virada de mês acontece em outro dispositivo (ou a sessão fica aberta por muito tempo), o período em cache fica obsoleto/fechado — a despesa era criada presa ao período errado, ou `addExpense` retornava silenciosamente (guard `isReadOnly`) sem lançar erro nem avisar o usuário.
+
+**Correção:**
+- `TemplatesView.vue`: `fetchCurrent()` no `onMounted` + revalidação do período imediatamente antes de gravar a despesa no mês atual; aviso visível (`saveWarning`) se o mês não estiver aberto ou a gravação falhar.
+- `DashboardView.vue` `quickAdd`: mesmo padrão — revalida com `fetchCurrent()` antes de criar despesa "para este mês" (não afeta agendamento futuro), aviso visível (`addExpenseWarning`) em vez de fechar o modal como se tivesse dado certo.
+- Backend `expenses.py` `create_expense`: agora rejeita (400) criação de despesa em período fechado/inexistente — blindagem mesmo se o front enviar `period_id` obsoleto.
+- `turnover.py`: carryover estava somando despesas com `is_excluded=true` no cálculo (`Σ expenses`); o frontend já ignorava essas despesas nos totais/saldos desde o commit `bbd8c45`, mas o backend não tinha sido atualizado. Corrigido para excluir `is_excluded` da soma.
+
+**Auditoria completa (4 agentes em paralelo — backend, frontend, banco, UI/UX):** achados não corrigidos nesta sessão, registrados no `TODO.md` (seção "🔎 Auditoria completa 2026-07-01"). Destaques:
+- `routers/expenses.py` e `routers/summary.py` são os únicos routers sem `get_current_user_id` (IDOR) — ficaram de fora da blindagem de 2026-06-22.
+- `dependencies/auth.py` tem fallback de JWT com `verify_signature=False` — sem `SUPABASE_JWT_SECRET`, aceita token forjado com qualquer `sub`.
+- RLS continua 100% ausente em todas as tabelas do Supabase (já era conhecido, reforçado).
+- `ConfirmModal.vue` fecha/emite `@confirm` antes do handler assíncrono do chamador resolver — mesma classe do bug relatado se repete em `TemplatesView` (toggleActive/doDelete), `SettingsView` (categorias, sem tratamento de erro nenhum em `categories.js`), `RentModal.save`, e vários handlers do `LoanModal`.
+- Lógica de outbox duplicada entre `dashboard.js` e `debts.js`; `scheduled.js` não tem resiliência offline como as outras stores.
+- `schema.sql` tem drift menor vs migrations (índice da 018 ausente, `models/__init__.py` não exporta todos os models, coluna legada `category` texto convive com `category_id` sem nunca ter sido limpa).
+
+**Decisão:** não implementar as correções maiores (RLS, auth em expenses/summary, refatorar ConfirmModal, sistema de toast) nesta sessão — são mudanças de maior escopo/risco (fronteira de auth, comportamento usado por muitos chamadores) que exigem priorização explícita do usuário antes de mexer.
+
+---
+
 ## 2026-06-22 — Implementação de Resiliência Offline, Segurança e Transações Atômicas
 
 - **Fila Outbox & Cache (Frontend)**: Refatorados stores `dashboard.js` e `debts.js` para salvar dados localmente em `localStorage` e processar requisições offline/cold-start via fila outbox FIFO resiliente. Implementado remapeamento de `tempId` para ID definitivo no retorno do POST e tratamento otimista das escritas.

@@ -222,7 +222,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     } catch (e) {
       if (!_isNetworkError(e) && !_isTempId(expenseId)) {
         expense.amount = previousAmount
-        return
+        throw e
       }
       _enqueue('update_expense', { expenseId, payload: { amount } })
     } finally {
@@ -246,7 +246,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     } catch (e) {
       if (!_isNetworkError(e) && !_isTempId(expenseId)) {
         expenses.value[idx].is_paid = !expenses.value[idx].is_paid // Reverte
-        return
+        throw e
       }
       _enqueue('toggle_paid', { expenseId })
     }
@@ -268,7 +268,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     } catch (e) {
       if (!_isNetworkError(e) && !_isTempId(expenseId)) {
         expenses.value[idx].is_excluded = !expenses.value[idx].is_excluded // Reverte
-        return
+        throw e
       }
       _enqueue('toggle_excluded', { expenseId })
     }
@@ -297,7 +297,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
       if (!_isNetworkError(e) && !_isTempId(expenseId)) {
         expense.rent_items = previousItems
         expense.amount = previousAmount
-        return
+        throw e
       }
       _enqueue('update_rent', { expenseId, components })
     } finally {

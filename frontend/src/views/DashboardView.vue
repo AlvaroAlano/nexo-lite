@@ -430,6 +430,7 @@
           </div>
           <span class="text-sm text-brand-ink-light dark:text-white">Já paguei</span>
         </label>
+        <p v-if="addExpenseWarning" class="text-amber-600 dark:text-amber-400 text-xs">{{ addExpenseWarning }}</p>
       </div>
       <template #footer>
         <button
@@ -513,6 +514,7 @@ const rentExpense = ref(null)
 const showTurnover = ref(false)
 const showAddForm = ref(false)
 const showExpenseModal = ref(false)
+const addExpenseWarning = ref('')
 const editTarget = ref(null)
 const showDetailModal = ref(false)
 const selectedDetailExpense = ref(null)
@@ -600,6 +602,8 @@ watch(showExpenseModal, (val) => {
   if (!val) {
     resetAddForm()
     editTarget.value = null
+  } else {
+    addExpenseWarning.value = ''
   }
 })
 
@@ -661,6 +665,7 @@ async function saveExpenseEdit() {
 
 async function quickAdd() {
   submitting.value = true
+  addExpenseWarning.value = ''
   try {
     if (isScheduling.value) {
       const [ty, tm] = addForm.target.split('-').map(Number)
@@ -674,14 +679,27 @@ async function quickAdd() {
         amount: addForm.amount,
       })
     } else {
-      await store.addExpense({
-        name: addForm.name.trim(),
-        category_id: addForm.category_id,
-        expense_type: 'variable',
-        responsavel: addForm.responsavel,
-        amount: addForm.amount,
-        is_paid: addForm.is_paid,
-      })
+      // Revalida o período antes de gravar — evita que uma sessão longa (ou
+      // uma virada de mês feita pelo parceiro em outro dispositivo) crie a
+      // despesa presa a um mês obsoleto/fechado sem nenhum aviso
+      await store.fetchCurrent()
+      if (!store.period?.id || store.isReadOnly) {
+        addExpenseWarning.value = 'O mês atual não está mais aberto. Feche e reabra o app para sincronizar antes de adicionar.'
+        return
+      }
+      try {
+        await store.addExpense({
+          name: addForm.name.trim(),
+          category_id: addForm.category_id,
+          expense_type: 'variable',
+          responsavel: addForm.responsavel,
+          amount: addForm.amount,
+          is_paid: addForm.is_paid,
+        })
+      } catch {
+        addExpenseWarning.value = 'Não foi possível adicionar a despesa. Tente novamente.'
+        return
+      }
     }
     showAddForm.value = false
     showExpenseModal.value = false

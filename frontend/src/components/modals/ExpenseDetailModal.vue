@@ -322,12 +322,12 @@ const itemTypeBadge = (t) => {
 
 function togglePaid() {
   if (!props.expense) return
-  store.togglePaid(props.expense.id)
+  store.togglePaid(props.expense.id).catch(() => {})
 }
 
 function toggleExcluded() {
   if (!props.expense) return
-  store.toggleExpenseExclusion(props.expense.id)
+  store.toggleExpenseExclusion(props.expense.id).catch(() => {})
 }
 
 function editExpense() {

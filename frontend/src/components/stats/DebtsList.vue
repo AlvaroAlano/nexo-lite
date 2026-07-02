@@ -324,6 +324,8 @@
       title="Remover dívida"
       :message="`Remover '${deleteTarget?.name}' da lista?`"
       confirm-label="Remover"
+      :loading="deleting"
+      :error-message="deleteError"
       @confirm="doDelete"
     />
 
@@ -471,15 +473,28 @@ function fmtDate(d) {
 // ── Exclusão ──────────────────────────────────────────────────────────────────
 const showConfirm  = ref(false)
 const deleteTarget = ref(null)
+const deleting = ref(false)
+const deleteError = ref('')
 
 function confirmDelete(debt) {
   deleteTarget.value = debt
+  deleteError.value = ''
   showConfirm.value  = true
 }
 
 async function doDelete() {
-  await store.deleteDebt(deleteTarget.value?.id)
-  deleteTarget.value = null
+  if (!deleteTarget.value) return
+  deleting.value = true
+  deleteError.value = ''
+  try {
+    await store.deleteDebt(deleteTarget.value.id)
+    deleteTarget.value = null
+    showConfirm.value = false
+  } catch {
+    deleteError.value = 'Não foi possível remover. Tente novamente.'
+  } finally {
+    deleting.value = false
+  }
 }
 
 // ── Formatação ────────────────────────────────────────────────────────────────

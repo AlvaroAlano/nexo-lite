@@ -87,6 +87,8 @@
         title="Remover recorrência"
         :message="`Remover '${deleteTarget?.name}' das recorrências? As próximas viradas não vão mais clonar esta despesa.`"
         confirm-label="Remover"
+        :loading="deleting"
+        :error-message="deleteError"
         @confirm="doDelete"
       />
 
@@ -168,6 +170,7 @@
               </div>
               <span class="text-sm text-brand-ink-light dark:text-white font-medium">Adicionar ao mês atual</span>
             </label>
+            <p v-if="saveWarning" class="text-amber-600 dark:text-amber-400 text-xs">{{ saveWarning }}</p>
 
             <button
               @click="addTemplate"
@@ -181,6 +184,7 @@
 
         <!-- Right: list -->
         <div class="space-y-2">
+          <p v-if="listError" class="text-red-500 dark:text-red-400 text-xs px-1">{{ listError }}</p>
           <div
             v-for="tmpl in templates"
             :key="tmpl.id"
@@ -382,6 +386,7 @@
             </div>
             <span class="text-sm text-brand-ink-light dark:text-white font-medium">Adicionar ao mês atual</span>
           </label>
+          <p v-if="saveWarning" class="text-amber-600 dark:text-amber-400 text-xs">{{ saveWarning }}</p>
         </div>
         <template #footer>
           <button
@@ -433,10 +438,13 @@ const expenseTypeOpts = [
 const loading = ref(false)
 const loadError = ref(false)
 const saving = ref(false)
+const saveWarning = ref('')
 const editTarget = ref(null)
 
 watch(() => dashboardStore.quickAddTemplateOpen, (val) => {
-  if (!val) {
+  if (val) {
+    saveWarning.value = ''
+  } else {
     form.value = emptyForm()
     editTarget.value = null
   }
@@ -494,7 +502,10 @@ const installmentSummary = computed(() => {
   }
 })
 
-onMounted(fetchTemplates)
+onMounted(() => {
+  fetchTemplates()
+  dashboardStore.fetchCurrent() // garante que o período em cache não está obsoleto (ex: virada de mês feita em outro dispositivo)
+})
 
 const { pullDistance, refreshing, handleTouchStart, handleTouchMove, handleTouchEnd } =
   usePullToRefresh(fetchTemplates)
@@ -566,6 +577,7 @@ async function addTemplate() {
   if (editTarget.value) { await updateTemplate(); return }
   if (installmentError.value) return
   saving.value = true
+  saveWarning.value = ''
   try {
     const isInstallment = form.value.expense_type === 'installment'
     const isRent = form.value.expense_type === 'rent'
@@ -594,22 +606,33 @@ async function addTemplate() {
     }
 
     // Optionally add to current open month
-    if (form.value.addToCurrentMonth && dashboardStore.period?.id) {
-      const current = form.value.installment_paid + 1
-      await dashboardStore.addExpense({
-        name: tmpl.name,
-        category_id: tmpl.category_id,
-        expense_type: tmpl.expense_type,
-        responsavel: tmpl.responsavel,
-        amount: isRent
-          ? (tmpl.rent_items || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0)
-          : tmpl.base_amount,
-        ...(isInstallment && {
-          installment_current: current,
-          installment_total: tmpl.installment_total,
-        }),
-        ...(isRent && { rent_items: tmpl.rent_items || [] }),
-      })
+    if (form.value.addToCurrentMonth) {
+      // Revalida o período antes de gravar — evita anexar a despesa a um mês
+      // já fechado (ex: o parceiro rodou a virada de mês enquanto o cache local ficou obsoleto)
+      await dashboardStore.fetchCurrent()
+      if (!dashboardStore.period?.id || dashboardStore.isReadOnly) {
+        saveWarning.value = 'Recorrência criada, mas o mês atual não está aberto — adicione a despesa manualmente no Check-in.'
+      } else {
+        const current = form.value.installment_paid + 1
+        try {
+          await dashboardStore.addExpense({
+            name: tmpl.name,
+            category_id: tmpl.category_id,
+            expense_type: tmpl.expense_type,
+            responsavel: tmpl.responsavel,
+            amount: isRent
+              ? (tmpl.rent_items || []).reduce((s, i) => s + (parseFloat(i.amount) || 0), 0)
+              : tmpl.base_amount,
+            ...(isInstallment && {
+              installment_current: current,
+              installment_total: tmpl.installment_total,
+            }),
+            ...(isRent && { rent_items: tmpl.rent_items || [] }),
+          })
+        } catch {
+          saveWarning.value = 'Recorrência criada, mas não foi possível adicionar ao mês atual. Adicione manualmente no Check-in.'
+        }
+      }
     }
 
     form.value = emptyForm()
@@ -624,9 +647,14 @@ async function addTemplateAndClose() {
 }
 
 async function toggleActive(tmpl) {
-  const { data } = await templatesApi.update(tmpl.id, { is_active: !tmpl.is_active })
-  const idx = templates.value.findIndex((t) => t.id === tmpl.id)
-  if (idx !== -1) templates.value[idx] = data
+  listError.value = ''
+  try {
+    const { data } = await templatesApi.update(tmpl.id, { is_active: !tmpl.is_active })
+    const idx = templates.value.findIndex((t) => t.id === tmpl.id)
+    if (idx !== -1) templates.value[idx] = data
+  } catch {
+    listError.value = `Não foi possível ${tmpl.is_active ? 'desativar' : 'ativar'} "${tmpl.name}". Tente novamente.`
+  }
 }
 
 const openMenuId = ref(null)
@@ -644,18 +672,30 @@ onUnmounted(() => document.removeEventListener(CLOSE_MENUS_EVENT, closeAllMenus)
 
 const showConfirmDelete = ref(false)
 const deleteTarget = ref(null)
+const deleting = ref(false)
+const deleteError = ref('')
+const listError = ref('')
 
 function confirmDelete(tmpl) {
   deleteTarget.value = tmpl
+  deleteError.value = ''
   showConfirmDelete.value = true
 }
 
 async function doDelete() {
   if (!deleteTarget.value) return
-  await templatesApi.delete(deleteTarget.value.id)
-  templates.value = templates.value.filter((t) => t.id !== deleteTarget.value.id)
-  deleteTarget.value = null
-  showConfirmDelete.value = false
+  deleting.value = true
+  deleteError.value = ''
+  try {
+    await templatesApi.delete(deleteTarget.value.id)
+    templates.value = templates.value.filter((t) => t.id !== deleteTarget.value.id)
+    deleteTarget.value = null
+    showConfirmDelete.value = false
+  } catch {
+    deleteError.value = 'Não foi possível remover. Tente novamente.'
+  } finally {
+    deleting.value = false
+  }
 }
 
 function typeLabel(t) {
